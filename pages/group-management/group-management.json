@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "设备分组管理",
+  "navigationBarBackgroundColor": "#1a1a2e",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#0f0f23",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "light",
+  "usingComponents": {}
+}

@@ -1,0 +1,188 @@
+<!-- 示例页面 - 展示设计系统的使用 -->
+<!-- Example Page - Demonstrating Design System Usage -->
+
+<view class="energy-container">
+  <!-- 背景装饰 -->
+  <view class="energy-bg-decoration">
+    <view class="energy-bg-circle" style="width: 200rpx; height: 200rpx; top: 10%; right: -50rpx; animation-delay: 0s; opacity: 0.6;"></view>
+    <view class="energy-bg-circle" style="width: 150rpx; height: 150rpx; top: 60%; left: -30rpx; animation-delay: 2s; opacity: 0.4;"></view>
+    <view class="energy-bg-circle" style="width: 100rpx; height: 100rpx; top: 30%; left: 50%; animation-delay: 4s; opacity: 0.5;"></view>
+  </view>
+  
+  <!-- 页面标题区域 -->
+  <view class="energy-flex-between energy-mb-32">
+    <view>
+      <text class="energy-title-large">设备管理</text>
+      <text class="energy-text-tertiary" style="font-size: 24rpx; display: block; margin-top: 8rpx;">Device Management</text>
+    </view>
+    <view class="energy-btn" style="width: 60rpx; height: 60rpx;">
+      <text class="energy-btn-icon" style="font-size: 32rpx;">⚙️</text>
+    </view>
+  </view>
+  
+  <!-- 统计概览卡片 -->
+  <view class="energy-glass-card energy-p-32">
+    <view class="energy-flex-between energy-mb-24">
+      <text class="energy-title-medium">设备概览</text>
+      <text class="energy-text-tertiary">实时状态</text>
+    </view>
+    
+    <view class="energy-grid-2">
+      <!-- 在线设备 -->
+      <view class="energy-data-card">
+        <view class="energy-icon energy-icon-power">
+          <text style="color: #ffffff;">📱</text>
+        </view>
+        <view style="flex: 1; display: flex; flex-direction: column; gap: 4rpx;">
+          <text class="energy-text-secondary" style="font-size: 24rpx;">在线设备</text>
+          <text class="energy-text-primary" style="font-size: 32rpx; font-weight: bold;">24</text>
+        </view>
+        <view class="energy-status-dot energy-status-success"></view>
+      </view>
+      
+      <!-- 离线设备 -->
+      <view class="energy-data-card">
+        <view class="energy-icon energy-icon-gas">
+          <text style="color: #ffffff;">📴</text>
+        </view>
+        <view style="flex: 1; display: flex; flex-direction: column; gap: 4rpx;">
+          <text class="energy-text-secondary" style="font-size: 24rpx;">离线设备</text>
+          <text class="energy-text-primary" style="font-size: 32rpx; font-weight: bold;">3</text>
+        </view>
+        <view class="energy-status-dot energy-status-warning"></view>
+      </view>
+      
+      <!-- 故障设备 -->
+      <view class="energy-data-card">
+        <view class="energy-icon energy-icon-carbon">
+          <text style="color: #ffffff;">⚠️</text>
+        </view>
+        <view style="flex: 1; display: flex; flex-direction: column; gap: 4rpx;">
+          <text class="energy-text-secondary" style="font-size: 24rpx;">故障设备</text>
+          <text class="energy-text-primary" style="font-size: 32rpx; font-weight: bold;">1</text>
+        </view>
+        <view class="energy-status-dot energy-status-critical"></view>
+      </view>
+      
+      <!-- 总设备数 -->
+      <view class="energy-data-card">
+        <view class="energy-icon energy-icon-water">
+          <text style="color: #ffffff;">📊</text>
+        </view>
+        <view style="flex: 1; display: flex; flex-direction: column; gap: 4rpx;">
+          <text class="energy-text-secondary" style="font-size: 24rpx;">总设备</text>
+          <text class="energy-text-primary" style="font-size: 32rpx; font-weight: bold;">28</text>
+        </view>
+        <view class="energy-status-dot energy-status-success"></view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 设备列表卡片 -->
+  <view class="energy-glass-card energy-p-32">
+    <view class="energy-flex-between energy-mb-24">
+      <text class="energy-title-medium">设备列表</text>
+      <view class="energy-flex" style="gap: 12rpx;">
+        <view style="padding: 8rpx 16rpx; background: rgba(0, 255, 255, 0.15); border-radius: 20rpx; border: 1px solid rgba(0, 255, 255, 0.3);">
+          <text class="energy-text-primary" style="font-size: 24rpx;">全部</text>
+        </view>
+        <view style="padding: 8rpx 16rpx; border-radius: 20rpx; border: 1px solid rgba(0, 255, 255, 0.2);">
+          <text class="energy-text-tertiary" style="font-size: 24rpx;">在线</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 设备项目 -->
+    <view style="display: flex; flex-direction: column; gap: 16rpx;">
+      <!-- 设备1 -->
+      <view style="display: flex; align-items: center; gap: 16rpx; padding: 16rpx; background: linear-gradient(135deg, rgba(26, 35, 50, 0.6) 0%, rgba(15, 20, 25, 0.8) 100%); border: 1px solid rgba(0, 255, 255, 0.1); border-radius: 12rpx;">
+        <view class="energy-icon energy-icon-power" style="width: 48rpx; height: 48rpx; font-size: 24rpx;">
+          <text style="color: #ffffff;">💡</text>
+        </view>
+        <view style="flex: 1; display: flex; flex-direction: column; gap: 4rpx;">
+          <text class="energy-text-primary" style="font-size: 28rpx; font-weight: bold;">智能照明系统</text>
+          <text class="energy-text-secondary" style="font-size: 22rpx;">区域A-1F-001</text>
+        </view>
+        <view style="display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx;">
+          <view class="energy-status-dot energy-status-success"></view>
+          <text class="energy-text-tertiary" style="font-size: 20rpx;">在线</text>
+        </view>
+      </view>
+      
+      <!-- 设备2 -->
+      <view style="display: flex; align-items: center; gap: 16rpx; padding: 16rpx; background: linear-gradient(135deg, rgba(26, 35, 50, 0.6) 0%, rgba(15, 20, 25, 0.8) 100%); border: 1px solid rgba(0, 255, 255, 0.1); border-radius: 12rpx;">
+        <view class="energy-icon energy-icon-water" style="width: 48rpx; height: 48rpx; font-size: 24rpx;">
+          <text style="color: #ffffff;">❄️</text>
+        </view>
+        <view style="flex: 1; display: flex; flex-direction: column; gap: 4rpx;">
+          <text class="energy-text-primary" style="font-size: 28rpx; font-weight: bold;">中央空调</text>
+          <text class="energy-text-secondary" style="font-size: 22rpx;">区域B-2F-002</text>
+        </view>
+        <view style="display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx;">
+          <view class="energy-status-dot energy-status-warning"></view>
+          <text class="energy-text-tertiary" style="font-size: 20rpx;">维护中</text>
+        </view>
+      </view>
+      
+      <!-- 设备3 -->
+      <view style="display: flex; align-items: center; gap: 16rpx; padding: 16rpx; background: linear-gradient(135deg, rgba(26, 35, 50, 0.6) 0%, rgba(15, 20, 25, 0.8) 100%); border: 1px solid rgba(0, 255, 255, 0.1); border-radius: 12rpx;">
+        <view class="energy-icon energy-icon-carbon" style="width: 48rpx; height: 48rpx; font-size: 24rpx;">
+          <text style="color: #ffffff;">🔌</text>
+        </view>
+        <view style="flex: 1; display: flex; flex-direction: column; gap: 4rpx;">
+          <text class="energy-text-primary" style="font-size: 28rpx; font-weight: bold;">电力监控</text>
+          <text class="energy-text-secondary" style="font-size: 22rpx;">区域C-3F-003</text>
+        </view>
+        <view style="display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx;">
+          <view class="energy-status-dot energy-status-critical"></view>
+          <text class="energy-text-tertiary" style="font-size: 20rpx;">故障</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 操作按钮区域 -->
+  <view class="energy-glass-card energy-p-32">
+    <text class="energy-title-medium energy-mb-24">快捷操作</text>
+    
+    <view class="energy-grid-2">
+      <!-- 添加设备 -->
+      <view style="display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 24rpx; background: linear-gradient(135deg, rgba(26, 35, 50, 0.6) 0%, rgba(15, 20, 25, 0.8) 100%); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 16rpx; cursor: pointer;" class="energy-transition">
+        <view style="width: 68rpx; height: 68rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36rpx; background: rgba(0, 255, 255, 0.15); border: 1px solid rgba(0, 255, 255, 0.3);">
+          <text style="color: #00ffff;">➕</text>
+        </view>
+        <text class="energy-text-primary" style="font-size: 24rpx; text-align: center;">添加设备</text>
+      </view>
+      
+      <!-- 批量控制 -->
+      <view style="display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 24rpx; background: linear-gradient(135deg, rgba(26, 35, 50, 0.6) 0%, rgba(15, 20, 25, 0.8) 100%); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 16rpx; cursor: pointer;" class="energy-transition">
+        <view style="width: 68rpx; height: 68rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36rpx; background: rgba(0, 255, 255, 0.15); border: 1px solid rgba(0, 255, 255, 0.3);">
+          <text style="color: #00ffff;">🎛️</text>
+        </view>
+        <text class="energy-text-primary" style="font-size: 24rpx; text-align: center;">批量控制</text>
+      </view>
+      
+      <!-- 设备报告 -->
+      <view style="display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 24rpx; background: linear-gradient(135deg, rgba(26, 35, 50, 0.6) 0%, rgba(15, 20, 25, 0.8) 100%); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 16rpx; cursor: pointer;" class="energy-transition">
+        <view style="width: 68rpx; height: 68rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36rpx; background: rgba(0, 255, 255, 0.15); border: 1px solid rgba(0, 255, 255, 0.3);">
+          <text style="color: #00ffff;">📊</text>
+        </view>
+        <text class="energy-text-primary" style="font-size: 24rpx; text-align: center;">设备报告</text>
+      </view>
+      
+      <!-- 系统设置 -->
+      <view style="display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 24rpx; background: linear-gradient(135deg, rgba(26, 35, 50, 0.6) 0%, rgba(15, 20, 25, 0.8) 100%); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 16rpx; cursor: pointer;" class="energy-transition">
+        <view style="width: 68rpx; height: 68rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36rpx; background: rgba(0, 255, 255, 0.15); border: 1px solid rgba(0, 255, 255, 0.3);">
+          <text style="color: #00ffff;">⚙️</text>
+        </view>
+        <text class="energy-text-primary" style="font-size: 24rpx; text-align: center;">系统设置</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 底部提示 -->
+  <view class="energy-flex-center" style="gap: 12rpx; padding: 32rpx; margin-top: 24rpx;">
+    <text class="energy-text-tertiary" style="font-size: 24rpx;">向上滑动查看更多</text>
+    <text class="energy-text-tertiary" style="font-size: 28rpx; animation: energyFloat 2s infinite;">↑</text>
+  </view>
+</view>

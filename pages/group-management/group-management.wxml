@@ -1,0 +1,176 @@
+<!--pages/group-management/group-management.wxml-->
+<!-- 设备分组管理页面 -->
+
+<view class="energy-container">
+  <!-- 背景装饰 -->
+  <view class="energy-bg-decoration">
+    <view class="energy-bg-circle" style="top: 10%; left: 80%; width: 120rpx; height: 120rpx;"></view>
+    <view class="energy-bg-circle" style="top: 60%; left: 10%; width: 80rpx; height: 80rpx;"></view>
+    <view class="energy-bg-circle" style="top: 80%; left: 70%; width: 100rpx; height: 100rpx;"></view>
+  </view>
+
+  <!-- 页面内容 -->
+  <view class="energy-glass-card energy-p-32">
+    <!-- 页面标题和添加按钮 -->
+    <view class="energy-flex energy-flex-between energy-mb-32">
+      <view class="energy-title-large">设备分组管理</view>
+      <view class="energy-btn energy-btn-primary" bindtap="onShowAddDialog">
+        <text class="energy-icon">+</text>
+        <text>添加分组</text>
+      </view>
+    </view>
+
+    <!-- 加载状态 -->
+    <view wx:if="{{loading}}" class="energy-loading-container">
+      <view class="energy-loading-spinner"></view>
+      <text class="energy-text-secondary energy-mt-16">加载中...</text>
+    </view>
+
+    <!-- 分组列表 -->
+    <view wx:else class="group-list">
+      <!-- 空状态 -->
+      <view wx:if="{{groupList.length === 0}}" class="energy-empty-state">
+        <view class="energy-empty-icon">📁</view>
+        <text class="energy-text-secondary">暂无设备分组</text>
+        <text class="energy-text-tertiary energy-mt-8">点击上方按钮创建第一个分组</text>
+      </view>
+
+      <!-- 分组卡片列表 -->
+      <view wx:else>
+        <view wx:for="{{groupList}}" wx:key="id" class="group-card energy-glass-card energy-mb-24">
+          <!-- 分组头部信息 -->
+          <view class="group-header energy-flex energy-flex-between">
+            <view class="group-info energy-flex">
+              <view class="group-icon">{{item.icon === 'office' ? '🏢' : item.icon === 'factory' ? '🏭' : item.icon === 'home' ? '🏠' : item.icon === 'outdoor' ? '🌳' : '📁'}}</view>
+              <view class="group-details">
+                <text class="group-name energy-text-primary">{{item.name}}</text>
+                <text class="group-description energy-text-secondary">{{item.description || '暂无描述'}}</text>
+              </view>
+            </view>
+            <view class="group-actions energy-flex">
+              <view class="action-btn" bindtap="onShowEditDialog" data-group="{{item}}">
+                <text class="energy-icon">✏️</text>
+              </view>
+              <view class="action-btn" bindtap="onDeleteGroup" data-group="{{item}}">
+                <text class="energy-icon">🗑️</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 分组统计信息 -->
+          <view class="group-stats energy-flex energy-mt-16">
+            <view class="stat-item">
+              <text class="stat-value energy-text-primary">{{item.deviceCount || 0}}</text>
+              <text class="stat-label energy-text-tertiary">设备数量</text>
+            </view>
+            <view class="stat-item">
+              <text class="stat-value energy-text-primary">{{item.onlineCount || 0}}</text>
+              <text class="stat-label energy-text-tertiary">在线设备</text>
+            </view>
+            <view class="stat-item">
+              <text class="stat-value energy-text-primary">{{item.alertCount || 0}}</text>
+              <text class="stat-label energy-text-tertiary">告警数量</text>
+            </view>
+          </view>
+
+          <!-- 分组操作按钮 -->
+          <view class="group-operations energy-flex energy-mt-24">
+            <view class="operation-btn energy-btn energy-btn-secondary" bindtap="onManageDevices" data-group="{{item}}">
+              <text class="energy-icon">⚙️</text>
+              <text>管理设备</text>
+            </view>
+            <view class="operation-btn energy-btn energy-btn-outline">
+              <text class="energy-icon">📊</text>
+              <text>查看统计</text>
+            </view>
+          </view>
+
+          <!-- 创建时间 -->
+          <view class="group-meta energy-mt-16">
+            <text class="energy-text-tertiary">创建时间：{{item.createdAt}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 添加分组对话框 -->
+<view wx:if="{{showAddDialog}}" class="dialog-overlay" bindtap="onHideAddDialog">
+  <view class="dialog-content energy-glass-card" catchtap="">
+    <view class="dialog-header">
+      <text class="dialog-title energy-title-medium">添加设备分组</text>
+      <view class="dialog-close" bindtap="onHideAddDialog">×</view>
+    </view>
+
+    <view class="dialog-body">
+      <!-- 分组名称 -->
+      <view class="form-group energy-mb-24">
+        <text class="form-label energy-text-primary">分组名称</text>
+        <input class="form-input" placeholder="请输入分组名称" value="{{formData.name}}" bindinput="onFormInput" data-field="name" />
+      </view>
+
+      <!-- 分组描述 -->
+      <view class="form-group energy-mb-24">
+        <text class="form-label energy-text-primary">分组描述</text>
+        <textarea class="form-textarea" placeholder="请输入分组描述（可选）" value="{{formData.description}}" bindinput="onFormInput" data-field="description"></textarea>
+      </view>
+
+      <!-- 图标选择 -->
+      <view class="form-group energy-mb-24">
+        <text class="form-label energy-text-primary">选择图标</text>
+        <view class="icon-selector energy-flex">
+          <view wx:for="{{iconOptions}}" wx:key="value" class="icon-option {{formData.icon === item.value ? 'selected' : ''}}" bindtap="onIconSelect" data-icon="{{item.value}}">
+            <text class="icon-emoji">{{item.icon}}</text>
+            <text class="icon-label">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="dialog-footer energy-flex">
+      <view class="dialog-btn energy-btn energy-btn-secondary" bindtap="onHideAddDialog">取消</view>
+      <view class="dialog-btn energy-btn energy-btn-primary" bindtap="onCreateGroup">创建</view>
+    </view>
+  </view>
+</view>
+
+<!-- 编辑分组对话框 -->
+<view wx:if="{{showEditDialog}}" class="dialog-overlay" bindtap="onHideEditDialog">
+  <view class="dialog-content energy-glass-card" catchtap="">
+    <view class="dialog-header">
+      <text class="dialog-title energy-title-medium">编辑设备分组</text>
+      <view class="dialog-close" bindtap="onHideEditDialog">×</view>
+    </view>
+
+    <view class="dialog-body">
+      <!-- 分组名称 -->
+      <view class="form-group energy-mb-24">
+        <text class="form-label energy-text-primary">分组名称</text>
+        <input class="form-input" placeholder="请输入分组名称" value="{{formData.name}}" bindinput="onFormInput" data-field="name" />
+      </view>
+
+      <!-- 分组描述 -->
+      <view class="form-group energy-mb-24">
+        <text class="form-label energy-text-primary">分组描述</text>
+        <textarea class="form-textarea" placeholder="请输入分组描述（可选）" value="{{formData.description}}" bindinput="onFormInput" data-field="description"></textarea>
+      </view>
+
+      <!-- 图标选择 -->
+      <view class="form-group energy-mb-24">
+        <text class="form-label energy-text-primary">选择图标</text>
+        <view class="icon-selector energy-flex">
+          <view wx:for="{{iconOptions}}" wx:key="value" class="icon-option {{formData.icon === item.value ? 'selected' : ''}}" bindtap="onIconSelect" data-icon="{{item.value}}">
+            <text class="icon-emoji">{{item.icon}}</text>
+            <text class="icon-label">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="dialog-footer energy-flex">
+      <view class="dialog-btn energy-btn energy-btn-secondary" bindtap="onHideEditDialog">取消</view>
+      <view class="dialog-btn energy-btn energy-btn-primary" bindtap="onUpdateGroup">保存</view>
+    </view>
+  </view>
+</view>

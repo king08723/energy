@@ -1,0 +1,211 @@
+
+<view class="container">
+  <!-- 背景装饰 -->
+  <view class="bg-decoration">
+    <view class="bg-circle bg-circle-1"></view>
+    <view class="bg-circle bg-circle-2"></view>
+    <view class="bg-circle bg-circle-3"></view>
+    <view class="bg-circle bg-circle-4"></view>
+    <view class="bg-circle bg-circle-5"></view>
+  </view>
+
+  <!-- 顶部状态栏 - 优化布局 -->
+  <view class="status-bar">
+    <view class="status-left">
+      <view class="time">{{currentTime}}</view>
+      <view class="date">{{currentDate}}</view>
+    </view>
+    <view class="status-right">
+      <view class="weather" bindtap="goToWeather">
+        <!-- 使用更现代的图标字符 -->
+        <text class="weather-icon">☀</text>
+        <text class="weather-temp">{{weather.temperature}}°C</text>
+      </view>
+      <view class="notification" bindtap="goToAlerts">
+        <!-- 使用更简洁的铃铛图标 -->
+        <text class="notification-icon">🔔</text>
+        <view class="notification-badge" wx:if="{{alertCount > 0}}">{{alertCount}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 主标题 - 优化设计 -->
+  <view class="main-title">
+    <view class="title-section">
+      <text class="title-text">路博能源</text>
+      <text class="title-subtitle">智慧能源管理平台</text>
+    </view>
+    <view class="title-actions">
+      <view class="refresh-btn {{isRefreshing ? 'refreshing' : ''}}" bindtap="refreshData">
+        <!-- 使用更现代的刷新图标 -->
+        <text class="refresh-icon">↻</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 总能耗概览卡片 - 优化设计 -->
+  <view class="energy-overview glass-card">
+    <view class="overview-header">
+      <text class="overview-title">今日总能耗</text>
+      <text class="overview-subtitle">实时监控</text>
+    </view>
+    <view class="overview-content" wx:if="{{!loading && overview.totalEnergy}}">
+      <view class="total-energy">
+        <text class="energy-value">{{overview.totalEnergy.value}}</text>
+        <text class="energy-unit">{{overview.totalEnergy.unit}}</text>
+      </view>
+      <view class="energy-trend">
+        <text class="trend-text">较昨日</text>
+        <text class="trend-value {{overview.totalEnergy.trend >= 0 ? 'trend-up' : 'trend-down'}}">
+          {{overview.totalEnergy.trend >= 0 ? '+' : ''}}{{overview.totalEnergy.trend}}%
+        </text>
+      </view>
+    </view>
+    <view class="loading-placeholder" wx:else>
+      <view class="loading-spinner"></view>
+      <text class="loading-text">数据加载中...</text>
+    </view>
+    <!-- 快速操作按钮 -->
+    <view class="overview-actions" wx:if="{{!loading}}">
+      <view class="action-btn" bindtap="goToDetail">
+        <text class="action-text">详情</text>
+      </view>
+      <view class="action-btn" bindtap="goToAnalysis">
+        <text class="action-text">分析</text>
+      </view>
+      <view class="action-btn" bindtap="exportData">
+        <text class="action-text">导出</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 实时数据网格 -->
+  <view class="data-grid" wx:if="{{!loading && monitorData.realTimeData}}">
+    <view class="data-card glass-card" bindtap="goToMonitor">
+      <view class="data-icon power-icon">⚡</view>
+      <view class="data-info">
+        <text class="data-title">实时功率</text>
+        <text class="data-value">{{monitorData.realTimeData.power.value}} {{monitorData.realTimeData.power.unit}}</text>
+      </view>
+      <view class="data-trend {{monitorData.realTimeData.power.trend}}">
+        <text class="trend-arrow">{{monitorData.realTimeData.power.trend === 'up' ? '↗' : monitorData.realTimeData.power.trend === 'down' ? '↘' : '→'}}</text>
+      </view>
+    </view>
+
+    <view class="data-card glass-card" bindtap="goToMonitor">
+      <view class="data-icon water-icon">💧</view>
+      <view class="data-info">
+        <text class="data-title">用水量</text>
+        <text class="data-value">{{monitorData.realTimeData.water.value}} {{monitorData.realTimeData.water.unit}}</text>
+      </view>
+      <view class="data-trend {{monitorData.realTimeData.water.trend}}">
+        <text class="trend-arrow">{{monitorData.realTimeData.water.trend === 'up' ? '↗' : monitorData.realTimeData.water.trend === 'down' ? '↘' : '→'}}</text>
+      </view>
+    </view>
+
+    <view class="data-card glass-card" bindtap="goToMonitor">
+      <view class="data-icon gas-icon">🔥</view>
+      <view class="data-info">
+        <text class="data-title">燃气量</text>
+        <text class="data-value">{{monitorData.realTimeData.gas.value}} {{monitorData.realTimeData.gas.unit}}</text>
+      </view>
+      <view class="data-trend {{monitorData.realTimeData.gas.trend}}">
+        <text class="trend-arrow">{{monitorData.realTimeData.gas.trend === 'up' ? '↗' : monitorData.realTimeData.gas.trend === 'down' ? '↘' : '→'}}</text>
+      </view>
+    </view>
+
+    <view class="data-card glass-card" bindtap="goToMonitor">
+      <view class="data-icon carbon-icon">🌱</view>
+      <view class="data-info">
+        <text class="data-title">碳排放</text>
+        <text class="data-value">{{monitorData.realTimeData.carbon.value}} {{monitorData.realTimeData.carbon.unit}}</text>
+      </view>
+      <view class="data-trend {{monitorData.realTimeData.carbon.trend}}">
+        <text class="trend-arrow">{{monitorData.realTimeData.carbon.trend === 'up' ? '↗' : monitorData.realTimeData.carbon.trend === 'down' ? '↘' : '→'}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 数据加载状态 -->
+  <view class="data-grid loading-grid" wx:else>
+    <view class="data-card glass-card loading-card" wx:for="{{[1,2,3,4]}}" wx:key="*this">
+      <view class="loading-placeholder">
+        <text class="loading-text">加载中...</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 用电负荷曲线 -->
+  <view class="chart-section glass-card">
+    <view class="chart-header">
+      <view class="chart-title-section">
+        <text class="chart-title">今日用电负荷</text>
+      </view>
+      <view class="chart-tabs">
+        <text class="chart-tab {{chartTab === 'today' ? 'active' : ''}}" bindtap="switchChartTab" data-tab="today">今日</text>
+        <text class="chart-tab {{chartTab === 'week' ? 'active' : ''}}" bindtap="switchChartTab" data-tab="week">本周</text>
+      </view>
+    </view>
+    <view class="chart-container">
+      <canvas class="chart-canvas" canvas-id="powerChart" id="powerChart" type="2d" disable-scroll="true" wx:if="{{chartData && !loading}}"></canvas>
+      <view class="chart-loading" wx:else>
+        <text class="loading-text">图表数据加载中...</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设备告警概览 -->
+  <view class="alert-section glass-card" bindtap="goToAlerts">
+    <view class="alert-header">
+      <text class="alert-title">设备告警</text>
+      <text class="alert-count" wx:if="{{!loading}}">{{alertCount}}条未处理</text>
+      <text class="alert-count" wx:else>加载中...</text>
+    </view>
+    <view class="alert-list" wx:if="{{!loading && alertCount > 0}}">
+      <view class="alert-item" wx:for="{{recentAlerts}}" wx:key="id">
+        <view class="alert-dot {{item.level}}"></view>
+        <text class="alert-text">{{item.message}}</text>
+        <text class="alert-time">{{item.createdAt}}</text>
+      </view>
+    </view>
+    <view class="no-alert" wx:elif="{{!loading && alertCount === 0}}">
+      <text class="no-alert-text">暂无告警信息</text>
+      <text class="no-alert-icon">✅</text>
+    </view>
+    <view class="loading-placeholder" wx:else>
+      <text class="loading-text">告警数据加载中...</text>
+    </view>
+  </view>
+
+  <!-- 快捷控制区域 -->
+  <view class="quick-control glass-card">
+    <view class="control-header">
+      <text class="control-title">快捷控制</text>
+      <text class="control-subtitle">一键操作</text>
+    </view>
+    <view class="control-grid">
+      <view class="control-item" bindtap="quickSaveEnergy">
+        <view class="control-icon save-icon">💡</view>
+        <text class="control-text">节能模式</text>
+      </view>
+      <view class="control-item" bindtap="goToSceneMode">
+        <view class="control-icon scene-icon">🏢</view>
+        <text class="control-text">场景模式</text>
+      </view>
+      <view class="control-item" bindtap="goToDevices">
+        <view class="control-icon device-icon">📱</view>
+        <text class="control-text">设备管理</text>
+      </view>
+      <view class="control-item" bindtap="goToData">
+        <view class="control-icon report-icon">📊</view>
+        <text class="control-text">数据报告</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部导航提示 -->
+  <view class="bottom-tip">
+    <text class="tip-text">上滑查看更多功能</text>
+    <text class="tip-arrow">↑</text>
+  </view>
+</view>

@@ -1,0 +1,7 @@
+<!--pages/saving/saving.wxml-->
+<view class="container">
+  <view class="title">节能页面</view>
+  <view class="content">
+    <text>这里是节能页面的内容</text>
+  </view>
+</view>

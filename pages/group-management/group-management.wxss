@@ -1,0 +1,355 @@
+/* pages/group-management/group-management.wxss */
+/* 设备分组管理页面样式 */
+
+@import '/styles/design-system.wxss';
+
+/* 分组列表样式 */
+.group-list {
+  width: 100%;
+}
+
+/* 分组卡片样式 */
+.group-card {
+  padding: 32rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(0, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10rpx);
+  transition: all 0.3s ease;
+}
+
+.group-card:hover {
+  border-color: rgba(0, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* 分组头部信息 */
+.group-header {
+  align-items: flex-start;
+}
+
+.group-info {
+  flex: 1;
+  align-items: flex-start;
+}
+
+.group-icon {
+  font-size: 48rpx;
+  margin-right: 24rpx;
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 255, 255, 0.1);
+  border-radius: 12rpx;
+}
+
+.group-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.group-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+  color: #ffffff;
+}
+
+.group-description {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+}
+
+/* 分组操作按钮 */
+.group-actions {
+  gap: 16rpx;
+}
+
+.action-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  transition: all 0.3s ease;
+}
+
+.action-btn:active {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.95);
+}
+
+/* 分组统计信息 */
+.group-stats {
+  gap: 48rpx;
+  padding: 24rpx 0;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #00ffff;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* 分组操作按钮 */
+.group-operations {
+  gap: 24rpx;
+}
+
+.operation-btn {
+  flex: 1;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  font-size: 24rpx;
+  border-radius: 12rpx;
+}
+
+/* 分组元信息 */
+.group-meta {
+  padding-top: 16rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.05);
+  text-align: right;
+}
+
+/* 对话框样式 */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 32rpx;
+}
+
+.dialog-content {
+  width: 100%;
+  max-width: 600rpx;
+  max-height: 80vh;
+  background: rgba(26, 26, 46, 0.95);
+  backdrop-filter: blur(20rpx);
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(0, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+/* 对话框头部 */
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 32rpx 24rpx;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.dialog-title {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.dialog-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.dialog-close:active {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.9);
+}
+
+/* 对话框主体 */
+.dialog-body {
+  padding: 32rpx;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* 表单样式 */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #ffffff;
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+
+.form-input,
+.form-textarea {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1rpx solid rgba(255, 255, 255, 0.2);
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: #00ffff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.form-textarea {
+  min-height: 120rpx;
+  resize: none;
+}
+
+/* 图标选择器 */
+.icon-selector {
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.icon-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1rpx solid rgba(255, 255, 255, 0.2);
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
+  min-width: 120rpx;
+}
+
+.icon-option.selected {
+  background: rgba(0, 255, 255, 0.2);
+  border-color: #00ffff;
+}
+
+.icon-option:active {
+  transform: scale(0.95);
+}
+
+.icon-emoji {
+  font-size: 32rpx;
+  margin-bottom: 8rpx;
+}
+
+.icon-label {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+}
+
+/* 对话框底部 */
+.dialog-footer {
+  padding: 24rpx 32rpx 32rpx;
+  gap: 24rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.dialog-btn {
+  flex: 1;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
+}
+
+/* 空状态样式 */
+.energy-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 32rpx;
+  text-align: center;
+}
+
+.energy-empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 32rpx;
+  opacity: 0.6;
+}
+
+/* 加载状态样式 */
+.energy-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 32rpx;
+}
+
+.energy-loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid rgba(0, 255, 255, 0.2);
+  border-top: 4rpx solid #00ffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 响应式适配 */
+@media (max-width: 750rpx) {
+  .group-stats {
+    gap: 24rpx;
+  }
+  
+  .stat-value {
+    font-size: 32rpx;
+  }
+  
+  .operation-btn {
+    font-size: 22rpx;
+  }
+  
+  .dialog-content {
+    margin: 16rpx;
+  }
+}

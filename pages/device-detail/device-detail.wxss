@@ -1,0 +1,366 @@
+/* pages/device-detail/device-detail.wxss */
+@import "../../styles/design-system.wxss";
+
+/* 设备图标 */
+.device-icon-large {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+  font-size: 40rpx;
+}
+
+.device-icon-large.power {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+}
+
+.device-icon-large.water {
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+}
+
+.device-icon-large.gas {
+  background: linear-gradient(135deg, #fdcb6e, #e17055);
+}
+
+.device-icon-large.carbon {
+  background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+}
+
+/* 设备基本信息 */
+.device-basic-info {
+  flex: 1;
+}
+
+/* 告警横幅 */
+.alert-banner {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-top: 24rpx;
+}
+
+/* 控制区域 */
+.control-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 24rpx;
+}
+
+.control-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 120rpx;
+  transition: all 0.3s ease;
+}
+
+.control-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.95);
+}
+
+/* 时间筛选器 */
+.time-filter {
+  padding: 12rpx 24rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-left: 16rpx;
+  transition: all 0.3s ease;
+}
+
+.time-filter.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.time-filter:first-child {
+  margin-left: 0;
+}
+
+/* 图表容器 */
+.chart-container {
+  height: 300rpx;
+  border-radius: 16rpx;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-placeholder {
+  text-align: center;
+}
+
+/* 自动化规则 */
+.automation-rules {
+  space-y: 16rpx;
+}
+
+.rule-item {
+  padding: 24rpx;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.rule-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 设备信息列表 */
+.device-info-list {
+  space-y: 16rpx;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+/* 开关样式 */
+.energy-switch {
+  transform: scale(0.8);
+}
+
+/* 滑块样式 */
+.energy-slider {
+  margin: 16rpx 0;
+}
+@import '/styles/design-system.wxss';
+
+/* 设备状态信息 */
+.device-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid rgba(0, 255, 255, 0.1);
+}
+
+.status-item:last-child {
+  border-bottom: none;
+}
+
+.status-value {
+  font-weight: bold;
+}
+
+/* 设备控制面板 */
+.control-section {
+  margin-bottom: 32rpx;
+}
+
+.control-section:last-child {
+  margin-bottom: 0;
+}
+
+.device-switch {
+  transform: scale(0.8);
+}
+
+/* 运行模式选择器 */
+.mode-selector {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.mode-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  border-radius: 12rpx;
+  border: 2rpx solid transparent;
+  background: rgba(0, 255, 255, 0.05);
+  transition: all 0.3s ease;
+  min-width: 120rpx;
+}
+
+.mode-active {
+  border-color: var(--color-primary);
+  background: rgba(0, 255, 255, 0.15);
+}
+
+.mode-inactive {
+  border-color: rgba(0, 255, 255, 0.2);
+}
+
+.mode-icon {
+  font-size: 32rpx;
+  margin-bottom: 8rpx;
+}
+
+.mode-text {
+  font-size: 20rpx;
+  color: var(--color-text-primary);
+}
+
+/* 参数控制 */
+.parameter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.parameter-item {
+  padding: 16rpx 0;
+}
+
+.parameter-slider {
+  width: 100%;
+  margin-top: 16rpx;
+}
+
+/* 实时数据图标 */
+.data-icon {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  margin-right: 16rpx;
+}
+
+/* 定时任务列表 */
+.timer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.timer-item {
+  padding: 20rpx;
+  border-radius: 12rpx;
+  background: rgba(0, 255, 255, 0.05);
+  border: 1rpx solid rgba(0, 255, 255, 0.1);
+}
+
+/* 故障信息 */
+.fault-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.fault-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1rpx solid rgba(255, 107, 107, 0.2);
+}
+
+.fault-icon {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+}
+
+.fault-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+/* 快捷操作 */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 16rpx;
+  border-radius: 12rpx;
+  background: rgba(0, 255, 255, 0.05);
+  border: 1rpx solid rgba(0, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.action-item:active {
+  transform: scale(0.95);
+  background: rgba(0, 255, 255, 0.1);
+}
+
+.action-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  margin-bottom: 12rpx;
+}
+
+.action-item text {
+  font-size: 22rpx;
+  text-align: center;
+}
+
+/* 空状态样式 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.empty-state text:first-child {
+  font-size: 48rpx;
+  margin-bottom: 16rpx;
+  opacity: 0.6;
+}
+
+/* 响应式调整 */
+@media (max-width: 750rpx) {
+  .quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .mode-selector {
+    justify-content: space-between;
+  }
+  
+  .mode-item {
+    flex: 1;
+    min-width: 100rpx;
+  }
+}

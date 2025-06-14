@@ -1,0 +1,185 @@
+<!--pages/device-detail/device-detail.wxml-->
+<view class="energy-container">
+  <!-- 背景装饰 -->
+  <view class="energy-bg-decoration">
+    <view class="energy-bg-circle" style="width: 180rpx; height: 180rpx; top: 15%; right: -40rpx; animation-delay: 0s; opacity: 0.5;"></view>
+    <view class="energy-bg-circle" style="width: 120rpx; height: 120rpx; top: 70%; left: -20rpx; animation-delay: 3s; opacity: 0.4;"></view>
+    <view class="energy-bg-circle" style="width: 90rpx; height: 90rpx; top: 45%; right: 15%; animation-delay: 6s; opacity: 0.3;"></view>
+  </view>
+  
+  <!-- 设备基本信息 -->
+  <view class="energy-glass-card energy-p-32">
+    <view class="energy-flex energy-flex-between energy-mb-24">
+      <view class="energy-flex">
+        <view class="device-icon-large {{deviceInfo.type}}">
+          <text class="energy-icon-text">{{deviceInfo.icon}}</text>
+        </view>
+        <view class="device-basic-info">
+          <text class="energy-title-large energy-mb-8">{{deviceInfo.name}}</text>
+          <text class="energy-text-tertiary energy-text-small">{{deviceInfo.type}} · {{deviceInfo.location}}</text>
+          <view class="energy-flex energy-mt-8">
+            <view class="energy-status-dot {{deviceInfo.status}}">
+              <text class="energy-text-small">{{deviceInfo.statusText}}</text>
+            </view>
+            <text class="energy-text-tertiary energy-text-small energy-ml-16">更新于 {{deviceInfo.lastUpdate}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="energy-icon" bindtap="onDeviceMenu">
+        <text class="energy-icon-text">⋯</text>
+      </view>
+    </view>
+
+    <!-- 告警信息 -->
+    <view class="alert-banner" wx:if="{{deviceInfo.alerts && deviceInfo.alerts.length > 0}}">
+      <view class="energy-flex">
+        <text class="energy-icon-text energy-text-warning energy-mr-12">⚠️</text>
+        <view class="energy-flex-1">
+          <text class="energy-text-warning energy-text-medium energy-font-medium">设备告警</text>
+          <text class="energy-text-warning energy-text-small energy-mt-4">{{deviceInfo.alerts[0].message}}</text>
+        </view>
+        <view class="energy-btn energy-btn-outline energy-btn-small" bindtap="onViewAlerts">
+          <text>查看</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 设备控制 -->
+  <view class="energy-glass-card energy-p-24" wx:if="{{deviceInfo.status === 'online'}}">
+    <text class="energy-title-medium energy-mb-16">设备控制</text>
+    
+    <!-- 开关控制 -->
+    <view class="control-section energy-mb-24">
+      <view class="energy-flex energy-flex-between energy-mb-16">
+        <text class="energy-text-primary energy-text-medium">设备开关</text>
+        <switch class="energy-switch" checked="{{deviceInfo.isOn}}" bindchange="onSwitchChange" />
+      </view>
+      
+      <!-- 功率调节 -->
+      <view class="energy-flex energy-flex-between energy-mb-16" wx:if="{{deviceInfo.supportPowerControl}}">
+        <text class="energy-text-primary energy-text-medium">功率调节</text>
+        <text class="energy-text-secondary energy-text-small">{{deviceInfo.powerLevel}}%</text>
+      </view>
+      <slider class="energy-slider" wx:if="{{deviceInfo.supportPowerControl}}"
+              value="{{deviceInfo.powerLevel}}"
+              min="0" max="100" step="10"
+              bindchange="onPowerChange" />
+    </view>
+
+    <!-- 快捷控制按钮 -->
+    <view class="energy-grid-3">
+      <view class="control-btn" bindtap="onQuickControl" data-action="restart">
+        <text class="energy-icon-text energy-mb-8">🔄</text>
+        <text class="energy-text-small">重启</text>
+      </view>
+      <view class="control-btn" bindtap="onQuickControl" data-action="reset">
+        <text class="energy-icon-text energy-mb-8">🔧</text>
+        <text class="energy-text-small">重置</text>
+      </view>
+      <view class="control-btn" bindtap="onQuickControl" data-action="optimize">
+        <text class="energy-icon-text energy-mb-8">⚡</text>
+        <text class="energy-text-small">优化</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 实时数据 -->
+  <view class="energy-glass-card energy-p-24">
+    <view class="energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">实时数据</text>
+      <view class="energy-btn energy-btn-outline energy-btn-small" bindtap="onRefreshData">
+        <text>刷新</text>
+      </view>
+    </view>
+    
+    <view class="energy-grid-2">
+      <view class="energy-data-card" wx:for="{{deviceInfo.realTimeData}}" wx:key="key">
+        <text class="energy-text-tertiary energy-text-small">{{item.label}}</text>
+        <text class="energy-title-medium energy-text-primary">{{item.value}}</text>
+        <text class="energy-text-tertiary energy-text-small">{{item.unit}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 历史数据图表 -->
+  <view class="energy-glass-card energy-p-24">
+    <view class="energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">历史数据</text>
+      <view class="energy-flex">
+        <view class="time-filter {{timeFilter === '1h' ? 'active' : ''}}" data-filter="1h" bindtap="onTimeFilterChange">
+          <text>1小时</text>
+        </view>
+        <view class="time-filter {{timeFilter === '24h' ? 'active' : ''}}" data-filter="24h" bindtap="onTimeFilterChange">
+          <text>24小时</text>
+        </view>
+        <view class="time-filter {{timeFilter === '7d' ? 'active' : ''}}" data-filter="7d" bindtap="onTimeFilterChange">
+          <text>7天</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 简化的图表展示 -->
+    <view class="chart-container">
+      <view class="chart-placeholder">
+        <text class="energy-icon-text energy-text-large energy-mb-16">📊</text>
+        <text class="energy-text-tertiary energy-text-small">{{timeFilter}}数据图表</text>
+        <text class="energy-text-tertiary energy-text-small energy-mt-8">点击查看详细分析</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 自动化规则 -->
+  <view class="energy-glass-card energy-p-24">
+    <view class="energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">自动化规则</text>
+      <view class="energy-btn energy-btn-outline energy-btn-small" bindtap="onAddRule">
+        <text>添加</text>
+      </view>
+    </view>
+    
+    <view class="automation-rules" wx:if="{{deviceInfo.automationRules && deviceInfo.automationRules.length > 0}}">
+      <view class="rule-item" wx:for="{{deviceInfo.automationRules}}" wx:key="id">
+        <view class="energy-flex energy-flex-between">
+          <view class="energy-flex-1">
+            <text class="energy-text-primary energy-text-medium energy-font-medium">{{item.name}}</text>
+            <text class="energy-text-tertiary energy-text-small energy-mt-4">{{item.description}}</text>
+          </view>
+          <switch class="energy-switch" checked="{{item.enabled}}" 
+                  data-rule="{{item.id}}" bindchange="onRuleToggle" />
+        </view>
+      </view>
+    </view>
+    
+    <view class="energy-empty-state" wx:else>
+      <text class="energy-icon-text energy-text-large energy-mb-16">🤖</text>
+      <text class="energy-text-tertiary energy-text-small">暂无自动化规则</text>
+    </view>
+  </view>
+  
+  <!-- 设备信息 -->
+  <view class="energy-glass-card energy-p-24">
+    <text class="energy-title-medium energy-mb-16">设备信息</text>
+    
+    <view class="device-info-list">
+      <view class="info-item" wx:for="{{deviceInfo.specifications}}" wx:key="key">
+        <text class="energy-text-tertiary energy-text-small">{{item.label}}</text>
+        <text class="energy-text-primary energy-text-medium">{{item.value}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 操作按钮 -->
+  <view class="energy-glass-card energy-p-24">
+    <view class="energy-grid-2">
+      <view class="energy-btn energy-btn-outline" bindtap="onEditDevice">
+        <text class="energy-icon-text energy-mr-8">✏️</text>
+        <text>编辑设备</text>
+      </view>
+      <view class="energy-btn energy-btn-outline" bindtap="onDeviceSettings">
+        <text class="energy-icon-text energy-mr-8">⚙️</text>
+        <text>设备设置</text>
+      </view>
+    </view>
+  </view>
+</view>

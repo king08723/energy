@@ -1,0 +1,10 @@
+<view class="container">
+  <view class="page-title">登录/注册</view>
+  <view class="content">
+    <!-- 手机号登录/注册 -->
+    <!-- 微信授权登录 -->
+    <!-- 验证码输入 -->
+    <!-- 密码设置 -->
+    <!-- 用户协议与隐私政策 -->
+  </view>
+</view>

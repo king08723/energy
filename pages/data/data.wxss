@@ -1,0 +1,1002 @@
+/* pages/data/data.wxss */
+@import "../../styles/design-system.wxss";
+
+/* 覆盖设计系统中的标题样式，使用首页的标题样式 */
+.energy-title-small, .energy-title-medium {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1e293b;
+  text-shadow: 0 2rpx 6rpx rgba(59, 130, 246, 0.1);
+  /* 添加渐变背景效果，与首页chart-title保持一致 */
+  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 1rpx;
+}
+
+/* 页面标题稍大一些 */
+.energy-title-medium {
+  font-size: 36rpx;
+}
+
+/* 页面容器 */
+.container {
+  position: relative;
+  min-height: 100vh;
+  /* 现代高级浅色背景渐变，参考首页样式 */
+  background: linear-gradient(135deg, 
+    #f8fafc 0%, 
+    #f1f5f9 25%, 
+    #e2e8f0 50%, 
+    #cbd5e1 75%, 
+    #f8fafc 100%);
+  /* 添加微妙的纹理效果 */
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+  padding: 32rpx 24rpx;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  max-width: 750rpx;
+  margin: 0 auto;
+}
+
+/* 页面内快速导航栏 */
+.page-nav-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 16rpx;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 24rpx;
+}
+
+.page-nav-scroll {
+  display: flex;
+  overflow-x: auto;
+  padding: 16rpx;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.page-nav-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.page-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  min-width: 120rpx;
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
+}
+
+.page-nav-item.active {
+  background: linear-gradient(135deg, rgba(0, 120, 255, 0.2), rgba(0, 200, 255, 0.1));
+  box-shadow: 0 4rpx 12rpx rgba(0, 150, 255, 0.2);
+}
+
+.nav-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  margin-bottom: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.nav-icon.overview {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  box-shadow: 0 4rpx 8rpx rgba(52, 152, 219, 0.4);
+}
+
+.nav-icon.trend {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  box-shadow: 0 4rpx 8rpx rgba(46, 204, 113, 0.4);
+}
+
+.nav-icon.compare {
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  box-shadow: 0 4rpx 8rpx rgba(155, 89, 182, 0.4);
+}
+
+.nav-icon.report {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  box-shadow: 0 4rpx 8rpx rgba(231, 76, 60, 0.4);
+}
+
+.nav-text {
+  font-size: 24rpx;
+  color: var(--energy-text-primary);
+}
+
+/* 时间范围选择器 */
+.time-selector-container {
+  width: 100%;
+}
+
+.time-tabs {
+  display: flex;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12rpx;
+  padding: 8rpx;
+  margin-bottom: 24rpx;
+}
+
+.time-tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: var(--energy-text-secondary);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.time-tab.active {
+  background: linear-gradient(135deg, var(--energy-primary), var(--energy-secondary));
+  color: var(--energy-text-primary);
+  box-shadow: 0 4rpx 12rpx rgba(0, 255, 255, 0.3);
+}
+
+.time-tab-hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.98);
+}
+
+/* 自定义时间选择器 */
+.custom-time-picker {
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12rpx;
+  padding: 24rpx;
+  border: 1rpx solid rgba(0, 200, 255, 0.2);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 24rpx;
+}
+
+.picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.picker-row:last-child {
+  margin-bottom: 0;
+}
+
+.picker-label {
+  font-size: 28rpx;
+  color: var(--energy-text-secondary);
+  min-width: 120rpx;
+}
+
+.date-picker {
+  flex: 1;
+  margin-left: 24rpx;
+}
+
+.picker-value {
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.3);
+  border: 1rpx solid rgba(0, 200, 255, 0.3);
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  color: var(--energy-text-primary);
+  text-align: center;
+}
+
+/* 应用按钮 */
+.apply-button {
+  background: linear-gradient(135deg, var(--energy-primary), var(--energy-secondary));
+  color: var(--energy-text-primary);
+  border-radius: 8rpx;
+  padding: 16rpx 32rpx;
+  font-size: 28rpx;
+  text-align: center;
+  margin-top: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 200, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.apply-button-hover {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(0, 200, 255, 0.2);
+}
+
+/* 快捷操作区域 */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16rpx;
+  border: 1px solid rgba(100, 200, 255, 0.2);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.quick-action-hover {
+  transform: scale(0.98);
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8rpx 16rpx rgba(0, 150, 255, 0.2);
+}
+
+.action-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16rpx;
+}
+
+.action-icon.saving {
+  background: linear-gradient(135deg, #f1c40f, #f39c12);
+  box-shadow: 0 4rpx 8rpx rgba(241, 196, 15, 0.4);
+}
+
+.action-icon.alerts {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  box-shadow: 0 4rpx 8rpx rgba(231, 76, 60, 0.4);
+}
+
+.action-icon.devices {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  box-shadow: 0 4rpx 8rpx rgba(52, 152, 219, 0.4);
+}
+
+.action-icon.report {
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  box-shadow: 0 4rpx 8rpx rgba(155, 89, 182, 0.4);
+}
+
+.action-title {
+  font-size: 28rpx;
+  text-align: center;
+}
+
+/* 能耗概览 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.section-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.refresh-btn, .help-btn {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.btn-hover {
+  transform: scale(0.9);
+  opacity: 0.8;
+}
+
+.overview-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  margin-bottom: 32rpx;
+}
+
+.overview-scroll-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.energy-overview-row {
+  display: flex;
+  gap: 24rpx;
+  padding: 8rpx 4rpx;
+}
+
+.overview-item {
+  min-width: 200rpx;
+  flex: 0 0 auto;
+  display: flex;
+  padding: 16rpx;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16rpx;
+  border: 1px solid rgba(100, 200, 255, 0.2);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.overview-item-hover {
+  transform: scale(0.98);
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8rpx 16rpx rgba(0, 150, 255, 0.2);
+}
+
+.overview-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+}
+
+.overview-icon.electricity {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  box-shadow: 0 4rpx 8rpx rgba(255, 215, 0, 0.3);
+}
+
+.overview-icon.water {
+  background: linear-gradient(135deg, #00BFFF, #1E90FF);
+  box-shadow: 0 4rpx 8rpx rgba(0, 191, 255, 0.3);
+}
+
+.overview-icon.gas {
+  background: linear-gradient(135deg, #FF6347, #FF4500);
+  box-shadow: 0 4rpx 8rpx rgba(255, 99, 71, 0.3);
+}
+
+.overview-icon.carbon {
+  background: linear-gradient(135deg, #32CD32, #228B22);
+  box-shadow: 0 4rpx 8rpx rgba(50, 205, 50, 0.3);
+}
+
+.overview-icon .icon {
+  font-size: 32rpx;
+}
+
+.overview-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.overview-label {
+  font-size: 24rpx;
+  margin-bottom: 4rpx;
+}
+
+.overview-value {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 4rpx;
+}
+
+.overview-change {
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.overview-change.positive {
+  color: #32CD32;
+}
+
+.overview-change.negative {
+  color: #FF6347;
+}
+
+/* 迷你趋势图 */
+.mini-trend-container {
+  height: 24rpx;
+  width: 80rpx;
+  margin-top: 8rpx;
+  position: relative;
+}
+
+.mini-trend {
+  height: 100%;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.mini-trend.positive {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 24' preserveAspectRatio='none'%3E%3Cpath d='M0,24 L10,18 L20,20 L30,16 L40,12 L50,8 L60,6 L70,2 L80,0' stroke='%2332CD32' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+}
+
+.mini-trend.negative {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 24' preserveAspectRatio='none'%3E%3Cpath d='M0,0 L10,4 L20,2 L30,6 L40,10 L50,14 L60,18 L70,20 L80,24' stroke='%23FF6347' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+}
+
+/* 趋势图表区域 */
+.trend-section {
+  margin-top: 32rpx;
+  border-top: 1px solid rgba(100, 200, 255, 0.2);
+  padding-top: 24rpx;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.data-type-selector {
+  display: flex;
+  gap: 8rpx;
+  margin-right: 16rpx;
+}
+
+.data-type-btn {
+  padding: 8rpx 16rpx;
+  font-size: 24rpx;
+  border-radius: 8rpx;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--energy-text-secondary);
+  transition: all 0.3s ease;
+}
+
+.data-type-btn.active {
+  background: linear-gradient(135deg, var(--energy-primary), var(--energy-secondary));
+  color: var(--energy-text-primary);
+  box-shadow: 0 4rpx 12rpx rgba(0, 200, 255, 0.3);
+}
+
+.chart-type-selector {
+  display: flex;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8rpx;
+  padding: 4rpx;
+}
+
+.chart-type-btn {
+  padding: 12rpx 16rpx;
+  border-radius: 6rpx;
+  font-size: 24rpx;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.chart-type-btn.active {
+  background: linear-gradient(135deg, var(--energy-primary), var(--energy-secondary));
+  box-shadow: 0 2rpx 8rpx rgba(0, 200, 255, 0.3);
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 400rpx;
+  margin-bottom: 16rpx;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.energy-chart {
+  width: 100%;
+  height: 100%;
+  border-radius: 12rpx;
+}
+
+.chart-tooltip {
+  position: absolute;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(100, 200, 255, 0.3);
+  border-radius: 8rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  padding: 12rpx;
+  pointer-events: none;
+  z-index: 10;
+  color: var(--energy-text-secondary);
+}
+
+.tooltip-date {
+  font-size: 24rpx;
+  color: var(--energy-text-secondary);
+  margin-bottom: 4rpx;
+}
+
+.tooltip-value {
+  font-size: 28rpx;
+  color: var(--energy-text-primary);
+  font-weight: 500;
+}
+
+.chart-loading,
+.chart-empty {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  border-radius: 12rpx;
+}
+
+.loading-spinner {
+  width: 40rpx;
+  height: 40rpx;
+  border: 3rpx solid rgba(0, 200, 255, 0.3);
+  border-top: 3rpx solid var(--energy-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-icon {
+  font-size: 48rpx;
+  margin-bottom: 16rpx;
+  opacity: 0.5;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 32rpx;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  cursor: pointer;
+}
+
+.legend-color {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.legend-color.electricity {
+  background: #FFD700;
+}
+
+.legend-color.water {
+  background: #00BFFF;
+}
+
+.legend-color.gas {
+  background: #FF6347;
+}
+
+.legend-color.disabled {
+  opacity: 0.3;
+}
+
+.legend-label {
+  font-size: 24rpx;
+  color: var(--energy-text-secondary);
+}
+
+/* 图表缩放控制 */
+.chart-zoom-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8rpx;
+  margin-top: 8rpx;
+}
+
+.zoom-btn {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 8rpx;
+  /* 半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 对比分析样式 */
+.compare-type-selector {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.compare-type-btn {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 24rpx;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border: 1rpx solid rgba(0, 200, 255, 0.2);
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: var(--energy-text-secondary);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.compare-type-btn.active {
+  background: linear-gradient(135deg, var(--energy-primary), var(--energy-secondary));
+  color: var(--energy-text-primary);
+  border-color: var(--energy-primary);
+  box-shadow: 0 4rpx 12rpx rgba(0, 200, 255, 0.3);
+}
+
+.compare-results {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.compare-item {
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12rpx;
+  padding: 20rpx;
+  border: 1rpx solid rgba(0, 200, 255, 0.2);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.compare-item-hover {
+  transform: scale(0.98);
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8rpx 16rpx rgba(0, 150, 255, 0.2);
+}
+
+.compare-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.compare-title {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.compare-change {
+  font-size: 24rpx;
+  font-weight: 600;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+.compare-change.positive {
+  color: #32CD32;
+  background: rgba(50, 205, 50, 0.1);
+}
+
+.compare-change.negative {
+  color: #FF6347;
+  background: rgba(255, 99, 71, 0.1);
+}
+
+.compare-values {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.compare-value {
+  text-align: center;
+}
+
+.value-label {
+  font-size: 24rpx;
+  color: var(--energy-text-secondary);
+  margin-bottom: 4rpx;
+}
+
+.value-number {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--energy-text-primary);
+}
+
+.compare-bar {
+  height: 8rpx;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+
+.bar-bg {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4rpx;
+  transition: width 0.5s ease;
+}
+
+.bar-fill.positive {
+  background: linear-gradient(90deg, #32CD32, #228B22);
+}
+
+.bar-fill.negative {
+  background: linear-gradient(90deg, #FF6347, #FF4500);
+}
+
+/* 报告生成 - 折叠面板 */
+.collapsible-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding-bottom: 16rpx;
+}
+
+.collapse-icon {
+  font-size: 24rpx;
+  transition: transform 0.3s ease;
+}
+
+.collapse-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.collapsible-content {
+  padding-top: 16rpx;
+  border-top: 1px solid rgba(100, 150, 200, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.report-type-selector {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.report-type-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 16rpx;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border: 1rpx solid rgba(0, 200, 255, 0.2);
+  border-radius: 12rpx;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.report-type-item.active {
+  background: linear-gradient(135deg, var(--energy-primary), var(--energy-secondary));
+  border-color: var(--energy-primary);
+  box-shadow: 0 4rpx 12rpx rgba(0, 200, 255, 0.3);
+}
+
+.report-type-hover {
+  transform: scale(0.98);
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8rpx 16rpx rgba(0, 150, 255, 0.2);
+}
+
+.report-icon {
+  font-size: 32rpx;
+  margin-bottom: 8rpx;
+}
+
+.report-name {
+  font-size: 24rpx;
+  color: var(--energy-text-secondary);
+}
+
+.report-type-item.active .report-name {
+  color: var(--energy-text-primary);
+}
+
+.report-format-selector {
+  margin-bottom: 24rpx;
+}
+
+.format-label {
+  font-size: 24rpx;
+  margin-bottom: 8rpx;
+}
+
+.format-options {
+  display: flex;
+  gap: 16rpx;
+}
+
+.format-option {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 24rpx;
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  border: 1rpx solid rgba(0, 200, 255, 0.2);
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: var(--energy-text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.format-option.active {
+  background: linear-gradient(135deg, var(--energy-primary), var(--energy-secondary));
+  color: var(--energy-text-primary);
+  border-color: var(--energy-primary);
+  box-shadow: 0 4rpx 12rpx rgba(0, 200, 255, 0.3);
+}
+
+.format-option-hover {
+  transform: scale(0.98);
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8rpx 16rpx rgba(0, 150, 255, 0.2);
+}
+
+.report-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.energy-btn {
+  flex: 1;
+  padding: 20rpx 32rpx;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.energy-btn-primary {
+  background: linear-gradient(135deg, var(--energy-primary), var(--energy-secondary));
+  color: var(--energy-text-primary);
+  box-shadow: 0 4rpx 12rpx rgba(0, 255, 255, 0.3);
+}
+
+.energy-btn-primary:hover {
+  box-shadow: 0 6rpx 16rpx rgba(0, 200, 255, 0.4);
+  transform: translateY(-2rpx);
+}
+
+.energy-btn-secondary {
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--energy-text-secondary);
+  border: 1rpx solid rgba(0, 200, 255, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.energy-btn-secondary:hover {
+  /* 更改为半透明浅色背景 */
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(0, 200, 255, 0.5);
+  box-shadow: 0 6rpx 16rpx rgba(0, 150, 255, 0.2);
+}
+
+.energy-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 浮动操作按钮 */
+.floating-action-button {
+  position: fixed;
+  bottom: 48rpx;
+  right: 48rpx;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0, 120, 255, 0.8), rgba(0, 200, 255, 0.6));
+  box-shadow: 0 8rpx 16rpx rgba(0, 150, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.floating-action-button:active {
+  transform: scale(0.9);
+  box-shadow: 0 4rpx 8rpx rgba(0, 150, 255, 0.4);
+}
+
+.fab-icon {
+  font-size: 48rpx;
+  color: #ffffff;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .energy-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .time-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .time-tab {
+    min-width: 80rpx;
+  }
+  
+  .report-type-selector {
+    flex-direction: column;
+  }
+  
+  .report-actions {
+    flex-direction: column;
+  }
+  
+  .compare-results {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}

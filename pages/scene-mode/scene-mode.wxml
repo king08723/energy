@@ -1,0 +1,8 @@
+<view class="container">
+  <view class="page-title">场景模式管理</view>
+  <view class="content">
+    <!-- 场景模式列表（生产模式、非生产模式、上课模式等） -->
+    <!-- 场景模式编辑（包含设备、运行参数） -->
+    <!-- 场景模式一键切换 -->
+  </view>
+</view>

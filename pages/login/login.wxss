@@ -1,0 +1,14 @@
+/* pages/login/login.wxss */
+.container {
+  padding: 20rpx;
+}
+
+.page-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+}
+
+.content {
+  /* 页面内容样式 */
+}

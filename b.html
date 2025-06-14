@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add Device</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --primary-color: #2563EB;--secondary-color: #F3F4F6;--text-primary: #1F2937;--text-secondary: #6B7280;--accent-color: #10B981;}
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--secondary-color);
+        }
+        .material-icons {
+            font-family: 'Material Icons';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        .icon-lg {
+            font-size: 28px;
+        }
+        .icon-xl {
+            font-size: 40px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-[var(--text-primary)]">
+<div class="container mx-auto px-4 pt-6 pb-16 max-w-md min-h-screen">
+<header class="flex justify-between items-center mb-10">
+<button class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+<span class="material-icons text-gray-600">arrow_back_ios_new</span>
+</button>
+<h1 class="text-lg font-semibold text-[var(--text-primary)]">添加设备</h1>
+<div class="flex items-center space-x-1">
+<button class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+<span class="material-icons text-gray-600">more_horiz</span>
+</button>
+<button class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+<span class="material-icons text-gray-600">sensors</span>
+</button>
+</div>
+</header>
+<section class="mb-10">
+<h2 class="text-3xl font-bold text-[var(--primary-color)] mb-2">添加新设备</h2>
+<p class="text-[var(--text-secondary)] text-sm">选择一种便捷的方式连接并管理您的智能设备。</p>
+</section>
+<section class="mb-12">
+<h3 class="text-base font-medium text-[var(--text-secondary)] mb-4">选择添加方式</h3>
+<div class="space-y-3">
+<div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+<div class="flex items-center space-x-4">
+<div class="p-3 bg-blue-100 rounded-full">
+<span class="material-icons text-[var(--primary-color)] icon-lg">qr_code_scanner</span>
+</div>
+<div>
+<h4 class="font-semibold text-[var(--text-primary)] text-base">扫码添加</h4>
+<p class="text-xs text-[var(--text-secondary)]">扫描设备上的二维码快速配网</p>
+</div>
+<span class="material-icons text-gray-400 ml-auto">chevron_right</span>
+</div>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+<div class="flex items-center space-x-4">
+<div class="p-3 bg-emerald-100 rounded-full">
+<span class="material-icons text-[var(--accent-color)] icon-lg">edit_note</span>
+</div>
+<div>
+<h4 class="font-semibold text-[var(--text-primary)] text-base">手动添加</h4>
+<p class="text-xs text-[var(--text-secondary)]">手动输入设备信息进行连接</p>
+</div>
+<span class="material-icons text-gray-400 ml-auto">chevron_right</span>
+</div>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+<div class="flex items-center space-x-4">
+<div class="p-3 bg-purple-100 rounded-full">
+<span class="material-icons text-purple-600 icon-lg">radar</span>
+</div>
+<div>
+<h4 class="font-semibold text-[var(--text-primary)] text-base">自动搜索</h4>
+<p class="text-xs text-[var(--text-secondary)]">搜索附近可用的智能设备</p>
+</div>
+<span class="material-icons text-gray-400 ml-auto">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<section class="text-center">
+<h3 class="text-base font-medium text-[var(--text-secondary)] mb-5">快速扫描二维码</h3>
+<div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 mb-6 inline-block">
+<div class="w-52 h-52 border-2 border-dashed border-[var(--primary-color)] rounded-xl flex flex-col items-center justify-center mb-5 mx-auto bg-gray-50">
+<span class="material-icons text-[var(--primary-color)] icon-xl mb-2">qr_code_2</span>
+<p class="text-xs text-[var(--text-secondary)]">将设备二维码对准扫描框</p>
+</div>
+<button class="w-full bg-[var(--primary-color)] hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-sm">
+                启动扫描器
+            </button>
+</div>
+<div class="flex items-center justify-center text-xs text-[var(--text-secondary)] space-x-1.5 px-4">
+<span class="material-icons text-amber-500 text-lg">lightbulb_outline</span>
+<p>温馨提示：设备二维码通常位于设备机身、包装盒或产品说明书上。</p>
+</div>
+</section>
+</div>
+
+</body></html>

@@ -1,0 +1,604 @@
+<!--pages/devices/devices.wxml-->
+<view class="energy-container">
+  <!-- 背景装饰 -->
+  <view class="energy-bg-decoration">
+    <view class="energy-bg-circle" style="width: 200rpx; height: 200rpx; top: 10%; right: -50rpx; animation-delay: 0s; opacity: 0.6;"></view>
+    <view class="energy-bg-circle" style="width: 150rpx; height: 150rpx; top: 60%; left: -30rpx; animation-delay: 2s; opacity: 0.4;"></view>
+    <view class="energy-bg-circle" style="width: 100rpx; height: 100rpx; top: 80%; right: 20%; animation-delay: 4s; opacity: 0.3;"></view>
+  </view>
+
+  <!-- 页面标题 -->
+  <view class="energy-glass-card energy-p-32">
+    <view class="energy-flex energy-flex-between energy-mb-24">
+      <text class="energy-title-large">设备管理</text>
+      <view class="energy-flex">
+        <!-- 实时刷新指示器 -->
+        <view class="refresh-indicator {{isRefreshing ? 'active' : ''}}" bindtap="onRefresh">
+          <text class="energy-icon-text">🔄</text>
+        </view>
+        <view class="energy-icon energy-mr-16" bindtap="onSearch">
+          <text class="energy-icon-text">🔍</text>
+        </view>
+        <view class="energy-icon energy-mr-16" bindtap="onFilter">
+          <text class="energy-icon-text">⚙️</text>
+        </view>
+        <!-- 批量操作按钮 -->
+        <view class="energy-icon" bindtap="onBatchMode">
+          <text class="energy-icon-text">{{batchMode ? '✅' : '☑️'}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 设备统计 -->
+    <view class="energy-grid-4 energy-mb-24">
+      <view class="energy-data-card" 
+           role="button" 
+           aria-label="总设备数量：{{deviceStats.total}}台"
+           bindtap="onCardTap" 
+           data-type="total">
+        <!-- 总设备图标 -->
+        <view class="card-icon">
+          <text class="energy-icon-text">📱</text>
+        </view>
+        <text class="energy-text-tertiary energy-text-small">总设备</text>
+        <view class="number-with-trend">
+          <text class="energy-title-medium energy-text-primary">{{deviceStats.total}}</text>
+          <view class="trend-indicator" wx:if="{{deviceStats.totalTrend}}">
+            <text class="trend-arrow {{deviceStats.totalTrend.type}}">{{deviceStats.totalTrend.icon}}</text>
+            <text class="trend-text">{{deviceStats.totalTrend.text}}</text>
+          </view>
+        </view>
+        <!-- 设备类型分布指示器 -->
+        <view class="device-type-indicator">
+          <view class="device-type-dot {{deviceStats.sensorDevices > 0 ? 'active' : ''}}" style="background: #4CAF50;"></view>
+          <view class="device-type-dot {{deviceStats.controlDevices > 0 ? 'active' : ''}}" style="background: #2196F3;"></view>
+          <view class="device-type-dot {{deviceStats.monitorDevices > 0 ? 'active' : ''}}" style="background: #FF9800;"></view>
+          <view class="device-type-dot {{deviceStats.otherDevices > 0 ? 'active' : ''}}" style="background: #9E9E9E;"></view>
+        </view>
+      </view>
+      <view class="energy-data-card" 
+           role="button" 
+           aria-label="在线设备：{{deviceStats.online}}台"
+           bindtap="onCardTap" 
+           data-type="online">
+        <!-- 在线设备图标 -->
+        <view class="card-icon">
+          <text class="energy-icon-text">🟢</text>
+        </view>
+        <text class="energy-text-tertiary energy-text-small">在线</text>
+        <view class="number-with-trend">
+          <text class="energy-title-medium energy-text-success">{{deviceStats.online}}</text>
+          <view class="trend-indicator" wx:if="{{deviceStats.onlineTrend}}">
+            <text class="trend-arrow {{deviceStats.onlineTrend.type}}">{{deviceStats.onlineTrend.icon}}</text>
+            <text class="trend-text">{{deviceStats.onlineTrend.text}}</text>
+          </view>
+        </view>
+        <view class="signal-strength">
+          <view class="signal-bar {{deviceStats.signalStrength >= 1 ? 'active' : ''}}"></view>
+          <view class="signal-bar {{deviceStats.signalStrength >= 2 ? 'active' : ''}}"></view>
+          <view class="signal-bar {{deviceStats.signalStrength >= 3 ? 'active' : ''}}"></view>
+          <view class="signal-bar {{deviceStats.signalStrength >= 4 ? 'active' : ''}}"></view>
+        </view>
+      </view>
+      <view class="energy-data-card" 
+           role="button" 
+           aria-label="告警数量：{{deviceStats.alerts}}个"
+           bindtap="onCardTap" 
+           data-type="alerts">
+        <!-- 告警图标 -->
+        <view class="card-icon">
+          <text class="energy-icon-text">⚠️</text>
+        </view>
+        <text class="energy-text-tertiary energy-text-small">告警</text>
+        <view class="number-with-trend">
+          <text class="energy-title-medium energy-text-warning">{{deviceStats.alerts}}</text>
+          <view class="trend-indicator" wx:if="{{deviceStats.alertTrend}}">
+            <text class="trend-arrow {{deviceStats.alertTrend.type}}">{{deviceStats.alertTrend.icon}}</text>
+            <text class="trend-text">{{deviceStats.alertTrend.text}}</text>
+          </view>
+        </view>
+        <!-- 告警严重程度指示器 -->
+        <view class="alert-severity-indicator">
+          <view class="severity-level critical {{deviceStats.criticalAlerts > 0 ? 'active' : ''}}"></view>
+          <view class="severity-level warning {{deviceStats.warningAlerts > 0 ? 'active' : ''}}"></view>
+          <view class="severity-level info {{deviceStats.infoAlerts > 0 ? 'active' : ''}}"></view>
+        </view>
+      </view>
+      <view class="energy-data-card {{deviceStats.healthScore < 70 ? 'warning' : ''}}" 
+           role="button" 
+           aria-label="系统健康度：{{deviceStats.healthScore}}%"
+           bindtap="onCardTap" 
+           data-type="health">
+        <!-- 健康度图标 -->
+        <view class="card-icon">
+          <text class="energy-icon-text">💚</text>
+        </view>
+        <text class="energy-text-tertiary energy-text-small">健康度</text>
+        <view class="number-with-trend">
+          <text class="energy-title-medium energy-text-{{deviceStats.healthLevel}}">{{deviceStats.healthScore}}%</text>
+          <view class="trend-indicator" wx:if="{{deviceStats.healthTrend}}">
+            <text class="trend-arrow {{deviceStats.healthTrend.type}}">{{deviceStats.healthTrend.icon}}</text>
+            <text class="trend-text">{{deviceStats.healthTrend.text}}</text>
+          </view>
+        </view>
+        <view class="health-indicator">
+          <view class="health-bar" style="width: {{deviceStats.healthScore}}%; background: {{deviceStats.healthColor}};"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 批量操作工具栏 -->
+  <view class="batch-toolbar energy-glass-card energy-p-24" wx:if="{{batchMode}}">
+    <view class="energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-text-primary energy-text-medium">已选择 {{selectedDevices.length}} 个设备</text>
+      <view class="energy-flex">
+        <view class="energy-btn energy-btn-outline energy-btn-small energy-mr-8" bindtap="onSelectAll">
+          <text>{{selectAllText}}</text>
+        </view>
+        <view class="energy-btn energy-btn-outline energy-btn-small" bindtap="onCancelBatch">
+          <text>取消</text>
+        </view>
+      </view>
+    </view>
+    <view class="energy-flex energy-flex-wrap">
+      <view class="energy-btn energy-btn-primary energy-btn-small energy-mr-8 energy-mb-8" 
+            bindtap="onBatchControl" data-action="start">
+        <text>批量启动</text>
+      </view>
+      <view class="energy-btn energy-btn-secondary energy-btn-small energy-mr-8 energy-mb-8" 
+            bindtap="onBatchControl" data-action="stop">
+        <text>批量停止</text>
+      </view>
+      <view class="energy-btn energy-btn-outline energy-btn-small energy-mr-8 energy-mb-8" 
+            bindtap="onBatchControl" data-action="restart">
+        <text>批量重启</text>
+      </view>
+      <view class="energy-btn energy-btn-warning energy-btn-small energy-mb-8" 
+            bindtap="onBatchDelete">
+        <text>批量删除</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 搜索和筛选 -->
+  <view class="energy-glass-card energy-p-24" wx:if="{{showSearch}}">
+    <view class="energy-flex energy-mb-16">
+      <view class="search-input-wrapper energy-flex-1 energy-mr-16">
+        <input class="search-input" 
+               placeholder="搜索设备名称、类型或位置" 
+               value="{{searchKeyword}}"
+               bindinput="onSearchInput"
+               confirm-type="search"
+               bindconfirm="onSearchConfirm" />
+        <view class="search-icon" wx:if="{{!searchKeyword}}">
+          <text class="energy-icon-text">🔍</text>
+        </view>
+        <view class="clear-icon" wx:if="{{searchKeyword}}" bindtap="onClearSearch">
+          <text class="energy-icon-text">✕</text>
+        </view>
+      </view>
+      <view class="energy-btn energy-btn-primary" bindtap="onSearchConfirm">
+        <text>搜索</text>
+      </view>
+    </view>
+    
+    <!-- 设备类型筛选 -->
+    <view class="energy-flex energy-flex-wrap energy-mb-16">
+      <view class="energy-filter-tag {{filterType === 'all' ? 'active' : ''}}" 
+            data-type="all" bindtap="onFilterType">
+        <text>全部</text>
+      </view>
+      <view class="energy-filter-tag {{filterType === 'meter' ? 'active' : ''}}" 
+            data-type="meter" bindtap="onFilterType">
+        <text>电表</text>
+      </view>
+      <view class="energy-filter-tag {{filterType === 'sensor' ? 'active' : ''}}" 
+            data-type="sensor" bindtap="onFilterType">
+        <text>传感器</text>
+      </view>
+      <view class="energy-filter-tag {{filterType === 'switch' ? 'active' : ''}}" 
+            data-type="switch" bindtap="onFilterType">
+        <text>开关</text>
+      </view>
+      <view class="energy-filter-tag {{filterType === 'hvac' ? 'active' : ''}}" 
+            data-type="hvac" bindtap="onFilterType">
+        <text>空调</text>
+      </view>
+    </view>
+    
+    <!-- 设备状态筛选 - 新增功能 -->
+    <view class="filter-section-title">
+      <text class="energy-text-small energy-text-tertiary">设备状态</text>
+    </view>
+    <!-- 横向滚动的状态筛选标签 -->
+    <scroll-view class="status-filter-scroll" scroll-x="true" show-scrollbar="false">
+      <view class="status-filter-container">
+        <view class="energy-filter-tag status-filter {{filterType === 'offline' ? 'active' : ''}}" 
+              data-type="offline" bindtap="onFilterType">
+          <text class="energy-icon-text">🔴</text>
+          <text>离线设备</text>
+        </view>
+        <view class="energy-filter-tag status-filter {{filterType === 'alert' ? 'active' : ''}}" 
+              data-type="alert" bindtap="onFilterType">
+          <text class="energy-icon-text">⚠️</text>
+          <text>告警设备</text>
+        </view>
+        <view class="energy-filter-tag status-filter {{filterType === 'abnormal' ? 'active' : ''}}" 
+              data-type="abnormal" bindtap="onFilterType">
+          <text class="energy-icon-text">⚡</text>
+          <text>异常设备</text>
+        </view>
+        <view class="energy-filter-tag status-filter {{filterType === 'healthy' ? 'active' : ''}}" 
+              data-type="healthy" bindtap="onFilterType">
+          <text class="energy-icon-text">✅</text>
+          <text>正常设备</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 设备分组 -->
+  <view class="energy-glass-card energy-p-24" wx:if="{{showGroups}}">
+    <view class="energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">设备分组</text>
+      <view class="energy-btn energy-btn-outline" bindtap="onManageGroups">
+        <text>管理分组</text>
+      </view>
+    </view>
+    <scroll-view class="energy-group-scroll" scroll-x="true">
+      <view class="energy-flex">
+        <view class="energy-group-item {{selectedGroup === 'all' ? 'active' : ''}}" 
+              data-group="all" bindtap="onSelectGroup">
+          <text>全部设备</text>
+        </view>
+        <view class="energy-group-item {{selectedGroup === item.id ? 'active' : ''}}" 
+              wx:for="{{deviceGroups}}" wx:key="id"
+              data-group="{{item.id}}" bindtap="onSelectGroup">
+          <text>{{item.name}}</text>
+          <text class="energy-text-small energy-text-tertiary">({{item.count}})</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 设备列表 -->
+  <view class="energy-glass-card energy-p-24">
+    <view class="energy-flex energy-flex-between energy-mb-24">
+      <view class="device-list-header">
+        <text class="energy-title-medium">设备列表</text>
+        <!-- 筛选结果统计信息 -->
+        <view class="filter-result-info" wx:if="{{filteredDevices.length !== allDevices.length}}">
+          <text class="energy-text-small energy-text-tertiary">筛选结果：{{filteredDevices.length}}/{{allDevices.length}} 个设备</text>
+          <view class="energy-btn energy-btn-outline energy-btn-small energy-ml-8" bindtap="onClearFilter">
+            <text>清除筛选</text>
+          </view>
+        </view>
+      </view>
+      <view class="energy-btn energy-btn-primary" bindtap="onAddDevice">
+        <text class="energy-icon-text energy-mr-8">➕</text>
+        <text>添加设备</text>
+      </view>
+    </view>
+
+    <!-- 设备列表滚动容器 -->
+    <scroll-view class="device-scroll-container" 
+                 scroll-y="true" 
+                 scroll-top="{{scrollTop}}"
+                 bindscrolltolower="onLoadMore"
+                 lower-threshold="50">
+      <!-- 设备项 - 优化后的卡片式布局 -->
+      <view class="device-list">
+        <view class="device-card {{batchMode ? 'batch-mode' : ''}} {{item.isSelected ? 'selected' : ''}}" 
+              wx:for="{{devices}}" wx:key="id"
+              bindtap="{{batchMode ? 'onSelectDevice' : 'onDeviceDetail'}}" 
+              data-device="{{item}}" data-device-id="{{item.id}}">
+        
+        <!-- 批量选择复选框 -->
+        <view class="batch-checkbox" wx:if="{{batchMode}}">
+          <view class="checkbox {{item.isSelected ? 'checked' : ''}}">
+            <text class="energy-icon-text" wx:if="{{item.isSelected}}">✓</text>
+          </view>
+        </view>
+        
+        <!-- 设备卡片主体 -->
+        <view class="device-card-content">
+          <!-- 设备标题行 - 独立显示 -->
+          <view class="device-title-row">
+            <!-- 设备图标作为标题行的第一个子节点 -->
+            <view class="device-icon {{item.type}}">
+              <text class="energy-icon-text">{{item.icon}}</text>
+              <!-- 设备健康状态指示器 -->
+              <view class="health-indicator-dot {{item.healthStatus || 'good'}}"></view>
+            </view>
+            <text class="device-name">{{item.name}}</text>
+            <view class="device-status-badge {{item.status}}">
+              <view class="status-dot"></view>
+              <text class="status-text">{{item.statusText}}</text>
+              <!-- 实时数据更新指示器 -->
+              <view class="data-update-indicator {{item.isUpdating ? 'active' : ''}}" wx:if="{{item.status === 'online'}}">
+                <text class="energy-icon-text">📡</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 设备头部信息 -->
+          <view class="device-header">
+            <!-- 设备基础信息 -->
+            <view class="device-primary-info">
+              <view class="device-basic-info">
+                <!-- 设备类型和位置 -->
+                <view class="device-meta-row">
+                  <view class="device-type-tag {{item.type}}">
+                    <text>{{item.type}}</text>
+                  </view>
+                  <text class="device-location">{{item.location}}</text>
+                </view>
+              </view>
+            </view>
+            
+            <!-- 操作按钮区域 -->
+            <view class="device-actions" wx:if="{{!batchMode}}" catchtap="true">
+              <view class="action-btn control-btn {{item.status !== 'online' ? 'disabled' : ''}}" 
+                    bindtap="onDeviceControl" data-device="{{item}}">
+                <text class="energy-icon-text">{{item.status === 'online' ? '⏸️' : '▶️'}}</text>
+              </view>
+              <view class="action-btn menu-btn" bindtap="onDeviceMenu" data-device="{{item}}">
+                <text class="energy-icon-text">⋯</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 设备运行数据 -->
+          <view class="device-metrics" wx:if="{{item.status === 'online'}}">
+            <view class="metrics-grid">
+              <!-- 功耗信息 -->
+              <view class="metric-item" wx:if="{{item.power}}">
+                <view class="metric-label">
+                  <text class="energy-icon-text">⚡</text>
+                  <text>功耗</text>
+                </view>
+                <view class="metric-value">
+                  <text class="value-text">{{item.power}}W</text>
+                  <view class="power-trend {{item.powerTrend || 'stable'}}">
+                    <text class="energy-icon-text">{{item.powerTrend === 'up' ? '📈' : item.powerTrend === 'down' ? '📉' : '➖'}}</text>
+                  </view>
+                </view>
+              </view>
+              
+              <!-- 温度信息 -->
+              <view class="metric-item" wx:if="{{item.temperature}}">
+                <view class="metric-label">
+                  <text class="energy-icon-text">🌡️</text>
+                  <text>温度</text>
+                </view>
+                <view class="metric-value">
+                  <text class="value-text">{{item.temperature}}°C</text>
+                </view>
+              </view>
+              
+              <!-- 运行时间 -->
+              <view class="metric-item" wx:if="{{item.uptime}}">
+                <view class="metric-label">
+                  <text class="energy-icon-text">⏱️</text>
+                  <text>运行时间</text>
+                </view>
+                <view class="metric-value">
+                  <text class="value-text">{{item.uptime}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 告警信息 -->
+          <view class="device-alert" wx:if="{{item.alerts && item.alerts.length > 0}}">
+            <view class="alert-content">
+              <view class="alert-icon">
+                <text class="energy-icon-text">⚠️</text>
+              </view>
+              <view class="alert-info">
+                <text class="alert-message">{{item.alerts[0].message}}</text>
+                <text class="alert-time">{{item.alerts[0].time}}</text>
+              </view>
+              <view class="alert-severity {{item.alerts[0].severity || 'warning'}}">
+                <view class="severity-dot"></view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      </view>
+      
+      <!-- 加载更多提示（仅在不显示分页时显示） -->
+      <view class="load-more-container" wx:if="{{devices.length > 0 && !showPagination}}">
+        <view class="load-more-item" wx:if="{{loadingMore}}">
+          <view class="loading-spinner"></view>
+          <text class="energy-text-tertiary energy-text-small">正在加载更多...</text>
+        </view>
+        <view class="load-more-item" wx:elif="{{!hasMore}}">
+          <text class="energy-text-tertiary energy-text-small">已显示全部设备</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 页码导航 -->
+    <view class="pagination-container" wx:if="{{showPagination && devices.length > 0}}">
+      <view class="pagination-info">
+        <text class="energy-text-tertiary energy-text-small">第 {{currentPage}} 页，共 {{totalPages}} 页</text>
+      </view>
+      <view class="pagination-controls">
+        <!-- 上一页按钮 -->
+        <view class="pagination-btn {{currentPage <= 1 ? 'disabled' : ''}}" 
+              bindtap="onPrevPage">
+          <text class="energy-icon-text">‹</text>
+        </view>
+        
+        <!-- 页码按钮 -->
+        <view class="pagination-pages">
+          <block wx:for="{{totalPages}}" wx:key="*this">
+            <view class="pagination-page {{currentPage === (index + 1) ? 'active' : ''}}" 
+                  bindtap="onGoToPage" 
+                  data-page="{{index + 1}}">
+              <text>{{index + 1}}</text>
+            </view>
+          </block>
+        </view>
+        
+        <!-- 下一页按钮 -->
+        <view class="pagination-btn {{currentPage >= totalPages ? 'disabled' : ''}}" 
+              bindtap="onNextPage">
+          <text class="energy-icon-text">›</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="energy-empty-state" wx:if="{{devices.length === 0}}">
+      <text class="energy-icon-text energy-text-large energy-mb-16">📱</text>
+      <text class="energy-text-primary energy-text-medium energy-mb-8">暂无设备</text>
+      <text class="energy-text-tertiary energy-text-small energy-mb-24">点击下方按钮添加您的第一个设备</text>
+      <view class="energy-btn energy-btn-primary" bindtap="onAddDevice">
+        <text class="energy-icon-text energy-mr-8">➕</text>
+        <text>添加设备</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设备性能监控 -->
+  <view class="energy-glass-card energy-p-24">
+    <view class="energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">设备性能</text>
+      <view class="energy-btn energy-btn-outline energy-btn-small" bindtap="onViewPerformance">
+        <text>查看详情</text>
+      </view>
+    </view>
+    <view class="performance-grid">
+      <!-- 平均响应时间性能卡片 -->
+      <view class="performance-item performance-item-response">
+        <!-- 顶部指标标题和趋势 -->
+        <view class="metric-header">
+          <view class="metric-icon">
+            <text class="energy-icon-text">⚡️</text>
+          </view>
+          <text class="metric-label">平均响应时间</text>
+          <view class="trend-indicator {{performanceData.responseTimeTrend}}">
+            <text class="trend-icon">{{performanceData.responseTimeTrend === 'up' ? '📈' : '📉'}}</text>
+          </view>
+        </view>
+        
+        <!-- 主要数值显示 -->
+        <view class="metric-value">
+          <text class="value-number">{{performanceData.avgResponseTime}}</text>
+          <text class="value-unit">ms</text>
+        </view>
+        
+        <!-- 底部性能指示器 -->
+        <view class="metric-indicator">
+          <view class="performance-bar" style="width: {{performanceData.responseScore}}%;"></view>
+        </view>
+      </view>
+      
+      <!-- 数据传输成功率性能卡片 -->
+      <view class="performance-item performance-item-success">
+        <!-- 顶部指标标题 -->
+        <view class="metric-header">
+          <view class="metric-icon">
+            <text class="energy-icon-text">🎯</text>
+          </view>
+          <text class="metric-label">传输成功率</text>
+          <view class="trend-indicator {{performanceData.successTrend}}">
+            <text class="trend-icon">{{performanceData.successTrend === 'up' ? '📈' : '📉'}}</text>
+          </view>
+        </view>
+        
+        <!-- 主要数值显示 -->
+        <view class="metric-value">
+          <text class="value-number">{{performanceData.successRate}}</text>
+          <text class="value-unit">%</text>
+        </view>
+        
+        <!-- 底部成功率指示器 -->
+        <view class="metric-indicator">
+          <view class="success-rate-bar">
+            <view class="rate-fill" style="width: {{performanceData.successRate}}%;"></view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 网络延迟性能卡片 -->
+      <view class="performance-item performance-item-latency">
+        <!-- 顶部指标标题 -->
+        <view class="metric-header">
+          <view class="metric-icon">
+            <text class="energy-icon-text">📡</text>
+          </view>
+          <text class="metric-label">网络延迟</text>
+          <view class="trend-indicator {{performanceData.latencyTrend}}">
+            <text class="trend-icon">{{performanceData.latencyTrend === 'up' ? '📈' : '📉'}}</text>
+          </view>
+        </view>
+        
+        <!-- 主要数值显示 -->
+        <view class="metric-value">
+          <text class="value-number">{{performanceData.networkLatency}}</text>
+          <text class="value-unit">ms</text>
+        </view>
+        
+        <!-- 底部延迟状态指示器 -->
+        <view class="metric-indicator">
+          <view class="latency-indicator {{performanceData.latencyLevel}}">
+            <view class="latency-dot"></view>
+            <view class="latency-pulse"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 智能推荐 -->
+  <view class="energy-glass-card energy-p-24" wx:if="{{recommendations.length > 0}}">
+    <text class="energy-title-medium energy-mb-16">智能推荐</text>
+    <view class="recommendation-list">
+      <view class="recommendation-item" wx:for="{{recommendations}}" wx:key="id">
+        <view class="recommendation-icon {{item.type}}">
+          <text class="energy-icon-text">{{item.icon}}</text>
+        </view>
+        <view class="recommendation-content energy-flex-1">
+          <text class="energy-text-primary energy-text-medium energy-mb-4">{{item.title}}</text>
+          <text class="energy-text-tertiary energy-text-small">{{item.description}}</text>
+        </view>
+        <view class="energy-btn energy-btn-outline energy-btn-small" 
+              bindtap="onApplyRecommendation" data-recommendation="{{item}}">
+          <text>应用</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="energy-glass-card energy-p-24">
+    <text class="energy-title-medium energy-mb-16">快捷操作</text>
+    <view class="energy-grid-2">
+      <view class="energy-action-card" data-type="scene" bindtap="onSceneMode">
+         <view class="icon">🎭</view>
+         <view class="title">场景模式</view>
+         <view class="description">一键切换设备场景</view>
+       </view>
+       <view class="energy-action-card" data-type="automation" bindtap="onAutomation">
+         <view class="icon">🤖</view>
+         <view class="title">自动化</view>
+         <view class="description">设置自动化规则</view>
+       </view>
+       <view class="energy-action-card" data-type="maintenance" bindtap="onDeviceMaintenance">
+         <view class="icon">🔧</view>
+         <view class="title">设备维护</view>
+         <view class="description">查看维护计划</view>
+       </view>
+       <view class="energy-action-card" data-type="analysis" bindtap="onEnergyAnalysis">
+          <view class="icon">📊</view>
+          <view class="title">能耗分析</view>
+          <view class="description">设备能耗报告</view>
+        </view>
+    </view>
+  </view>
+</view>

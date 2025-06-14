@@ -1,0 +1,9 @@
+<view class="container">
+  <view class="page-title">自动化规则设置</view>
+  <view class="content">
+    <!-- 自动化规则列表 -->
+    <!-- 添加新规则入口 -->
+    <!-- 规则编辑（触发条件：时间、设备状态、能耗阈值；执行动作：设备控制、消息通知） -->
+    <!-- 规则启用/禁用 -->
+  </view>
+</view>

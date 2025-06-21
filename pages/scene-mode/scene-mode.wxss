@@ -1,14 +1,419 @@
 /* pages/scene-mode/scene-mode.wxss */
-.container {
-  padding: 20rpx;
+@import "../../styles/design-system.wxss";
+
+/* 场景统计项 - 调整为与主页一致的风格 */
+.scene-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 24rpx;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(16, 185, 129, 0.06) 50%, rgba(139, 92, 246, 0.05) 100%);
+  border-radius: 24rpx;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  min-width: 160rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08), 0 1rpx 4rpx rgba(59, 130, 246, 0.1) inset, 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  transition: all 0.3s ease;
 }
 
-.page-title {
+/* 刷新指示器 - 调整为与主页一致的风格 */
+.refresh-indicator {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2rpx 8rpx rgba(59, 130, 246, 0.1);
+}
+
+.refresh-indicator:active {
+  transform: scale(0.9);
+  background: rgba(59, 130, 246, 0.15);
+  box-shadow: 0 4rpx 16rpx rgba(59, 130, 246, 0.2);
+}
+
+.refresh-indicator.active {
+  animation: spin 1s linear infinite;
+  animation: refreshPulse 1.5s ease-in-out infinite;
+}
+
+.energy-icon-text {
+  font-size: 28rpx;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes refreshPulse {
+  0%, 100% {
+    box-shadow: 0 2rpx 8rpx rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 4rpx 20rpx rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* 当前激活场景卡片 - 调整为与主页一致的风格 */
+.active-scene-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 6rpx 16rpx;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 16rpx;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  transition: all 0.2s ease;
+}
+
+.active-scene-indicator .energy-status-dot {
+  animation: pulse 2s infinite;
+}
+
+.active-scene-indicator .energy-text-success {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #10b981;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6rpx rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.active-scene-card {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.1) 0%, 
+    rgba(16, 185, 129, 0.08) 50%,
+    rgba(139, 92, 246, 0.06) 100%);
+  border-radius: 24rpx;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08),
+    0 1rpx 4rpx rgba(59, 130, 246, 0.1) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  transition: all 0.3s ease;
+}
+
+.active-scene-card:hover {
+  transform: translateY(-2rpx);
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.12),
+    0 2rpx 8rpx rgba(59, 130, 246, 0.15) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+/* 激活场景卡片内的标题文本 */
+.active-scene-card .energy-title-small {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1e293b;
+  text-shadow: 0 2rpx 6rpx rgba(59, 130, 246, 0.08);
+  margin-bottom: 4rpx;
+}
+
+/* 激活场景卡片内的描述文本 */
+.active-scene-card .energy-text-muted {
+  font-size: 26rpx;
+  color: #64748b;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* 激活场景卡片内的时间文本 */
+.active-scene-card .energy-text-tertiary {
+  font-size: 22rpx;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-top: 4rpx;
+}
+
+.scene-icon {
+  font-size: 52rpx;
+  margin-right: 20rpx;
+  color: #3b82f6;
+  text-shadow: 0 2rpx 8rpx rgba(59, 130, 246, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scene-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.scene-devices {
+  padding: 8rpx 16rpx;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 16rpx;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  transition: all 0.2s ease;
+  font-size: 24rpx;
+  color: #10b981;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 4rpx;
+}
+
+/* 场景筛选 - 调整为与主页一致的风格 */
+.scene-filter {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 20rpx;
+  background: transparent;
+  border-radius: 20rpx;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  cursor: pointer;
+  font-size: 24rpx;
+  color: #64748b;
+}
+
+.scene-filter:active {
+  transform: scale(0.95);
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.filter-icon {
+  font-size: 24rpx;
+  color: inherit;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.filter-dropdown {
+  position: absolute;
+  right: 24rpx;
+  top: 120rpx;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20rpx;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  box-shadow: 0 4rpx 16rpx rgba(100, 116, 139, 0.1);
+  z-index: 10;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  padding: 6rpx;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.filter-item {
+  padding: 10rpx 20rpx;
+  color: #64748b;
+  font-size: 24rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-radius: 16rpx;
+  border: 1px solid transparent;
+}
+
+.filter-item.active {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.15);
+  font-weight: 600;
+}
+
+.filter-item:hover {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+/* 场景列表 - 调整为与主页一致的风格 */
+.scene-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  margin-top: 24rpx;
+}
+
+.scene-empty {
+  padding: 48rpx 0;
+  text-align: center;
+  color: #64748b;
+  font-size: 28rpx;
+}
+
+.scene-item {
+  margin-bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%, 
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(248, 250, 252, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08),
+    0 1rpx 4rpx rgba(59, 130, 246, 0.1) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  transition: all 0.3s ease;
+}
+
+.scene-item:hover {
+  border-color: rgba(59, 130, 246, 0.25);
+  transform: translateY(-2rpx);
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.12),
+    0 2rpx 8rpx rgba(59, 130, 246, 0.15) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+}
+
+.scene-header {
+  margin-bottom: 16rpx;
+}
+
+.scene-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.scene-status {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.scene-status.active {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+.scene-description {
+  padding: 8rpx 0;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  color: #64748b;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.scene-actions {
+  margin-top: 16rpx;
+  display: flex;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.scene-btn {
+  background: rgba(59, 130, 246, 0.08);
+  color: #1e293b;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: 24rpx;
+  padding: 12rpx 20rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2rpx 8rpx rgba(59, 130, 246, 0.1);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.scene-btn:active {
+  transform: scale(0.95);
+  background: rgba(59, 130, 246, 0.15);
+  box-shadow: 0 4rpx 16rpx rgba(59, 130, 246, 0.2);
+}
+
+.scene-btn:hover {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.scene-btn.disabled {
+  background: rgba(203, 213, 225, 0.3);
+  color: #64748b;
+  border-color: rgba(203, 213, 225, 0.5);
+  box-shadow: none;
+}
+
+.scene-btn.edit {
+  background: rgba(14, 165, 233, 0.1);
+  border-color: rgba(14, 165, 233, 0.2);
+  color: #0ea5e9;
+}
+
+.scene-btn.delete {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* 添加场景按钮 - 调整为与主页一致的风格 */
+.add-scene-btn {
+  position: fixed;
+  bottom: 48rpx;
+  right: 48rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+  padding: 16rpx 32rpx;
+  border-radius: 40rpx;
+  box-shadow: 0 8rpx 32rpx rgba(59, 130, 246, 0.3),
+    0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 28rpx;
+  z-index: 100;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.add-scene-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 12rpx 40rpx rgba(59, 130, 246, 0.4),
+    0 6rpx 16rpx rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%);
+}
+
+.add-icon {
   font-size: 32rpx;
   font-weight: bold;
-  margin-bottom: 20rpx;
 }
 
-.content {
-  /* 页面内容样式 */
+.add-text {
+  letter-spacing: 1rpx;
 }

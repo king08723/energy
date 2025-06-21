@@ -26,12 +26,12 @@
     rgba(30, 41, 59, 0.95) 50%,
     rgba(51, 65, 85, 0.85) 100%);
   
-  /* 文字颜色 Text Colors - 增强亮度 */
+  /* 文字颜色 Text Colors - 高对比度 */
   --text-primary: #ffffff;
-  --text-secondary: rgba(0, 255, 255, 0.85);
-  --text-tertiary: rgba(0, 255, 255, 0.7);
+  --text-secondary: rgba(255, 255, 255, 0.9);
+  --text-tertiary: rgba(255, 255, 255, 0.8);
   --text-muted: rgba(255, 255, 255, 0.7);
-  --text-glow: rgba(0, 255, 255, 1);
+  --text-glow: rgba(255, 255, 255, 1);
   
   /* 状态色 Status Colors - 更鲜艳 */
   --color-success: #10b981;
@@ -146,8 +146,8 @@
 .energy-title-medium {
   font-size: 32rpx;
   font-weight: 600;
-  color: var(--primary-cyan);
-  text-shadow: var(--shadow-text);
+  color: #ffffff;
+  text-shadow: 0 1rpx 3rpx rgba(255, 255, 255, 0.3);
   letter-spacing: 1rpx;
 }
 
@@ -155,7 +155,7 @@
   font-size: 24rpx;
   font-weight: 600;
   color: var(--text-primary);
-  text-shadow: 0 1rpx 3rpx rgba(0, 255, 255, 0.3);
+  text-shadow: 0 1rpx 3rpx rgba(255, 255, 255, 0.3);
 }
 
 .energy-text-primary {
@@ -194,6 +194,23 @@
 .energy-text-error {
   color: var(--color-error);
   text-shadow: 0 0 5rpx rgba(239, 68, 68, 0.5);
+}
+
+/* 文字大小 */
+.energy-text-large {
+  font-size: 28rpx;
+}
+
+.energy-text-medium {
+  font-size: 24rpx;
+}
+
+.energy-text-small {
+  font-size: 20rpx;
+}
+
+.energy-text-tiny {
+  font-size: 16rpx;
 }
 
 /* ==================== 按钮样式 Button Styles ==================== */

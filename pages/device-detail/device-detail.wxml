@@ -1,73 +1,106 @@
 <!--pages/device-detail/device-detail.wxml-->
 <view class="energy-container">
-  <!-- 背景装饰 -->
+  <!-- 背景装饰 - 增强视觉效果 -->
   <view class="energy-bg-decoration">
-    <view class="energy-bg-circle" style="width: 180rpx; height: 180rpx; top: 15%; right: -40rpx; animation-delay: 0s; opacity: 0.5;"></view>
-    <view class="energy-bg-circle" style="width: 120rpx; height: 120rpx; top: 70%; left: -20rpx; animation-delay: 3s; opacity: 0.4;"></view>
-    <view class="energy-bg-circle" style="width: 90rpx; height: 90rpx; top: 45%; right: 15%; animation-delay: 6s; opacity: 0.3;"></view>
+    <view class="energy-bg-circle" style="width: 220rpx; height: 220rpx; top: 5%; right: -60rpx; animation-delay: 0s; opacity: 0.6;"></view>
+    <view class="energy-bg-circle" style="width: 180rpx; height: 180rpx; top: 40%; left: -40rpx; animation-delay: 2s; opacity: 0.5;"></view>
+    <view class="energy-bg-circle" style="width: 150rpx; height: 150rpx; top: 70%; right: 10%; animation-delay: 4s; opacity: 0.4;"></view>
+    <view class="energy-bg-circle" style="width: 100rpx; height: 100rpx; top: 20%; left: 15%; animation-delay: 6s; opacity: 0.3;"></view>
   </view>
   
-  <!-- 设备基本信息 -->
-  <view class="energy-glass-card energy-p-32">
+  <!-- 设备基本信息卡片 - 重新设计，更加突出 -->
+  <view class="energy-glass-card device-header-card energy-p-32">
+    <!-- 设备状态指示器 -->
+    <view class="device-status-indicator {{deviceInfo.status}}">
+      <text>{{deviceInfo.statusText}}</text>
+    </view>
+    
     <view class="energy-flex energy-flex-between energy-mb-24">
       <view class="energy-flex">
-        <view class="device-icon-large {{deviceInfo.type}}">
+        <view class="device-icon-large {{deviceInfo.type}} energy-pulsing">
           <text class="energy-icon-text">{{deviceInfo.icon}}</text>
         </view>
         <view class="device-basic-info">
           <text class="energy-title-large energy-mb-8">{{deviceInfo.name}}</text>
-          <text class="energy-text-tertiary energy-text-small">{{deviceInfo.type}} · {{deviceInfo.location}}</text>
-          <view class="energy-flex energy-mt-8">
-            <view class="energy-status-dot {{deviceInfo.status}}">
-              <text class="energy-text-small">{{deviceInfo.statusText}}</text>
-            </view>
+          <view class="device-meta">
+            <text class="energy-text-secondary energy-text-small">{{deviceInfo.type}} · {{deviceInfo.location}}</text>
             <text class="energy-text-tertiary energy-text-small energy-ml-16">更新于 {{deviceInfo.lastUpdate}}</text>
           </view>
         </view>
       </view>
-      <view class="energy-icon" bindtap="onDeviceMenu">
-        <text class="energy-icon-text">⋯</text>
+      <!-- 快捷操作按钮 -->
+      <view class="device-quick-actions">
+        <view class="quick-action-btn" bindtap="onRefreshData">
+          <text class="energy-icon-text">🔄</text>
+        </view>
+        <view class="quick-action-btn" bindtap="onDeviceMenu">
+          <text class="energy-icon-text">⋯</text>
+        </view>
       </view>
     </view>
 
-    <!-- 告警信息 -->
+    <!-- 告警信息 - 视觉优化 -->
     <view class="alert-banner" wx:if="{{deviceInfo.alerts && deviceInfo.alerts.length > 0}}">
       <view class="energy-flex">
-        <text class="energy-icon-text energy-text-warning energy-mr-12">⚠️</text>
+        <text class="energy-icon-text energy-text-warning energy-mr-12 alert-icon">⚠️</text>
         <view class="energy-flex-1">
           <text class="energy-text-warning energy-text-medium energy-font-medium">设备告警</text>
           <text class="energy-text-warning energy-text-small energy-mt-4">{{deviceInfo.alerts[0].message}}</text>
         </view>
-        <view class="energy-btn energy-btn-outline energy-btn-small" bindtap="onViewAlerts">
+        <view class="energy-btn energy-btn-outline energy-btn-small alert-view-btn" bindtap="onViewAlerts">
           <text>查看</text>
         </view>
       </view>
     </view>
+    
+    <!-- 设备核心数据 - 新增，突出重要信息 -->
+    <view class="device-core-metrics" wx:if="{{deviceInfo.status === 'online'}}">
+      <view class="core-metric" wx:for="{{deviceInfo.realTimeData}}" wx:key="key" wx:if="{{index < 2}}">
+        <text class="metric-value energy-text-glow">{{item.value}}<text class="metric-unit">{{item.unit}}</text></text>
+        <text class="metric-label energy-text-tertiary">{{item.label}}</text>
+      </view>
+    </view>
   </view>
   
-  <!-- 设备控制 -->
+  <!-- 设备控制面板 - 重新设计，更直观 -->
   <view class="energy-glass-card energy-p-24" wx:if="{{deviceInfo.status === 'online'}}">
-    <text class="energy-title-medium energy-mb-16">设备控制</text>
+    <view class="card-header energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">设备控制</text>
+      <view class="device-power-status {{deviceInfo.isOn ? 'on' : 'off'}}">
+        <text>{{deviceInfo.isOn ? '运行中' : '已关闭'}}</text>
+      </view>
+    </view>
     
-    <!-- 开关控制 -->
+    <!-- 开关控制 - 视觉优化 -->
     <view class="control-section energy-mb-24">
       <view class="energy-flex energy-flex-between energy-mb-16">
         <text class="energy-text-primary energy-text-medium">设备开关</text>
-        <switch class="energy-switch" checked="{{deviceInfo.isOn}}" bindchange="onSwitchChange" />
+        <switch class="energy-switch custom-switch" color="#00ffff" checked="{{deviceInfo.isOn}}" bindchange="onSwitchChange" />
       </view>
       
-      <!-- 功率调节 -->
+      <!-- 功率调节 - 视觉优化 -->
       <view class="energy-flex energy-flex-between energy-mb-16" wx:if="{{deviceInfo.supportPowerControl}}">
         <text class="energy-text-primary energy-text-medium">功率调节</text>
-        <text class="energy-text-secondary energy-text-small">{{deviceInfo.powerLevel}}%</text>
+        <text class="energy-text-secondary energy-text-small power-level-text">{{deviceInfo.powerLevel}}%</text>
       </view>
-      <slider class="energy-slider" wx:if="{{deviceInfo.supportPowerControl}}"
-              value="{{deviceInfo.powerLevel}}"
-              min="0" max="100" step="10"
-              bindchange="onPowerChange" />
+      <view class="slider-container" wx:if="{{deviceInfo.supportPowerControl}}">
+        <slider class="energy-slider custom-slider" 
+                value="{{deviceInfo.powerLevel}}"
+                min="0" max="100" step="10"
+                activeColor="rgba(0, 255, 255, 0.8)"
+                backgroundColor="rgba(255, 255, 255, 0.1)"
+                block-size="28"
+                block-color="#ffffff"
+                bindchange="onPowerChange" />
+        <view class="slider-markers">
+          <view class="slider-marker" wx:for="{{[0, 25, 50, 75, 100]}}" wx:key="*this">
+            <text class="marker-text">{{item}}</text>
+          </view>
+        </view>
+      </view>
     </view>
 
-    <!-- 快捷控制按钮 -->
+    <!-- 快捷控制按钮 - 视觉优化 -->
     <view class="energy-grid-3">
       <view class="control-btn" bindtap="onQuickControl" data-action="restart">
         <text class="energy-icon-text energy-mb-8">🔄</text>
@@ -84,29 +117,36 @@
     </view>
   </view>
   
-  <!-- 实时数据 -->
+  <!-- 实时数据 - 视觉优化 -->
   <view class="energy-glass-card energy-p-24">
-    <view class="energy-flex energy-flex-between energy-mb-16">
+    <view class="card-header energy-flex energy-flex-between energy-mb-16">
       <text class="energy-title-medium">实时数据</text>
-      <view class="energy-btn energy-btn-outline energy-btn-small" bindtap="onRefreshData">
-        <text>刷新</text>
+      <view class="last-update-time">
+        <text class="energy-text-tertiary energy-text-small">{{deviceInfo.lastUpdate}}</text>
       </view>
     </view>
     
-    <view class="energy-grid-2">
-      <view class="energy-data-card" wx:for="{{deviceInfo.realTimeData}}" wx:key="key">
-        <text class="energy-text-tertiary energy-text-small">{{item.label}}</text>
-        <text class="energy-title-medium energy-text-primary">{{item.value}}</text>
-        <text class="energy-text-tertiary energy-text-small">{{item.unit}}</text>
+    <view class="realtime-data-grid">
+      <view class="realtime-data-card" wx:for="{{deviceInfo.realTimeData}}" wx:key="key">
+        <view class="data-icon-container">
+          <text class="data-icon">{{item.key === 'power' ? '⚡' : item.key === 'temperature' ? '🌡️' : item.key === 'humidity' ? '💧' : '📊'}}</text>
+        </view>
+        <view class="data-content">
+          <text class="energy-text-tertiary energy-text-small">{{item.label}}</text>
+          <view class="data-value-container">
+            <text class="energy-title-medium energy-text-primary data-value">{{item.value}}</text>
+            <text class="energy-text-tertiary energy-text-small data-unit">{{item.unit}}</text>
+          </view>
+        </view>
       </view>
     </view>
   </view>
   
-  <!-- 历史数据图表 -->
+  <!-- 能耗分析图表 - 视觉优化 -->
   <view class="energy-glass-card energy-p-24">
-    <view class="energy-flex energy-flex-between energy-mb-16">
-      <text class="energy-title-medium">历史数据</text>
-      <view class="energy-flex">
+    <view class="card-header energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">能耗分析</text>
+      <view class="time-filter-container">
         <view class="time-filter {{timeFilter === '1h' ? 'active' : ''}}" data-filter="1h" bindtap="onTimeFilterChange">
           <text>1小时</text>
         </view>
@@ -119,21 +159,54 @@
       </view>
     </view>
     
-    <!-- 简化的图表展示 -->
-    <view class="chart-container">
-      <view class="chart-placeholder">
-        <text class="energy-icon-text energy-text-large energy-mb-16">📊</text>
-        <text class="energy-text-tertiary energy-text-small">{{timeFilter}}数据图表</text>
-        <text class="energy-text-tertiary energy-text-small energy-mt-8">点击查看详细分析</text>
+    <!-- 能耗数据摘要 -->
+    <view class="energy-summary-container energy-mb-16" wx:if="{{energyData}}">
+      <view class="energy-summary-item">
+        <text class="energy-text-tertiary energy-text-small">总能耗</text>
+        <view class="energy-flex energy-flex-align-center">
+          <text class="energy-title-medium energy-text-primary">{{energyData.totalEnergy}}</text>
+          <text class="energy-text-tertiary energy-text-small energy-ml-4">{{energyData.unit}}</text>
+        </view>
       </view>
+      <view class="energy-summary-item">
+        <text class="energy-text-tertiary energy-text-small">碳排放</text>
+        <view class="energy-flex energy-flex-align-center">
+          <text class="energy-title-medium energy-text-primary">{{energyData.carbonEmission}}</text>
+          <text class="energy-text-tertiary energy-text-small energy-ml-4">kg</text>
+        </view>
+      </view>
+      <view class="energy-summary-item">
+        <text class="energy-text-tertiary energy-text-small">能效等级</text>
+        <view class="energy-flex energy-flex-align-center">
+          <text class="energy-title-medium energy-text-primary">{{energyData.efficiencyLevel || 'A'}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 能耗图表 -->
+    <view class="chart-container">
+      <block wx:if="{{energyData && energyData.data && energyData.data.length > 0}}">
+        <canvas type="2d" id="energyChart" class="energy-chart"></canvas>
+      </block>
+      <view class="chart-placeholder" wx:else>
+        <text class="energy-icon-text energy-text-large energy-mb-16 chart-icon">📊</text>
+        <text class="energy-text-secondary energy-text-small">暂无{{timeFilter}}能耗数据</text>
+        <text class="energy-text-tertiary energy-text-small energy-mt-8">请稍后再试</text>
+      </view>
+    </view>
+    
+    <!-- 能耗分析说明 -->
+    <view class="energy-analysis-tips energy-mt-16" wx:if="{{energyData}}">
+      <text class="energy-text-tertiary energy-text-small">{{timeFilter === '1h' ? '过去1小时' : timeFilter === '24h' ? '过去24小时' : '过去7天'}}内，该设备能耗{{energyData.trend === 'up' ? '上升' : energyData.trend === 'down' ? '下降' : '稳定'}}{{energyData.trendValue || ''}}{{energyData.trend !== 'stable' ? '%' : ''}}。</text>
     </view>
   </view>
   
-  <!-- 自动化规则 -->
+  <!-- 自动化规则 - 视觉优化 -->
   <view class="energy-glass-card energy-p-24">
-    <view class="energy-flex energy-flex-between energy-mb-16">
+    <view class="card-header energy-flex energy-flex-between energy-mb-16">
       <text class="energy-title-medium">自动化规则</text>
-      <view class="energy-btn energy-btn-outline energy-btn-small" bindtap="onAddRule">
+      <view class="energy-btn energy-btn-outline energy-btn-small add-rule-btn" bindtap="onAddRule">
+        <text class="add-icon">+</text>
         <text>添加</text>
       </view>
     </view>
@@ -141,11 +214,14 @@
     <view class="automation-rules" wx:if="{{deviceInfo.automationRules && deviceInfo.automationRules.length > 0}}">
       <view class="rule-item" wx:for="{{deviceInfo.automationRules}}" wx:key="id">
         <view class="energy-flex energy-flex-between">
-          <view class="energy-flex-1">
+          <view class="rule-icon">
+            <text class="energy-icon-text">🤖</text>
+          </view>
+          <view class="energy-flex-1 rule-content">
             <text class="energy-text-primary energy-text-medium energy-font-medium">{{item.name}}</text>
             <text class="energy-text-tertiary energy-text-small energy-mt-4">{{item.description}}</text>
           </view>
-          <switch class="energy-switch" checked="{{item.enabled}}" 
+          <switch class="energy-switch" color="#00ffff" checked="{{item.enabled}}" 
                   data-rule="{{item.id}}" bindchange="onRuleToggle" />
         </view>
       </view>
@@ -154,12 +230,18 @@
     <view class="energy-empty-state" wx:else>
       <text class="energy-icon-text energy-text-large energy-mb-16">🤖</text>
       <text class="energy-text-tertiary energy-text-small">暂无自动化规则</text>
+      <text class="energy-text-tertiary energy-text-small energy-mt-8">添加规则让设备更智能</text>
     </view>
   </view>
   
-  <!-- 设备信息 -->
+  <!-- 设备信息 - 视觉优化 -->
   <view class="energy-glass-card energy-p-24">
-    <text class="energy-title-medium energy-mb-16">设备信息</text>
+    <view class="card-header energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">设备信息</text>
+      <view class="device-info-badge">
+        <text class="energy-text-tertiary energy-text-small">{{deviceInfo.specifications[0].value}}</text>
+      </view>
+    </view>
     
     <view class="device-info-list">
       <view class="info-item" wx:for="{{deviceInfo.specifications}}" wx:key="key">
@@ -169,17 +251,15 @@
     </view>
   </view>
   
-  <!-- 操作按钮 -->
-  <view class="energy-glass-card energy-p-24">
-    <view class="energy-grid-2">
-      <view class="energy-btn energy-btn-outline" bindtap="onEditDevice">
-        <text class="energy-icon-text energy-mr-8">✏️</text>
-        <text>编辑设备</text>
-      </view>
-      <view class="energy-btn energy-btn-outline" bindtap="onDeviceSettings">
-        <text class="energy-icon-text energy-mr-8">⚙️</text>
-        <text>设备设置</text>
-      </view>
+  <!-- 操作按钮 - 视觉优化 -->
+  <view class="action-buttons-container">
+    <view class="energy-btn energy-btn-outline action-btn" bindtap="onEditDevice">
+      <text class="energy-icon-text energy-mr-8">✏️</text>
+      <text>编辑设备</text>
+    </view>
+    <view class="energy-btn energy-btn-outline action-btn" bindtap="onDeviceSettings">
+      <text class="energy-icon-text energy-mr-8">⚙️</text>
+      <text>设备设置</text>
     </view>
   </view>
 </view>

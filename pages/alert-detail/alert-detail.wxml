@@ -1,0 +1,320 @@
+<!--告警详情页面模板-->
+<view class="container">
+  <!-- 背景装饰 -->
+  <view class="bg-decoration">
+    <view class="bg-circle bg-circle-1"></view>
+    <view class="bg-circle bg-circle-2"></view>
+    <view class="bg-circle bg-circle-3"></view>
+    <view class="bg-circle bg-circle-4"></view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 告警详情内容 -->
+  <view wx:else class="alert-detail-content">
+    <!-- 告警基本信息卡片 -->
+    <view class="alert-info-card glass-card">
+      <!-- 告警头部信息 -->
+      <view class="alert-header-enhanced">
+        <view class="alert-level-badge {{alert.level}}">
+          <view class="level-icon-container">
+            <image src="../../assets/icons/{{alert.levelInfo.icon}}.svg" class="level-icon-svg" mode="aspectFit"/>
+          </view>
+          <text class="level-text">{{alert.levelInfo.text}}</text>
+        </view>
+        <view class="alert-timestamp">
+          <text class="time-label">发生时间</text>
+          <text class="time-value">{{alert.createTimeFormatted}}</text>
+        </view>
+      </view>
+      
+      <!-- 告警标题 -->
+      <view class="alert-title-enhanced">{{alert.title}}</view>
+      
+      <!-- 告警基本信息 - 采用数据卡片布局 -->
+      <view class="alert-meta-enhanced">
+        <view class="data-card-list glass-card">
+          <view class="data-card-list-content">
+            <view class="data-icon alert-type-icon">
+              <image src="../../assets/icons/search.svg" class="icon-svg" mode="aspectFit"/>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">告警类型</text>
+                <text class="data-value">{{alert.typeText}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        <view wx:if="{{alert.handleTimeFormatted}}" class="data-card-list glass-card">
+          <view class="data-card-list-content">
+            <view class="data-icon handle-time-icon">
+              <image src="../../assets/icons/success.svg" class="icon-svg" mode="aspectFit"/>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">处理时间</text>
+                <text class="data-value">{{alert.handleTimeFormatted}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 告警描述 -->
+      <view class="alert-description-enhanced">
+        <text class="description-label">详细描述</text>
+        <text class="description-content">{{alert.description}}</text>
+      </view>
+    </view>
+
+    <!-- 设备信息卡片 -->
+    <view wx:if="{{device}}" class="device-info-card glass-card">
+      <view class="card-header-enhanced">
+        <view class="card-title-section">
+          <text class="card-title">相关设备</text>
+          <text class="card-subtitle">设备详细信息</text>
+        </view>
+        <view class="device-actions">
+          <view class="action-btn-enhanced" bindtap="goToDeviceDetail">
+            <image src="../../assets/icons/arrow-right.svg" class="action-icon" mode="aspectFit"/>
+            <text>查看详情</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 设备主要信息 -->
+      <view class="device-main-info">
+        <view class="device-header">
+          <view class="device-icon-container">
+            <image src="../../assets/icons/power.svg" class="device-icon" mode="aspectFit"/>
+          </view>
+          <view class="device-basic">
+            <view class="device-name">{{device.name}}</view>
+            <view class="device-type">{{device.type}}</view>
+          </view>
+          <view class="device-status-badge {{device.status}}">
+            <view class="status-dot"></view>
+            <text class="status-text">{{device.status === 'online' ? '在线' : '离线'}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 设备详细信息 - 采用数据卡片布局 -->
+      <view class="device-details-enhanced">
+        <view class="data-card-list glass-card">
+          <view class="data-card-list-content">
+            <view class="data-icon location-icon">
+              <image src="../../assets/icons/scan.svg" class="icon-svg" mode="aspectFit"/>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">设备位置</text>
+                <text class="data-value">{{device.location}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        <view class="data-card-list glass-card">
+          <view class="data-card-list-content">
+            <view class="data-icon model-icon">
+              <image src="../../assets/icons/manual.svg" class="icon-svg" mode="aspectFit"/>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">设备型号</text>
+                <text class="data-value">{{device.model}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        <view class="data-card-list glass-card">
+          <view class="data-card-list-content">
+            <view class="data-icon install-icon">
+              <image src="../../assets/icons/success.svg" class="icon-svg" mode="aspectFit"/>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">安装日期</text>
+                <text class="data-value">{{device.installDate}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 能耗数据卡片（仅能耗异常告警显示） -->
+    <view wx:if="{{energyData}}" class="energy-data-card glass-card">
+      <view class="card-header-enhanced">
+        <view class="card-title-section">
+          <text class="card-title">能耗数据</text>
+          <text class="card-subtitle">异常能耗分析</text>
+        </view>
+      </view>
+      
+      <!-- 能耗统计 - 采用首页能耗卡片布局 -->
+      <view class="energy-stats-enhanced">
+        <view class="data-card-list glass-card energy-card-current">
+          <view class="data-card-list-content">
+            <view class="data-icon electricity-icon">
+              <image src="../../assets/icons/power.svg" class="icon-svg" mode="aspectFit"/>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">当前能耗</text>
+                <view class="data-value-container">
+                  <text class="data-value">{{energyData.current}}</text>
+                  <text class="data-unit">kWh</text>
+                </view>
+              </view>
+            </view>
+            <view class="data-trend up">
+              <text class="trend-arrow">↗</text>
+              <text class="trend-value">异常</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="data-card-list glass-card energy-card-normal">
+          <view class="data-card-list-content">
+            <view class="data-icon normal-icon">
+              <image src="../../assets/icons/success.svg" class="icon-svg" mode="aspectFit"/>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">正常范围</text>
+                <view class="data-value-container">
+                  <text class="data-value">{{energyData.normal}}</text>
+                  <text class="data-unit">kWh</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        <view class="data-card-list glass-card energy-card-difference">
+          <view class="data-card-list-content">
+            <view class="data-icon warning-icon">
+              <image src="../../assets/icons/carbon.svg" class="icon-svg" mode="aspectFit"/>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">超出比例</text>
+                <view class="data-value-container">
+                  <text class="data-value abnormal">+{{energyData.percentage}}</text>
+                  <text class="data-unit">%</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 能耗趋势图 -->
+      <view class="energy-trend-enhanced">
+        <text class="trend-title">24小时能耗趋势</text>
+        <view class="trend-chart-container">
+          <view class="trend-chart">
+            <view wx:for="{{energyData.trend}}" wx:key="time" class="trend-bar">
+              <view class="bar" style="height: {{item.value / energyData.current * 100}}%"></view>
+              <text class="bar-label">{{item.time}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 处理建议卡片 -->
+    <view wx:if="{{suggestions.length > 0}}" class="suggestions-card glass-card">
+      <view class="card-header-enhanced">
+        <view class="card-title-section">
+          <text class="card-title">处理建议</text>
+          <text class="card-subtitle">智能推荐解决方案</text>
+        </view>
+      </view>
+      
+      <view class="suggestions-list-enhanced">
+        <view wx:for="{{suggestions}}" wx:key="index" class="suggestion-item-enhanced">
+          <view class="suggestion-number-container">
+            <view class="suggestion-number">{{index + 1}}</view>
+          </view>
+          <view class="suggestion-content">
+            <text class="suggestion-text">{{item}}</text>
+          </view>
+          <view class="suggestion-action">
+            <image src="../../assets/icons/arrow-right.svg" class="suggestion-arrow" mode="aspectFit"/>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 处理历史卡片 -->
+    <view wx:if="{{handleHistory.length > 0}}" class="history-card glass-card">
+      <view class="card-header-enhanced">
+        <view class="card-title-section">
+          <text class="card-title">处理历史</text>
+          <text class="card-subtitle">历史处理记录</text>
+        </view>
+      </view>
+      
+      <view class="history-list-enhanced">
+        <view wx:for="{{handleHistory}}" wx:key="id" class="history-item-enhanced">
+          <view class="history-timeline">
+            <view class="timeline-dot"></view>
+            <view class="timeline-line" wx:if="{{index < handleHistory.length - 1}}"></view>
+          </view>
+          <view class="history-content-enhanced">
+            <view class="history-header">
+              <view class="history-action-enhanced">
+                <text class="action-text">{{item.action === 'view' ? '查看' : item.action === 'read' ? '标记已读' : item.action === 'resolve' ? '标记解决' : '操作'}}</text>
+                <text class="operator">{{item.operator}}</text>
+              </view>
+              <view class="history-time-enhanced">{{item.time}}</view>
+            </view>
+            <text wx:if="{{item.remark}}" class="history-remark-enhanced">{{item.remark}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮区域 -->
+    <view class="action-buttons-enhanced">
+      <!-- 解决按钮 -->
+      <view wx:if="{{alert.status !== 'resolved'}}" 
+            class="action-btn-enhanced primary {{isHandling ? 'disabled' : ''}}" 
+            bindtap="handleResolve">
+        <view class="btn-icon">
+          <image src="../../assets/icons/success.svg" class="btn-icon-svg" mode="aspectFit"/>
+        </view>
+        <text wx:if="{{!isHandling}}">标记为已解决</text>
+        <text wx:else>处理中...</text>
+      </view>
+      
+      <!-- 忽略按钮 -->
+      <view wx:if="{{alert.status !== 'ignored' && alert.status !== 'resolved'}}" 
+            class="action-btn-enhanced secondary {{isHandling ? 'disabled' : ''}}" 
+            bindtap="handleIgnore">
+        <view class="btn-icon">
+          <image src="../../assets/icons/eye-off.svg" class="btn-icon-svg" mode="aspectFit"/>
+        </view>
+        <text>忽略告警</text>
+      </view>
+      
+      <!-- 分享按钮 -->
+      <view class="action-btn-enhanced outline" bindtap="shareAlert">
+        <view class="btn-icon">
+          <image src="../../assets/icons/arrow-right.svg" class="btn-icon-svg" mode="aspectFit"/>
+        </view>
+        <text>分享告警</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,8 +1,134 @@
-<view class="container">
-  <view class="page-title">场景模式管理</view>
-  <view class="content">
-    <!-- 场景模式列表（生产模式、非生产模式、上课模式等） -->
-    <!-- 场景模式编辑（包含设备、运行参数） -->
-    <!-- 场景模式一键切换 -->
+<!--pages/scene-mode/scene-mode.wxml-->
+<view class="energy-container">
+  <!-- 背景装饰 -->
+  <view class="energy-bg-decoration">
+    <view class="energy-bg-circle" style="width: 200rpx; height: 200rpx; top: 10%; right: -50rpx; animation-delay: 0s; opacity: 0.6;"></view>
+    <view class="energy-bg-circle" style="width: 150rpx; height: 150rpx; top: 60%; left: -30rpx; animation-delay: 2s; opacity: 0.4;"></view>
+    <view class="energy-bg-circle" style="width: 100rpx; height: 100rpx; top: 80%; right: 20%; animation-delay: 4s; opacity: 0.3;"></view>
+  </view>
+
+  <!-- 页面标题 -->
+  <view class="energy-glass-card energy-p-32">
+    <view class="energy-flex energy-flex-between energy-mb-24">
+      <text class="energy-title-large">场景模式管理</text>
+      <view class="energy-flex">
+        <!-- 实时刷新指示器 -->
+        <view class="refresh-indicator {{isRefreshing ? 'active' : ''}}" bindtap="onRefresh">
+          <text class="energy-icon-text">🔄</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 场景模式统计 -->
+    <view class="energy-flex energy-flex-between energy-mb-24">
+      <view class="scene-stat-item">
+        <text class="energy-text-tertiary energy-text-small">场景总数</text>
+        <text class="energy-title-medium energy-text-primary">{{sceneStats.total || 0}}</text>
+      </view>
+      <view class="scene-stat-item">
+        <text class="energy-text-tertiary energy-text-small">当前激活</text>
+        <text class="energy-title-medium energy-text-success">{{sceneStats.active || 0}}</text>
+      </view>
+      <view class="scene-stat-item">
+        <text class="energy-text-tertiary energy-text-small">设备覆盖</text>
+        <text class="energy-title-medium energy-text-primary">{{sceneStats.devicesCovered || 0}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 当前激活场景 -->
+  <view class="energy-glass-card energy-p-24" wx:if="{{activeScene}}">
+    <view class="energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">当前激活场景</text>
+      <view class="active-scene-indicator">
+        <view class="energy-status-dot energy-status-success"></view>
+        <text class="energy-text-success energy-text-small">已激活</text>
+      </view>
+    </view>
+    
+    <view class="active-scene-card">
+      <view class="scene-icon">{{activeScene.icon || '🏭'}}</view>
+      <view class="scene-info">
+        <text class="energy-title-small">{{activeScene.name}}</text>
+        <text class="energy-text-muted">{{activeScene.description}}</text>
+        <text class="energy-text-tertiary energy-text-small">激活时间: {{activeScene.lastActiveTime}}</text>
+      </view>
+      <view class="scene-devices">
+        <text class="energy-text-tertiary energy-text-small">包含设备: {{activeScene.devices.length}}台</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 场景模式列表 -->
+  <view class="energy-glass-card energy-p-24">
+    <view class="energy-flex energy-flex-between energy-mb-16">
+      <text class="energy-title-medium">场景模式列表</text>
+      <view class="scene-filter" bindtap="toggleFilter">
+        <text class="energy-text-tertiary energy-text-small">{{filterType === 'all' ? '全部' : filterType === 'office' ? '办公' : filterType === 'factory' ? '工厂' : '学校'}}</text>
+        <text class="filter-icon">⌄</text>
+      </view>
+    </view>
+    
+    <!-- 筛选下拉菜单 -->
+    <view class="filter-dropdown" wx:if="{{showFilter}}">
+      <view class="filter-item {{filterType === 'all' ? 'active' : ''}}" bindtap="onFilterType" data-type="all">
+        <text>全部场景</text>
+      </view>
+      <view class="filter-item {{filterType === 'office' ? 'active' : ''}}" bindtap="onFilterType" data-type="office">
+        <text>办公场景</text>
+      </view>
+      <view class="filter-item {{filterType === 'factory' ? 'active' : ''}}" bindtap="onFilterType" data-type="factory">
+        <text>工厂场景</text>
+      </view>
+      <view class="filter-item {{filterType === 'school' ? 'active' : ''}}" bindtap="onFilterType" data-type="school">
+        <text>学校场景</text>
+      </view>
+    </view>
+    
+    <!-- 场景列表 -->
+    <view class="scene-list">
+      <view class="scene-empty" wx:if="{{filteredScenes.length === 0}}">
+        <text class="energy-text-muted">暂无场景模式</text>
+      </view>
+      
+      <view class="scene-item energy-glass-card energy-p-16" wx:for="{{filteredScenes}}" wx:key="id">
+        <view class="scene-header energy-flex energy-flex-between">
+          <view class="scene-title-area">
+            <text class="scene-icon">{{item.icon || (item.type === 'factory' ? '🏭' : item.type === 'school' ? '🏫' : '🏢')}}</text>
+            <text class="energy-title-small">{{item.name}}</text>
+          </view>
+          <view class="scene-status {{item.isActive ? 'active' : ''}}">
+            <view class="energy-status-dot {{item.isActive ? 'energy-status-success' : ''}}"></view>
+            <text class="energy-text-small {{item.isActive ? 'energy-text-success' : 'energy-text-muted'}}">{{item.isActive ? '已启用' : '未启用'}}</text>
+          </view>
+        </view>
+        
+        <view class="scene-description energy-mb-16">
+          <text class="energy-text-muted">{{item.description}}</text>
+        </view>
+        
+        <view class="scene-devices energy-mb-16">
+          <text class="energy-text-tertiary energy-text-small">包含设备: {{item.devices.length}}台</text>
+        </view>
+        
+        <view class="scene-actions energy-flex energy-flex-between">
+          <button class="scene-btn {{item.isActive ? 'disabled' : ''}}" bindtap="onSwitchScene" data-id="{{item.id}}" disabled="{{item.isActive}}">
+            {{item.isActive ? '已启用' : '一键启用'}}
+          </button>
+          <button class="scene-btn edit" bindtap="onEditScene" data-id="{{item.id}}">
+            编辑
+          </button>
+          <button class="scene-btn delete" bindtap="onDeleteScene" data-id="{{item.id}}">
+            删除
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 添加新场景按钮 -->
+  <view class="add-scene-btn" bindtap="onAddScene">
+    <text class="add-icon">+</text>
+    <text class="add-text">添加场景模式</text>
   </view>
 </view>

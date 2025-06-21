@@ -46,20 +46,102 @@
   <!-- 总能耗概览卡片 - 优化设计 -->
   <view class="energy-overview glass-card">
     <view class="overview-header">
-      <text class="overview-title">今日总能耗</text>
-      <text class="overview-subtitle">实时监控</text>
+      <text class="overview-title">今日能耗总览</text>
+      <text class="overview-subtitle">累计消耗数据</text>
     </view>
     <view class="overview-content" wx:if="{{!loading && overview.totalEnergy}}">
-      <view class="total-energy">
-        <text class="energy-value">{{overview.totalEnergy.value}}</text>
-        <text class="energy-unit">{{overview.totalEnergy.unit}}</text>
-      </view>
-      <view class="energy-trend">
-        <text class="trend-text">较昨日</text>
-        <text class="trend-value {{overview.totalEnergy.trend >= 0 ? 'trend-up' : 'trend-down'}}">
-          {{overview.totalEnergy.trend >= 0 ? '+' : ''}}{{overview.totalEnergy.trend}}%
-        </text>
-      </view>
+      
+      <!-- 能耗分类列表布局 -->
+      <view class="energy-breakdown-list">
+        <!-- 用电量累计 -->
+        <view class="data-card-list glass-card energy-card-electricity" wx:if="{{overview.electricity}}">
+          <view class="data-card-list-content">
+            <view class="data-icon electricity-icon">
+              <image src="../../assets/icons/power.svg" class="icon-svg" mode="aspectFit"></image>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">用电量</text>
+                <view class="data-value-container">
+                  <text class="data-value">{{overview.electricity.value}}</text>
+                  <text class="data-unit">{{overview.electricity.unit}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="data-trend {{overview.electricity.trend >= 0 ? 'up' : 'down'}}">
+              <text class="trend-arrow">{{overview.electricity.trend >= 0 ? '↗' : '↘'}}</text>
+              <text class="trend-value">{{overview.electricity.trend}}%</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 用水量累计 -->
+        <view class="data-card-list glass-card energy-card-water" wx:if="{{overview.water}}">
+          <view class="data-card-list-content">
+            <view class="data-icon water-icon">
+              <image src="../../assets/icons/water.svg" class="icon-svg" mode="aspectFit"></image>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">用水量</text>
+                <view class="data-value-container">
+                  <text class="data-value">{{overview.water.value}}</text>
+                  <text class="data-unit">{{overview.water.unit}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="data-trend {{overview.water.trend >= 0 ? 'up' : 'down'}}">
+              <text class="trend-arrow">{{overview.water.trend >= 0 ? '↗' : '↘'}}</text>
+              <text class="trend-value">{{overview.water.trend}}%</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 燃气量累计 -->
+        <view class="data-card-list glass-card energy-card-gas" wx:if="{{overview.gas}}">
+          <view class="data-card-list-content">
+            <view class="data-icon gas-icon">
+              <image src="../../assets/icons/gas.svg" class="icon-svg" mode="aspectFit"></image>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">燃气量</text>
+                <view class="data-value-container">
+                  <text class="data-value">{{overview.gas.value}}</text>
+                  <text class="data-unit">{{overview.gas.unit}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="data-trend {{overview.gas.trend >= 0 ? 'up' : 'down'}}">
+              <text class="trend-arrow">{{overview.gas.trend >= 0 ? '↗' : '↘'}}</text>
+              <text class="trend-value">{{overview.gas.trend}}%</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 碳排放累计 -->
+        <view class="data-card-list glass-card energy-card-carbon" wx:if="{{overview.carbon}}">
+          <view class="data-card-list-content">
+            <view class="data-icon carbon-icon">
+              <image src="../../assets/icons/carbon.svg" class="icon-svg" mode="aspectFit"></image>
+            </view>
+            <view class="data-info-list">
+              <view class="data-info-row">
+                <text class="data-title">碳排放</text>
+                <view class="data-value-container">
+                  <text class="data-value">{{overview.carbon.value}}</text>
+                  <text class="data-unit">{{overview.carbon.unit}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="data-trend {{overview.carbon.trend >= 0 ? 'up' : 'down'}}">
+              <text class="trend-arrow">{{overview.carbon.trend >= 0 ? '↗' : '↘'}}</text>
+              <text class="trend-value">{{overview.carbon.trend}}%</text>
+            </view>
+          </view>
+        </view>
+      </view>  
+      
     </view>
     <view class="loading-placeholder" wx:else>
       <view class="loading-spinner"></view>
@@ -79,59 +161,98 @@
     </view>
   </view>
 
-  <!-- 实时数据网格 -->
-  <view class="data-grid" wx:if="{{!loading && monitorData.realTimeData}}">
-    <view class="data-card glass-card" bindtap="goToMonitor">
-      <view class="data-icon power-icon">⚡</view>
+  <!-- 实时数据监控 -->
+  <view class="realtime-monitor glass-card" wx:if="{{!loading && monitorData.realTimeData}}">
+    <view class="monitor-header">
+      <text class="monitor-title">实时数据监控</text>
+      <text class="monitor-subtitle">当前实时状态</text>
+    </view>
+    
+    <!-- 实时数据网格 -->
+    <view class="data-grid">
+    <!-- 实时功率卡片 -->
+    <view class="data-card glass-card energy-card-electricity" bindtap="goToMonitor" data-type="power">
+      <view class="data-icon power-icon">
+        <image src="../../assets/icons/power.svg" class="icon-svg" mode="aspectFit"></image>
+      </view>
       <view class="data-info">
-        <text class="data-title">实时功率</text>
-        <text class="data-value">{{monitorData.realTimeData.power.value}} {{monitorData.realTimeData.power.unit}}</text>
+        <text class="data-title">用电功率</text>
+        <view class="data-value-container">
+          <text class="data-value">{{monitorData.realTimeData.power.value}}</text>
+          <text class="data-unit">{{monitorData.realTimeData.power.unit}}</text>
+        </view>
       </view>
       <view class="data-trend {{monitorData.realTimeData.power.trend}}">
         <text class="trend-arrow">{{monitorData.realTimeData.power.trend === 'up' ? '↗' : monitorData.realTimeData.power.trend === 'down' ? '↘' : '→'}}</text>
       </view>
     </view>
 
-    <view class="data-card glass-card" bindtap="goToMonitor">
-      <view class="data-icon water-icon">💧</view>
+    <!-- 用水量卡片 -->
+    <view class="data-card glass-card energy-card-water" bindtap="goToMonitor" data-type="water">
+      <view class="data-icon water-icon">
+        <image src="../../assets/icons/water.svg" class="icon-svg" mode="aspectFit"></image>
+      </view>
       <view class="data-info">
-        <text class="data-title">用水量</text>
-        <text class="data-value">{{monitorData.realTimeData.water.value}} {{monitorData.realTimeData.water.unit}}</text>
+        <text class="data-title">用水流量</text>
+        <view class="data-value-container">
+          <text class="data-value">{{monitorData.realTimeData.water.value}}</text>
+          <text class="data-unit">{{monitorData.realTimeData.water.unit}}</text>
+        </view>
       </view>
       <view class="data-trend {{monitorData.realTimeData.water.trend}}">
         <text class="trend-arrow">{{monitorData.realTimeData.water.trend === 'up' ? '↗' : monitorData.realTimeData.water.trend === 'down' ? '↘' : '→'}}</text>
       </view>
     </view>
 
-    <view class="data-card glass-card" bindtap="goToMonitor">
-      <view class="data-icon gas-icon">🔥</view>
+    <!-- 燃气量卡片 -->
+    <view class="data-card glass-card energy-card-gas" bindtap="goToMonitor" data-type="gas">
+      <view class="data-icon gas-icon">
+        <image src="../../assets/icons/gas.svg" class="icon-svg" mode="aspectFit"></image>
+      </view>
       <view class="data-info">
-        <text class="data-title">燃气量</text>
-        <text class="data-value">{{monitorData.realTimeData.gas.value}} {{monitorData.realTimeData.gas.unit}}</text>
+        <text class="data-title">燃气流量</text>
+        <view class="data-value-container">
+          <text class="data-value">{{monitorData.realTimeData.gas.value}}</text>
+          <text class="data-unit">{{monitorData.realTimeData.gas.unit}}</text>
+        </view>
       </view>
       <view class="data-trend {{monitorData.realTimeData.gas.trend}}">
         <text class="trend-arrow">{{monitorData.realTimeData.gas.trend === 'up' ? '↗' : monitorData.realTimeData.gas.trend === 'down' ? '↘' : '→'}}</text>
       </view>
     </view>
 
-    <view class="data-card glass-card" bindtap="goToMonitor">
-      <view class="data-icon carbon-icon">🌱</view>
+    <!-- 碳排放卡片 -->
+    <view class="data-card glass-card energy-card-carbon" bindtap="goToMonitor" data-type="carbon">
+      <view class="data-icon carbon-icon">
+        <image src="../../assets/icons/carbon.svg" class="icon-svg" mode="aspectFit"></image>
+      </view>
       <view class="data-info">
-        <text class="data-title">碳排放</text>
-        <text class="data-value">{{monitorData.realTimeData.carbon.value}} {{monitorData.realTimeData.carbon.unit}}</text>
+        <text class="data-title">碳排放率</text>
+        <view class="data-value-container">
+          <text class="data-value">{{monitorData.realTimeData.carbon.value}}</text>
+          <text class="data-unit">{{monitorData.realTimeData.carbon.unit}}</text>
+        </view>
       </view>
       <view class="data-trend {{monitorData.realTimeData.carbon.trend}}">
         <text class="trend-arrow">{{monitorData.realTimeData.carbon.trend === 'up' ? '↗' : monitorData.realTimeData.carbon.trend === 'down' ? '↘' : '→'}}</text>
       </view>
     </view>
+    </view>
   </view>
   
   <!-- 数据加载状态 -->
-  <view class="data-grid loading-grid" wx:else>
+  <view class="realtime-monitor glass-card" wx:else>
+    <view class="monitor-header">
+      <text class="monitor-title">实时数据监控</text>
+      <text class="monitor-subtitle">当前实时状态</text>
+    </view>
+    
+    <view class="data-grid loading-grid">
     <view class="data-card glass-card loading-card" wx:for="{{[1,2,3,4]}}" wx:key="*this">
       <view class="loading-placeholder">
         <text class="loading-text">加载中...</text>
       </view>
+    </view>
     </view>
   </view>
 
@@ -139,7 +260,7 @@
   <view class="chart-section glass-card">
     <view class="chart-header">
       <view class="chart-title-section">
-        <text class="chart-title">今日用电负荷</text>
+        <text class="chart-title">今日用电负荷 (kW)</text>
       </view>
       <view class="chart-tabs">
         <text class="chart-tab {{chartTab === 'today' ? 'active' : ''}}" bindtap="switchChartTab" data-tab="today">今日</text>
@@ -147,7 +268,7 @@
       </view>
     </view>
     <view class="chart-container">
-      <canvas class="chart-canvas" canvas-id="powerChart" id="powerChart" type="2d" disable-scroll="true" wx:if="{{chartData && !loading}}"></canvas>
+      <canvas class="chart-canvas" id="powerChart" type="2d" disable-scroll="true" wx:if="{{chartData && !loading}}"></canvas>
       <view class="chart-loading" wx:else>
         <text class="loading-text">图表数据加载中...</text>
       </view>
@@ -161,8 +282,9 @@
       <text class="alert-count" wx:if="{{!loading}}">{{alertCount}}条未处理</text>
       <text class="alert-count" wx:else>加载中...</text>
     </view>
-    <view class="alert-list" wx:if="{{!loading && alertCount > 0}}">
-      <view class="alert-item" wx:for="{{recentAlerts}}" wx:key="id">
+    <view class="alert-list" wx:if="{{!loading && alertCount > 0 && recentAlerts && recentAlerts.length > 0}}">
+      <!-- 修改这里，为每个告警项添加单独的点击事件，并传递告警ID -->
+      <view class="alert-item" wx:for="{{recentAlerts}}" wx:key="id" bindtap="goToAlertDetail" data-id="{{item.id}}">
         <view class="alert-dot {{item.level}}"></view>
         <text class="alert-text">{{item.message}}</text>
         <text class="alert-time">{{item.createdAt}}</text>
@@ -192,14 +314,19 @@
         <view class="control-icon scene-icon">🏢</view>
         <text class="control-text">场景模式</text>
       </view>
-      <view class="control-item" bindtap="goToDevices">
-        <view class="control-icon device-icon">📱</view>
-        <text class="control-text">设备管理</text>
+      <view class="control-item" bindtap="goToAutomation">
+        <view class="control-icon automation-icon">⚙️</view>
+        <text class="control-text">自动化规则</text>
       </view>
-      <view class="control-item" bindtap="goToData">
-        <view class="control-icon report-icon">📊</view>
-        <text class="control-text">数据报告</text>
-      </view>
+
+      <navigator url="/pages/group-management/group-management" class="control-item">
+        <view class="control-icon">👥</view>
+        <text class="control-text">分组管理</text>
+      </navigator>
+      <navigator url="/pages/intelligent-analysis/intelligent-analysis" class="control-item">
+        <view class="control-icon">🤖</view>
+        <text class="control-text">智能分析</text>
+      </navigator>
     </view>
   </view>
 

@@ -1,14 +1,221 @@
 /* pages/automation/automation.wxss */
-.container {
-  padding: 20rpx;
+@import "../../styles/design-system.wxss";
+
+/* 规则统计样式 */
+.rule-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  border-radius: 16rpx;
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-.page-title {
-  font-size: 32rpx;
+.rule-stat-item:hover {
+  transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(0, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 规则统计文字样式 */
+.rule-stat-item .energy-text-tertiary {
+  font-size: 18rpx; /* 更小的文字 */
+  letter-spacing: 1rpx;
+  margin-bottom: 4rpx;
+  color: rgba(0, 255, 255, 0.8); /* 更鲜艳的颜色 */
+  font-weight: 500; /* 稍微加粗 */
+}
+
+.rule-stat-item .energy-title-medium {
+  font-size: 36rpx; /* 更大的数字 */
+  font-weight: 600;
+  text-shadow: 0 0 8rpx rgba(0, 255, 255, 0.3); /* 添加发光效果 */
+}
+
+/* 添加规则按钮 */
+.add-rule-card {
+  margin: 24rpx 0;
+  transition: all 0.3s ease;
+}
+
+.add-rule-card:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.add-icon {
+  font-size: 40rpx;
   font-weight: bold;
-  margin-bottom: 20rpx;
+  margin-right: 16rpx;
+  color: var(--energy-color-primary);
 }
 
-.content {
-  /* 页面内容样式 */
+/* 规则筛选 */
+.rule-filter {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 16rpx;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8rpx;
+}
+
+.filter-icon {
+  margin-left: 8rpx;
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+.filter-dropdown {
+  position: absolute;
+  right: 24rpx;
+  top: 80rpx;
+  background-color: #ffffff; /* 使用白色背景 */
+  /* 移除 backdrop-filter 以去除透明效果 */
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.filter-item {
+  padding: 16rpx 32rpx;
+  transition: all 0.2s ease;
+  color: #333333; /* 设置文字颜色为深灰色，接近黑色 */
+}
+
+.filter-item.active {
+  background-color: rgba(0, 212, 255, 0.1); /* 使用浅蓝色背景 */
+  color: #00d4ff; /* 使用主色调蓝色文字 */
+  font-weight: 500; /* 稍微加粗文字 */
+}
+
+.filter-item:active {
+  background-color: rgba(0, 0, 0, 0.05); /* 使用浅灰色背景，适合白底主题 */
+}
+
+/* 规则列表 */
+.rule-list {
+  margin-top: 24rpx;
+}
+
+.rule-empty {
+  padding: 48rpx 0;
+  text-align: center;
+}
+
+.rule-item {
+  margin-bottom: 24rpx;
+  border-left: 6rpx solid transparent;
+  transition: all 0.3s ease;
+}
+
+.rule-item:active {
+  transform: scale(0.98);
+}
+
+.rule-header {
+  margin-bottom: 16rpx;
+}
+
+.rule-title-area {
+  display: flex;
+  align-items: center;
+}
+
+.rule-icon {
+  margin-right: 12rpx;
+  font-size: 32rpx;
+}
+
+.rule-status {
+  opacity: 0.8;
+}
+
+.rule-status.enabled {
+  opacity: 1;
+}
+
+.rule-description {
+  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.rule-footer {
+  font-size: 24rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+/* 规则详情弹窗 */
+.rule-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.rule-detail-content {
+  width: 80%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 32rpx;
+  border-radius: 24rpx;
+}
+
+.rule-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.close-btn {
+  font-size: 40rpx;
+  line-height: 1;
+  padding: 8rpx;
+}
+
+.rule-detail-body {
+  margin-bottom: 32rpx;
+}
+
+.detail-section {
+  margin-bottom: 24rpx;
+  padding: 16rpx;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12rpx;
+}
+
+.detail-item {
+  display: flex;
+  margin-bottom: 12rpx;
+  line-height: 1.5;
+}
+
+.rule-detail-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+}
+
+/* 开关样式 */
+.energy-switch-small {
+  transform: scale(0.8);
+  transform-origin: right center;
+}
+
+/* 防止事件冒泡 */
+.onSwitchTap {
+  /* 空样式，仅用于阻止事件冒泡 */
 }

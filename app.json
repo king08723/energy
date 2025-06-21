@@ -13,8 +13,11 @@
     "pages/add-device/add-device",
     "pages/user-management/user-management",
     "pages/scene-mode/scene-mode",
-    "pages/group-management/group-management"
+    "pages/group-management/group-management",
+    "pages/alert-detail/alert-detail",
+    "pages/intelligent-analysis/intelligent-analysis"
   ],
+  "lazyCodeLoading": "requiredComponents",
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ffffff",

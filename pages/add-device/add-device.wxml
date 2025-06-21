@@ -1,226 +1,287 @@
-<!--pages/add-device/add-device.wxml-->
-<view class="energy-container">
+<!-- pages/add-device/add-device.wxml -->
+<view class="container">
   <!-- 背景装饰 -->
-  <view class="energy-bg-decoration">
-    <view class="energy-bg-circle" style="width: 160rpx; height: 160rpx; top: 10%; right: -30rpx; animation-delay: 0s; opacity: 0.4;"></view>
-    <view class="energy-bg-circle" style="width: 100rpx; height: 100rpx; top: 60%; left: -20rpx; animation-delay: 3s; opacity: 0.3;"></view>
-    <view class="energy-bg-circle" style="width: 80rpx; height: 80rpx; top: 35%; right: 20%; animation-delay: 6s; opacity: 0.5;"></view>
+  <view class="bg-decoration">
+    <view class="circle-decoration circle-1"></view>
+    <view class="circle-decoration circle-2"></view>
   </view>
 
   <!-- 页面标题 -->
-  <view class="energy-glass-card energy-p-32 energy-mb-24">
-    <text class="energy-title-large energy-mb-8">添加设备</text>
-    <text class="energy-text-tertiary energy-text-small">选择添加方式，快速连接您的智能设备</text>
+  <view class="page-header">
+    <text class="page-title">添加设备</text>
   </view>
 
-  <!-- 添加方式选择 -->
-  <view class="energy-glass-card energy-p-24 energy-mb-24">
-    <text class="energy-title-medium energy-mb-16">添加方式</text>
-    
+  <!-- 步骤指示器组件 -->
+  <step-indicator 
+    steps="{{['选择方式', '设备信息', '完成添加']}}"
+    currentStep="{{currentStep}}"
+    activeColor="#1aad19"
+    bind:stepchange="onStepChange"
+  ></step-indicator>
+
+  <!-- 步骤1：选择添加方式 -->
+  <view class="step-view" wx:if="{{currentStep === 1}}">
     <view class="add-methods">
-      <view class="method-item {{addMethod === 'scan' ? 'active' : ''}}" 
-            data-method="scan" bindtap="onMethodSelect">
+      <view class="method-item {{addMethod === 'scan' ? 'active' : ''}}" bindtap="selectAddMethod" data-method="scan">
         <view class="method-icon">
-          <text class="energy-icon-text">📱</text>
+          <image class="method-icon-img" src="/assets/icons/scan.svg" mode="aspectFit"></image>
         </view>
         <view class="method-info">
-          <text class="energy-text-primary energy-text-medium energy-font-medium">扫码添加</text>
-          <text class="energy-text-tertiary energy-text-small energy-mt-4">扫描设备二维码快速添加</text>
+          <text class="method-name">扫码添加</text>
+          <text class="method-desc">扫描设备二维码快速添加</text>
         </view>
-        <view class="method-check">
-          <view class="energy-radio {{addMethod === 'scan' ? 'checked' : ''}}"></view>
+        <view class="method-check" wx:if="{{addMethod === 'scan'}}">
+          <text class="cuIcon-check"></text>
         </view>
       </view>
-      
-      <view class="method-item {{addMethod === 'manual' ? 'active' : ''}}" 
-            data-method="manual" bindtap="onMethodSelect">
+
+      <view class="method-item {{addMethod === 'manual' ? 'active' : ''}}" bindtap="selectAddMethod" data-method="manual">
         <view class="method-icon">
-          <text class="energy-icon-text">✏️</text>
+          <image class="method-icon-img" src="/assets/icons/manual.svg" mode="aspectFit"></image>
         </view>
         <view class="method-info">
-          <text class="energy-text-primary energy-text-medium energy-font-medium">手动添加</text>
-          <text class="energy-text-tertiary energy-text-small energy-mt-4">手动输入设备信息</text>
+          <text class="method-name">手动添加</text>
+          <text class="method-desc">手动输入设备信息添加</text>
         </view>
-        <view class="method-check">
-          <view class="energy-radio {{addMethod === 'manual' ? 'checked' : ''}}"></view>
+        <view class="method-check" wx:if="{{addMethod === 'manual'}}">
+          <text class="cuIcon-check"></text>
         </view>
       </view>
-      
-      <view class="method-item {{addMethod === 'search' ? 'active' : ''}}" 
-            data-method="search" bindtap="onMethodSelect">
+
+      <view class="method-item {{addMethod === 'search' ? 'active' : ''}}" bindtap="selectAddMethod" data-method="search">
         <view class="method-icon">
-          <text class="energy-icon-text">🔍</text>
+          <image class="method-icon-img" src="/assets/icons/search.svg" mode="aspectFit"></image>
         </view>
         <view class="method-info">
-          <text class="energy-text-primary energy-text-medium energy-font-medium">自动搜索</text>
-          <text class="energy-text-tertiary energy-text-small energy-mt-4">自动搜索附近的智能设备</text>
+          <text class="method-name">自动搜索</text>
+          <text class="method-desc">自动搜索周围可用设备</text>
         </view>
-        <view class="method-check">
-          <view class="energy-radio {{addMethod === 'search' ? 'checked' : ''}}"></view>
+        <view class="method-check" wx:if="{{addMethod === 'search'}}">
+          <text class="cuIcon-check"></text>
         </view>
       </view>
+    </view>
+
+    <!-- 步骤1操作按钮 -->
+    <view class="step-actions">
+      <button class="energy-btn energy-btn-default" bindtap="cancelAdd">取消</button>
+      <button class="energy-btn energy-btn-primary energy-btn-glow" bindtap="nextStep">下一步</button>
     </view>
   </view>
 
-  <!-- 扫码添加 -->
-  <view class="energy-glass-card energy-p-24 energy-mb-24" wx:if="{{addMethod === 'scan'}}">
-    <text class="energy-title-medium energy-mb-16">扫描二维码</text>
-    
-    <view class="scan-container">
-      <view class="scan-placeholder">
-        <text class="energy-icon-text energy-text-large energy-mb-16">📷</text>
-        <text class="energy-text-tertiary energy-text-small energy-mb-16">将设备二维码放入框内</text>
-        <view class="energy-btn energy-btn-primary" bindtap="onStartScan">
-          <text>开始扫描</text>
-        </view>
+  <!-- 步骤2：设备信息 -->
+  <view class="step-view" wx:if="{{currentStep === 2}}">
+    <!-- 扫码添加 -->
+    <view class="scan-container" wx:if="{{addMethod === 'scan'}}">
+      <view class="scan-placeholder" bindtap="startScan">
+        <image class="scan-icon" src="/assets/icons/scan.svg" mode="aspectFit"></image>
+        <text>点击开始扫描设备二维码</text>
+      </view>
+      <view class="scan-tips">
+        <text>提示：请对准设备上的二维码进行扫描</text>
       </view>
     </view>
-    
-    <view class="scan-tips energy-mt-24">
-      <text class="energy-text-tertiary energy-text-small">💡 提示：二维码通常位于设备背面或说明书上</text>
-    </view>
-  </view>
 
-  <!-- 手动添加 -->
-  <view class="energy-glass-card energy-p-24 energy-mb-24" wx:if="{{addMethod === 'manual'}}">
-    <text class="energy-title-medium energy-mb-16">设备信息</text>
-    
-    <view class="form-section">
-      <!-- 设备类型 -->
-      <view class="form-item energy-mb-24">
-        <text class="energy-text-primary energy-text-medium energy-mb-12">设备类型</text>
+    <!-- 手动添加 -->
+    <view class="form-section" wx:if="{{addMethod === 'manual'}}">
+      <!-- 设备类型选择 -->
+      <view class="form-item">
+        <text class="form-label">设备类型</text>
         <view class="device-types">
-          <view class="type-item {{deviceForm.type === 'power' ? 'active' : ''}}" 
-                data-type="power" bindtap="onTypeSelect">
-            <text class="energy-icon-text">⚡</text>
-            <text class="energy-text-small">电力</text>
+          <view class="type-item {{deviceForm.type === 'power' ? 'active' : ''}}" bindtap="selectDeviceType" data-type="power">
+            <image class="type-icon" src="/assets/icons/power.svg" mode="aspectFit"></image>
+            <text>电表</text>
           </view>
-          <view class="type-item {{deviceForm.type === 'water' ? 'active' : ''}}" 
-                data-type="water" bindtap="onTypeSelect">
-            <text class="energy-icon-text">💧</text>
-            <text class="energy-text-small">水务</text>
+          <view class="type-item {{deviceForm.type === 'water' ? 'active' : ''}}" bindtap="selectDeviceType" data-type="water">
+            <image class="type-icon" src="/assets/icons/water.svg" mode="aspectFit"></image>
+            <text>水表</text>
           </view>
-          <view class="type-item {{deviceForm.type === 'gas' ? 'active' : ''}}" 
-                data-type="gas" bindtap="onTypeSelect">
-            <text class="energy-icon-text">🔥</text>
-            <text class="energy-text-small">燃气</text>
+          <view class="type-item {{deviceForm.type === 'gas' ? 'active' : ''}}" bindtap="selectDeviceType" data-type="gas">
+            <image class="type-icon" src="/assets/icons/gas.svg" mode="aspectFit"></image>
+            <text>燃气表</text>
           </view>
-          <view class="type-item {{deviceForm.type === 'carbon' ? 'active' : ''}}" 
-                data-type="carbon" bindtap="onTypeSelect">
-            <text class="energy-icon-text">🌱</text>
-            <text class="energy-text-small">碳排放</text>
+          <view class="type-item {{deviceForm.type === 'carbon' ? 'active' : ''}}" bindtap="selectDeviceType" data-type="carbon">
+            <image class="type-icon" src="/assets/icons/carbon.svg" mode="aspectFit"></image>
+            <text>碳排放</text>
           </view>
         </view>
       </view>
-      
+
       <!-- 设备名称 -->
-      <view class="form-item energy-mb-24">
-        <text class="energy-text-primary energy-text-medium energy-mb-12">设备名称</text>
-        <input class="energy-input" 
-               placeholder="请输入设备名称" 
-               value="{{deviceForm.name}}"
-               bindinput="onNameInput" />
-      </view>
-      
-      <!-- 设备位置 -->
-      <view class="form-item energy-mb-24">
-        <text class="energy-text-primary energy-text-medium energy-mb-12">设备位置</text>
-        <picker mode="selector" 
-                range="{{locations}}" 
-                value="{{deviceForm.locationIndex}}"
-                bindchange="onLocationChange">
-          <view class="energy-input picker-input">
-            <text class="{{deviceForm.location ? 'energy-text-primary' : 'energy-text-tertiary'}}">
-              {{deviceForm.location || '请选择设备位置'}}
-            </text>
-            <text class="energy-icon-text">▼</text>
+      <view class="form-item">
+        <text class="form-label">设备名称</text>
+        <input class="energy-input" placeholder="请输入设备名称" value="{{deviceForm.name}}" bindinput="inputDeviceName" />
+        <!-- 名称建议 -->
+        <view class="suggestion-text" wx:if="{{deviceForm.type && !deviceForm.name}}">
+          <text>建议名称：</text>
+          <view class="location-tags">
+            <text class="location-tag" wx:for="{{nameSuggestions[deviceForm.type]}}" wx:key="index" bindtap="useNameSuggestion" data-name="{{item}}">{{item}}</text>
           </view>
-        </picker>
+        </view>
       </view>
-      
+
+      <!-- 设备位置 -->
+      <view class="form-item">
+        <text class="form-label">设备位置</text>
+        <view class="location-selection">
+          <!-- 最近使用的位置 -->
+          <view class="recent-locations" wx:if="{{recentLocations.length > 0}}">
+            <text class="sub-label">最近使用：</text>
+            <view class="location-tags">
+              <text class="location-tag {{deviceForm.location === item ? 'active' : ''}}" 
+                wx:for="{{recentLocations}}" 
+                wx:key="index" 
+                bindtap="selectRecentLocation" 
+                data-location="{{item}}">{{item}}</text>
+            </view>
+          </view>
+          
+          <!-- 位置选择器 -->
+          <picker bindchange="selectLocation" value="{{selectedLocation}}" range="{{locationOptions}}">
+            <view class="energy-input picker-input">
+              <text wx:if="{{deviceForm.location}}">{{deviceForm.location}}</text>
+              <text wx:else class="placeholder">请选择设备位置</text>
+              <text class="cuIcon-right"></text>
+            </view>
+          </picker>
+        </view>
+      </view>
+
       <!-- 设备ID -->
-      <view class="form-item energy-mb-24">
-        <text class="energy-text-primary energy-text-medium energy-mb-12">设备ID</text>
-        <input class="energy-input" 
-               placeholder="请输入设备唯一标识" 
-               value="{{deviceForm.deviceId}}"
-               bindinput="onDeviceIdInput" />
+      <view class="form-item">
+        <text class="form-label">设备ID</text>
+        <input class="energy-input" placeholder="请输入设备ID" value="{{deviceForm.deviceId}}" bindinput="inputDeviceId" />
+        <!-- 错误提示 -->
+        <view class="error-text" wx:if="{{formErrors.deviceId}}">
+          <text>{{formErrors.deviceId}}</text>
+        </view>
       </view>
-      
+
       <!-- 设备密钥 -->
-      <view class="form-item energy-mb-24">
-        <text class="energy-text-primary energy-text-medium energy-mb-12">设备密钥</text>
-        <input class="energy-input" 
-               placeholder="请输入设备连接密钥" 
-               value="{{deviceForm.secret}}"
-               password="{{!showSecret}}"
-               bindinput="onSecretInput" />
-        <view class="secret-toggle" bindtap="onToggleSecret">
-          <text class="energy-icon-text">{{showSecret ? '🙈' : '👁️'}}</text>
+      <view class="form-item">
+        <text class="form-label">设备密钥</text>
+        <view class="password-input-container">
+          <input class="energy-input" placeholder="请输入设备密钥" value="{{deviceForm.secret}}" password="{{!showSecret}}" bindinput="inputSecret" />
+          <view class="secret-toggle" bindtap="toggleSecretVisibility">
+            <image class="eye-icon" src="{{showSecret ? '/assets/icons/eye.svg' : '/assets/icons/eye-off.svg'}}" mode="aspectFit"></image>
+          </view>
+        </view>
+        <!-- 错误提示 -->
+        <view class="error-text" wx:if="{{formErrors.secret}}">
+          <text>{{formErrors.secret}}</text>
         </view>
       </view>
     </view>
-  </view>
 
-  <!-- 自动搜索 -->
-  <view class="energy-glass-card energy-p-24 energy-mb-24" wx:if="{{addMethod === 'search'}}">
-    <text class="energy-title-medium energy-mb-16">搜索设备</text>
-    
-    <view class="search-container">
-      <view class="search-status" wx:if="{{!isSearching && foundDevices.length === 0}}">
-        <text class="energy-icon-text energy-text-large energy-mb-16">📡</text>
-        <text class="energy-text-tertiary energy-text-small energy-mb-16">点击开始搜索附近的智能设备</text>
-        <view class="energy-btn energy-btn-primary" bindtap="onStartSearch">
-          <text>开始搜索</text>
-        </view>
+    <!-- 自动搜索 -->
+    <view class="search-container" wx:if="{{addMethod === 'search'}}">
+      <!-- 未开始搜索状态 -->
+      <view class="search-status" wx:if="{{!isSearching && !searchCompleted}}">
+        <image class="search-icon" src="/assets/icons/search.svg" mode="aspectFit"></image>
+        <text>点击下方按钮开始搜索设备</text>
+        <button class="energy-btn energy-btn-primary" bindtap="startSearch" style="margin-top: 32rpx;">开始搜索</button>
       </view>
-      
+
+      <!-- 搜索中状态 -->
       <view class="search-loading" wx:if="{{isSearching}}">
-        <view class="loading-animation">
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
-          <view class="loading-dot"></view>
+        <view class="radar-animation">
+          <view class="radar-circle"></view>
+          <view class="radar-line"></view>
         </view>
-        <text class="energy-text-primary energy-text-medium energy-mt-16">正在搜索设备...</text>
-        <text class="energy-text-tertiary energy-text-small energy-mt-8">请确保设备已开启并处于配网模式</text>
+        <text>正在搜索周围的设备...</text>
       </view>
-      
-      <view class="found-devices" wx:if="{{foundDevices.length > 0}}">
-        <text class="energy-text-primary energy-text-medium energy-mb-16">发现 {{foundDevices.length}} 个设备</text>
-        
+
+      <!-- 搜索到设备状态 -->
+      <view class="found-devices" wx:if="{{!isSearching && searchCompleted}}">
+        <text class="section-title">搜索到 {{foundDevices.length}} 个设备</text>
         <view class="device-list">
-          <view class="device-item" wx:for="{{foundDevices}}" wx:key="id" 
-                data-device="{{item}}" bindtap="onSelectFoundDevice">
+          <view class="device-item" wx:for="{{foundDevices}}" wx:key="id" bindtap="selectSearchDevice" data-index="{{index}}">
             <view class="device-icon {{item.type}}">
-              <text class="energy-icon-text">{{item.icon}}</text>
+              <image class="device-type-icon" src="/assets/icons/{{item.type}}.svg" mode="aspectFit"></image>
             </view>
             <view class="device-info">
-              <text class="energy-text-primary energy-text-medium energy-font-medium">{{item.name}}</text>
-              <text class="energy-text-tertiary energy-text-small energy-mt-4">{{item.model}} · 信号强度: {{item.signal}}</text>
+              <text class="device-name">{{item.name}}</text>
+              <text class="device-id">ID: {{item.id}}</text>
+              <text class="device-signal">信号强度: {{item.signal}}%</text>
             </view>
             <view class="device-select">
-              <text class="energy-icon-text">▶</text>
+              <image class="arrow-icon" src="/assets/icons/arrow-right.svg" mode="aspectFit"></image>
             </view>
           </view>
         </view>
-        
-        <view class="search-actions energy-mt-24">
-          <view class="energy-btn energy-btn-outline energy-btn-small" bindtap="onStartSearch">
-            <text>重新搜索</text>
-          </view>
+
+        <!-- 重新搜索按钮 -->
+        <view class="search-actions">
+          <button class="energy-btn energy-btn-default" bindtap="startSearch">重新搜索</button>
         </view>
       </view>
     </view>
+
+    <!-- 步骤2操作按钮 -->
+    <view class="step-actions">
+      <button class="energy-btn energy-btn-default" bindtap="prevStep">上一步</button>
+      <button class="energy-btn energy-btn-primary" bindtap="nextStep">下一步</button>
+    </view>
   </view>
 
-  <!-- 操作按钮 -->
-  <view class="action-buttons">
-    <view class="energy-btn energy-btn-outline" bindtap="onCancel">
-      <text>取消</text>
+  <!-- 步骤3：完成添加 -->
+  <view class="step-view" wx:if="{{currentStep === 3}}">
+    <!-- 设备预览 -->
+    <view class="device-preview">
+      <view class="device-preview-icon {{deviceForm.type}}">
+        <image class="device-preview-img" src="/assets/icons/{{deviceForm.type}}.svg" mode="aspectFit"></image>
+      </view>
+      <view class="device-preview-info">
+        <view class="info-row">
+          <text class="info-label">设备名称：</text>
+          <text class="info-value">{{deviceForm.name}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">设备类型：</text>
+          <text class="info-value">
+            {{deviceForm.type === 'power' ? '电表' : 
+              deviceForm.type === 'water' ? '水表' : 
+              deviceForm.type === 'gas' ? '燃气表' : '碳排放监测'}}
+          </text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">设备位置：</text>
+          <text class="info-value">{{deviceForm.location || '未设置'}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">设备ID：</text>
+          <text class="info-value">{{deviceForm.deviceId}}</text>
+        </view>
+      </view>
     </view>
-    <view class="energy-btn energy-btn-primary {{!canSubmit ? 'disabled' : ''}}" 
-          bindtap="onSubmit">
-      <text>添加设备</text>
+
+    <!-- 连接测试 -->
+    <view class="connection-test">
+      <view class="test-connection-btn" bindtap="testConnection">
+        <text>测试设备连接</text>
+      </view>
+      
+      <!-- 测试状态 -->
+      <view class="test-status {{connectionTest.status}}" wx:if="{{connectionTest.status}}">
+        <image class="test-icon" 
+          src="{{connectionTest.status === 'success' ? '/assets/icons/connection-success.svg' : '/assets/icons/connection-error.svg'}}" 
+          mode="aspectFit"></image>
+        <text class="test-text">{{connectionTest.message}}</text>
+      </view>
+    </view>
+
+    <!-- 步骤3操作按钮 -->
+    <view class="step-actions">
+      <button class="energy-btn energy-btn-default" bindtap="prevStep">上一步</button>
+      <button class="energy-btn energy-btn-primary" bindtap="submitDevice">添加设备</button>
+    </view>
+  </view>
+
+  <!-- 添加成功动画 -->
+  <view class="success-overlay" wx:if="{{showSuccessAnimation}}">
+    <view class="success-animation">
+      <image class="success-icon" src="/assets/icons/success.svg" mode="aspectFit"></image>
+      <text class="success-text">设备添加成功</text>
     </view>
   </view>
 </view>

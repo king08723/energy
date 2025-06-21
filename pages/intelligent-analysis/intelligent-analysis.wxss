@@ -1,0 +1,692 @@
+/* pages/intelligent-analysis/intelligent-analysis.wxss */
+.intelligent-analysis {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20rpx;
+}
+
+/* 页面头部 */
+.page-header {
+  text-align: center;
+  padding: 40rpx 0;
+  color: white;
+}
+
+.page-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.page-subtitle {
+  font-size: 28rpx;
+  opacity: 0.8;
+  display: block;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400rpx;
+  color: white;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  border-top: 4rpx solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  opacity: 0.8;
+}
+
+/* 主要内容 */
+.main-content {
+  background: white;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 标签页导航 */
+.tab-nav {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 2rpx solid #e9ecef;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30rpx 20rpx;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.tab-item.active {
+  background: white;
+  border-bottom: 4rpx solid #007bff;
+}
+
+.tab-icon {
+  font-size: 32rpx;
+  margin-bottom: 10rpx;
+}
+
+.tab-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.tab-item.active .tab-text {
+  color: #007bff;
+  font-weight: bold;
+}
+
+/* 过滤器 */
+.filter-bar {
+  display: flex;
+  padding: 20rpx;
+  background: #f8f9fa;
+  gap: 20rpx;
+}
+
+.filter-item {
+  padding: 16rpx 32rpx;
+  background: white;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: #666;
+  border: 2rpx solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.filter-item.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* 设备列表 */
+.device-list {
+  padding: 20rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 40rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+  opacity: 0.5;
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #666;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+.empty-description {
+  font-size: 26rpx;
+  color: #999;
+  line-height: 1.5;
+  display: block;
+}
+
+.device-card {
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  border: 2rpx solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.device-card:hover {
+  transform: translateY(-4rpx);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+}
+
+/* 设备头部 */
+.device-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20rpx;
+}
+
+.device-info {
+  flex: 1;
+}
+
+.device-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.device-location {
+  font-size: 24rpx;
+  color: #666;
+  display: block;
+}
+
+.risk-badge {
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  color: white;
+  font-size: 22rpx;
+  font-weight: bold;
+}
+
+/* 分析结果 */
+.analysis-results {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+}
+
+.metric-item {
+  text-align: center;
+  flex: 1;
+}
+
+.metric-label {
+  font-size: 22rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.metric-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4rpx;
+}
+
+.metric-number {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.metric-unit {
+  font-size: 20rpx;
+  color: #666;
+}
+
+.metric-status {
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+.metric-status.normal {
+  color: #28a745;
+}
+
+.metric-status.warning {
+  color: #ffc107;
+}
+
+/* 根因分析 */
+.root-cause-analysis {
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background: #fff3cd;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #ffc107;
+}
+
+.analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.analysis-title {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #856404;
+}
+
+.confidence-score {
+  font-size: 22rpx;
+  color: #856404;
+}
+
+.primary-cause {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.cause-label {
+  font-size: 24rpx;
+  color: #856404;
+  font-weight: bold;
+}
+
+.cause-text {
+  font-size: 24rpx;
+  color: #856404;
+}
+
+/* 影响评估 */
+.impact-assessment {
+  padding: 20rpx;
+  background: #f8d7da;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #dc3545;
+}
+
+.assessment-title {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #721c24;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.impact-metrics {
+  display: flex;
+  justify-content: space-between;
+}
+
+.impact-item {
+  text-align: center;
+  flex: 1;
+}
+
+.impact-label {
+  font-size: 22rpx;
+  color: #721c24;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.impact-value {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #721c24;
+}
+
+/* 告警分析 */
+.alerts-analysis {
+  padding: 20rpx;
+}
+
+.alert-summary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30rpx;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.summary-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.summary-stats {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat-item {
+  text-align: center;
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 36rpx;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+/* 告警列表 */
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.alert-card {
+  background: white;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  border-left: 4rpx solid #ddd;
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12rpx;
+}
+
+.alert-info {
+  flex: 1;
+}
+
+.alert-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.alert-device {
+  font-size: 22rpx;
+  color: #666;
+}
+
+.alert-level {
+  padding: 6rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  font-weight: bold;
+  color: white;
+}
+
+.alert-level.critical {
+  background: #dc3545;
+}
+
+.alert-level.warning {
+  background: #ffc107;
+  color: #333;
+}
+
+.alert-level.info {
+  background: #17a2b8;
+}
+
+.alert-content {
+  margin-bottom: 12rpx;
+}
+
+.alert-description {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+.alert-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alert-time {
+  font-size: 20rpx;
+  color: #999;
+}
+
+.alert-status {
+  font-size: 20rpx;
+  color: #666;
+}
+
+/* 优化建议 */
+.optimization-recommendations {
+  padding: 20rpx;
+}
+
+.recommendations-header {
+  text-align: center;
+  padding: 30rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.recommendations-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.recommendations-subtitle {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+/* 建议列表 */
+.recommendation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.recommendation-card {
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  border: 2rpx solid #f0f0f0;
+}
+
+.recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.recommendation-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.recommendation-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.recommendation-type {
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  font-weight: bold;
+  color: white;
+}
+
+.recommendation-type.urgent {
+  background: #dc3545;
+}
+
+.recommendation-type.maintenance {
+  background: #ffc107;
+  color: #333;
+}
+
+.recommendation-type.optimization {
+  background: #28a745;
+}
+
+.priority-badge {
+  padding: 8rpx 16rpx;
+  background: #e9ecef;
+  border-radius: 12rpx;
+}
+
+.priority-text {
+  font-size: 22rpx;
+  color: #666;
+  font-weight: bold;
+}
+
+.recommendation-description {
+  margin-bottom: 20rpx;
+}
+
+.description-text {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* 影响设备 */
+.affected-devices {
+  margin-bottom: 20rpx;
+}
+
+.devices-label {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.devices-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.device-tag {
+  padding: 6rpx 12rpx;
+  background: #e9ecef;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  color: #666;
+}
+
+/* 预期收益 */
+.estimated-savings {
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background: #d4edda;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #28a745;
+}
+
+.savings-title {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #155724;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.savings-metrics {
+  display: flex;
+  justify-content: space-between;
+}
+
+.savings-item {
+  text-align: center;
+  flex: 1;
+}
+
+.savings-label {
+  font-size: 20rpx;
+  color: #155724;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.savings-value {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #155724;
+}
+
+/* 执行按钮 */
+.recommendation-actions {
+  text-align: center;
+}
+
+.execute-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12rpx;
+  padding: 16rpx 40rpx;
+  font-size: 26rpx;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.execute-btn:hover {
+  transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .analysis-results,
+  .impact-metrics,
+  .summary-stats,
+  .savings-metrics {
+    flex-direction: column;
+    gap: 16rpx;
+  }
+  
+  .metric-item,
+  .impact-item,
+  .stat-item,
+  .savings-item {
+    text-align: left;
+  }
+  
+  .filter-bar {
+    flex-wrap: wrap;
+  }
+  
+  .devices-list {
+    justify-content: flex-start;
+  }
+}

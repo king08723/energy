@@ -437,10 +437,16 @@
 
 .overview-content {
   display: flex;
-  justify-content: space-between;
-  align-items: center; /* 改为居中对齐，使 total-energy 垂直居中 */
+  flex-direction: column;
+  gap: 24rpx;
   position: relative;
-  min-height: 120rpx; /* 设置最小高度，确保有足够空间进行居中 */
+}
+
+.overview-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 120rpx;
 }
 
 .total-energy {
@@ -513,6 +519,94 @@
   font-size: 24rpx;
 }
 
+/* 能耗分类列表布局 */
+.energy-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+/* 列表视图中的卡片样式 */
+.data-card-list {
+  padding: 24rpx;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 0;
+  cursor: pointer;
+  border-radius: 16rpx;
+  position: relative;
+  overflow: hidden;
+  min-height: 100rpx; /* 适当减小高度 */
+  border: 1px solid rgba(59, 130, 246, 0.08);
+}
+
+.data-card-list:active {
+  transform: scale(0.98); /* 优化点击反馈 */
+}
+
+.data-card-list:hover {
+  transform: translateY(-2rpx);
+  box-shadow: 
+    0 8rpx 24rpx rgba(0, 0, 0, 0.08),
+    0 2rpx 8rpx rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+/* 列表内容布局 */
+.data-card-list-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* 列表中的信息样式 */
+.data-info-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 16rpx;
+  margin-right: 16rpx;
+}
+
+/* 列表中的行样式 - 左右排列 */
+.data-info-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start; /* 改为左对齐 */
+  align-items: center;
+  width: 100%;
+  position: relative; /* 添加相对定位 */
+}
+
+/* 调整标题样式，使其居左 */
+.data-info-row .data-title {
+  position: absolute;
+  left: 0;
+}
+
+/* 调整数值容器位置，使其居中并向右偏移一个字宽 */
+.data-info-row .data-value-container {
+  position: absolute;
+  left: 60%; /* 从50%增加到55%，向右偏移 */
+  transform: translateX(-50%);
+}
+
+/* 确保行高度足够 */
+.data-info-row {
+  min-height: 60rpx; /* 添加最小高度 */
+  padding: 10rpx 0; /* 添加上下内边距 */
+}
+
+/* SVG图标统一样式 */
+.icon-svg {
+  width: 32rpx;
+  height: 32rpx;
+  filter: brightness(0) invert(1); /* 将图标变为白色 */
+}
+
 /* 快速操作按钮 */
 .overview-actions {
   display: flex;
@@ -574,7 +668,39 @@
   font-weight: 500;
 }
 
-/* 实时数据网格 */
+/* 实时数据监控区域 */
+.realtime-monitor {
+  margin-top: 32rpx;
+  padding: 32rpx;
+}
+
+.monitor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.08);
+}
+
+.monitor-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1e293b;
+  text-shadow: 0 2rpx 6rpx rgba(59, 130, 246, 0.08);
+}
+
+.monitor-subtitle {
+  font-size: 26rpx;
+  color: #64748b;
+  font-weight: 500;
+  padding: 6rpx 16rpx;
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: 16rpx;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+/* 实时数据网格 - 优化设计 */
 .data-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -585,21 +711,42 @@
 @media (min-width: 768px) {
   .data-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 24rpx;
+    gap: 20rpx; /* 稍微增加间距 */
   }
 }
 
+/* 统一数据卡片样式 */
 .data-card {
-  padding: 24rpx;
+  padding: 20rpx; /* 稍微减少内边距 */
   display: flex;
-  align-items: center;
-  gap: 16rpx;
-  transition: all 0.3s ease;
+  align-items: flex-start; /* 改为顶部对齐 */
+  gap: 12rpx; /* 减少间距确保内容不被挤压 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-bottom: 0;
   cursor: pointer;
   border-radius: 16rpx;
   position: relative;
   overflow: hidden;
+  min-height: 120rpx; /* 统一卡片高度 */
+  min-width: 0; /* 确保flex子元素能够正确收缩 */
+  border: 1px solid rgba(59, 130, 246, 0.08);
+}
+
+/* 能耗类型特定样式 */
+.energy-card-electricity {
+  /* 移除左侧边框，保留类名以便未来可能的样式调整 */
+}
+
+.energy-card-water {
+  /* 移除左侧边框 */
+}
+
+.energy-card-gas {
+  /* 移除左侧边框 */
+}
+
+.energy-card-carbon {
+  /* 移除左侧边框 */
 }
 
 .data-card::before {
@@ -610,14 +757,14 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, 
-    rgba(59, 130, 246, 0.05) 0%, 
-    rgba(16, 185, 129, 0.02) 100%);
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .data-card:active {
-  transform: scale(0.95);
+  transform: scale(0.98); /* 优化点击反馈 */
 }
 
 .data-card:hover::before {
@@ -625,98 +772,179 @@
 }
 
 .data-card:hover {
-  background: rgba(59, 130, 246, 0.05);
-  box-shadow: 0 0 20rpx rgba(59, 130, 246, 0.1);
+  transform: translateY(-2rpx);
+  box-shadow: 
+    0 8rpx 24rpx rgba(0, 0, 0, 0.08),
+    0 2rpx 8rpx rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.15);
 }
 
+/* 统一图标样式 */
 .data-icon {
-  width: 60rpx;
-  height: 60rpx;
+  width: 56rpx; /* 与breakdown-icon保持一致 */
+  height: 56rpx;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
   position: relative;
   z-index: 1;
+  flex-shrink: 0;
+  align-self: center; /* 图标保持居中对齐 */
 }
 
-.power-icon {
+/* 统一图标渐变色彩样式 */
+.electricity-icon,
+.data-card .power-icon {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   box-shadow: 
     0 4rpx 12rpx rgba(59, 130, 246, 0.3),
     0 0 20rpx rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
-.water-icon {
+.water-icon,
+.data-card .water-icon {
   background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
   box-shadow: 
     0 4rpx 12rpx rgba(6, 182, 212, 0.3),
     0 0 20rpx rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.2);
 }
 
-.gas-icon {
-  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+.gas-icon,
+.data-card .gas-icon {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   box-shadow: 
-    0 4rpx 12rpx rgba(100, 116, 139, 0.3),
-    0 0 20rpx rgba(100, 116, 139, 0.15);
+    0 4rpx 12rpx rgba(249, 115, 22, 0.3),
+    0 0 20rpx rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(249, 115, 22, 0.2);
 }
 
-.carbon-icon {
+.carbon-icon,
+.data-card .carbon-icon {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   box-shadow: 
     0 4rpx 12rpx rgba(16, 185, 129, 0.3),
     0 0 20rpx rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .data-info {
   flex: 1;
+  min-width: 0; /* 确保能够正确收缩 */
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
+  gap: 4rpx; /* 减少间距节省空间 */
+  overflow: visible; /* 允许内容显示完整 */
+  align-self: center; /* 数据信息保持居中对齐 */
+  width: auto; /* 宽度自适应内容 */
 }
 
+/* 统一标题样式 */
 .data-title {
+  font-size: 26rpx; /* 与breakdown-label保持一致 */
+  color: #64748b;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* 数值容器 */
+.data-value-container {
+  display: flex;
+  align-items: baseline;
+  gap: 6rpx; /* 减少间距 */
+  min-width: fit-content; /* 根据内容自适应最小宽度 */
+  flex-wrap: nowrap; /* 防止换行 */
+  white-space: nowrap; /* 防止文本换行 */
+}
+
+/* 统一数值样式 */
+.data-value {
+  font-size: 36rpx; /* 与breakdown-value保持一致 */
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: 0.5rpx;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  white-space: nowrap; /* 防止数值换行 */
+  flex-shrink: 0; /* 防止数值被压缩 */
+}
+
+/* 单位样式 */
+.data-unit {
   font-size: 24rpx;
   color: #64748b;
+  font-weight: 500;
+  white-space: nowrap; /* 防止单位换行 */
+  flex-shrink: 0; /* 防止单位被压缩 */
 }
 
-.data-value {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #1e293b;
-  text-shadow: 0 2rpx 4rpx rgba(59, 130, 246, 0.1);
-}
-
+/* 统一趋势指示器样式 */
 .data-trend {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
   background: rgba(100, 116, 139, 0.1);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  transition: all 0.2s ease;
+  flex-shrink: 0; /* 防止收缩 */
+  margin-left: auto; /* 推到右侧 */
+}
+
+/* 列表视图中的趋势指标样式 */
+.data-card-list .data-trend {
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
 }
 
 .trend-arrow {
-  font-size: 24rpx;
+  font-size: 20rpx; /* 稍微增大 */
   color: #64748b;
+  font-weight: 600;
+}
+
+.trend-value {
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .data-trend.up {
   background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 .data-trend.down {
   background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
-.data-trend.up .trend-arrow {
+.data-trend.up .trend-arrow,
+.data-trend.up .trend-value {
   color: #ef4444;
 }
 
-.data-trend.down .trend-arrow {
+.data-trend.down .trend-arrow,
+.data-trend.down .trend-value {
   color: #10b981;
+}
+
+/* 悬停效果 */
+.data-card:hover .data-trend {
+  transform: scale(1.05);
+}
+
+.data-card:hover .data-trend.up {
+  box-shadow: 0 2rpx 8rpx rgba(239, 68, 68, 0.2);
+}
+
+.data-card:hover .data-trend.down {
+  box-shadow: 0 2rpx 8rpx rgba(16, 185, 129, 0.2);
 }
 
 /* 图表区域 */

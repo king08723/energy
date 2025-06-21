@@ -237,7 +237,7 @@ Page({
   onEditProfile() {
     wx.showModal({
       title: '编辑资料',
-      content: '此功能正在开发中',
+      content: '没有权限YJ03',
       showCancel: false
     });
   },

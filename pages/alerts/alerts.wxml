@@ -1,12 +1,32 @@
 <view class="container">
   <!-- 页面标题 -->
   <view class="page-header">
-    <view class="page-title">告警消息</view>
-    <view class="page-subtitle">实时监控设备状态</view>
+    <view class="page-title energy-title-large">告警消息</view>
+    <view class="page-subtitle energy-text-secondary">实时监控设备状态</view>
   </view>
 
-  <!-- 筛选器 -->
-  <view class="filter-section">
+  <!-- 告警统计卡片 - 新增模块 -->
+  <view class="alerts-summary energy-glass-card">
+    <view class="summary-item critical">
+      <view class="summary-count">{{criticalCount}}</view>
+      <view class="summary-label">严重告警</view>
+    </view>
+    <view class="summary-item warning">
+      <view class="summary-count">{{warningCount || 0}}</view>
+      <view class="summary-label">警告</view>
+    </view>
+    <view class="summary-item info">
+      <view class="summary-count">{{infoCount || 0}}</view>
+      <view class="summary-label">提示</view>
+    </view>
+    <view class="summary-item unread">
+      <view class="summary-count">{{unreadCount}}</view>
+      <view class="summary-label">未读</view>
+    </view>
+  </view>
+
+  <!-- 筛选器 - 优化布局和交互 -->
+  <view class="filter-section energy-glass-card">
     <view class="filter-tabs">
       <view class="filter-tab {{activeTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">
         <text class="tab-text">全部</text>
@@ -34,22 +54,38 @@
     </view>
   </view>
 
-  <!-- 告警列表 -->
+  <!-- 告警列表 - 优化布局和视觉层次 -->
   <view class="alerts-list">
-    <view wx:for="{{filteredAlerts}}" wx:key="id" class="alert-item {{item.isRead ? 'read' : 'unread'}} {{item.level}}" bindtap="viewAlertDetail" data-id="{{item.id}}">
-      <!-- 告警状态指示器 -->
+    <view wx:for="{{filteredAlerts}}" wx:key="id" 
+          class="alert-item {{item.isRead ? 'read' : 'unread'}} {{item.level}} {{item.expanded ? 'expanded' : ''}} {{item.highlight ? 'highlight' : ''}}" 
+          bindtap="toggleAlertExpand" 
+          data-id="{{item.id}}"
+          id="alert-{{item.id}}">
+      
+      <!-- 告警级别指示器 -->
       <view class="alert-indicator">
         <view class="status-dot {{item.level}}"></view>
         <view wx:if="{{!item.isRead}}" class="unread-badge"></view>
       </view>
       
-      <!-- 告警主要信息 -->
+      <!-- 告警主要信息 - 优化布局 -->
       <view class="alert-main">
+        <!-- 告警标题和时间 -->
         <view class="alert-header">
           <view class="alert-title">{{item.title}}</view>
           <view class="alert-time">{{item.timeAgo}}</view>
         </view>
         
+        <!-- 告警级别和类型信息 - 移动到更合理位置 -->
+        <view class="alert-meta">
+          <view class="alert-level {{item.level}}">
+            <text class="level-icon iconfont {{item.levelIcon}}"></text>
+            <text class="level-text">{{item.levelText}}</text>
+          </view>
+          <view class="alert-type">{{item.type}}</view>
+        </view>
+        
+        <!-- 告警内容 - 优化展示 -->
         <view class="alert-content">
           <view class="alert-device">
             <text class="iconfont icon-device"></text>
@@ -59,39 +95,40 @@
           
           <view class="alert-description">{{item.description}}</view>
           
-          <view class="alert-meta">
-            <view class="alert-level">
-              <text class="level-icon iconfont {{item.levelIcon}}"></text>
-              <text class="level-text">{{item.levelText}}</text>
-            </view>
-            <view class="alert-type">{{item.type}}</view>
+          <!-- 告警详情按钮 - 新增 -->
+          <view class="alert-detail-btn" catchtap="viewAlertDetail" data-id="{{item.id}}">
+            <text>查看详情</text>
+            <text class="iconfont icon-arrow-right"></text>
           </view>
         </view>
       </view>
       
-      <!-- 快速操作 -->
+      <!-- 快速操作 - 优化布局和交互 -->
       <view class="alert-actions">
-        <view class="action-item" bindtap="markAsRead" data-id="{{item.id}}" catchtap="true">
+        <view class="action-item mark-read" bindtap="markAsRead" data-id="{{item.id}}" catchtap="true">
           <text class="iconfont icon-check"></text>
         </view>
-        <view class="action-item" bindtap="ignoreAlert" data-id="{{item.id}}" catchtap="true">
+        <view class="action-item ignore" bindtap="ignoreAlert" data-id="{{item.id}}" catchtap="true">
           <text class="iconfont icon-close"></text>
+        </view>
+        <view class="action-item handle" bindtap="handleAlert" data-id="{{item.id}}" catchtap="true">
+          <text class="iconfont icon-repair"></text>
         </view>
       </view>
     </view>
     
-    <!-- 空状态 -->
+    <!-- 空状态 - 优化视觉效果 -->
     <view wx:if="{{filteredAlerts.length === 0}}" class="empty-state">
       <view class="empty-icon">
         <text class="iconfont icon-bell-off"></text>
       </view>
-      <view class="empty-title">暂无告警消息</view>
-      <view class="empty-subtitle">系统运行正常</view>
+      <view class="empty-title">暂无{{activeTab === 'all' ? '' : activeTab === 'unread' ? '未读' : '严重'}}告警消息</view>
+      <view class="empty-subtitle">{{activeTab === 'all' ? '系统运行正常' : activeTab === 'unread' ? '所有告警已处理' : '没有严重级别的告警'}}</view>
     </view>
   </view>
   
-  <!-- 加载更多 -->
-  <view wx:if="{{hasMore}}" class="load-more" bindtap="loadMore">
+  <!-- 加载更多 - 优化交互 -->
+  <view wx:if="{{hasMore && filteredAlerts.length > 0}}" class="load-more" bindtap="loadMore">
     <view wx:if="{{isLoading}}" class="loading">
       <view class="loading-spinner"></view>
       <text>加载中...</text>

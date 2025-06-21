@@ -1,3 +1,9 @@
 {
-  "navigationBarTitleText": "实时监控详情"
+  "navigationBarTitleText": "实时监控详情",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#1a2332",
+  "backgroundTextStyle": "light",
+  "navigationBarBackgroundColor": "#1a2332",
+  "navigationBarTextStyle": "white",
+  "usingComponents": {}
 }

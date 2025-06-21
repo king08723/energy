@@ -184,6 +184,13 @@
     *   **分组权限控制：** 不同用户角色可配置不同分组的查看和控制权限。
     *   **分组统计与监控：** 按分组统计能耗数据、设备状态，提供分组级别的监控视图。
     *   **分组批量操作：** 支持按分组进行批量设备控制，如一键关闭某分组所有设备。
+
+*   **设备维护管理：**
+    *   **维护计划管理：** 支持创建和编辑设备维护计划，包括维护类型（定期保养、故障维修、升级改造等）、计划时间、负责人员等。
+    *   **维护记录跟踪：** 记录设备维护历史，包括维护时间、维护内容、维护人员、维护结果等详细信息。
+    *   **维护提醒功能：** 根据维护计划自动生成提醒通知，确保维护工作按时执行。
+    *   **维护报告生成：** 自动生成维护报告，包括维护统计、设备健康度分析、维护成本分析等。
+    *   **预防性维护：** 基于设备运行数据和历史维护记录，提供预防性维护建议。
 *   **自动化规则设置：**
     *   **场景模式管理：**
         *   **工厂场景：**
@@ -410,6 +417,16 @@ MVP版本将包含以下最核心的能源管理功能：
 *   `DELETE /api/device-groups/{id}/devices/{deviceId}` - 从分组中移除设备
 *   `POST /api/device-groups/{id}/batch-control` - 分组批量设备控制
 
+#### 设备维护管理 (P15)
+*   `GET /api/maintenance/plans` - 获取维护计划列表
+*   `POST /api/maintenance/plans` - 创建维护计划
+*   `PUT /api/maintenance/plans/{id}` - 更新维护计划
+*   `DELETE /api/maintenance/plans/{id}` - 删除维护计划
+*   `GET /api/maintenance/records` - 获取维护记录列表
+*   `POST /api/maintenance/records` - 创建维护记录
+*   `GET /api/maintenance/reports` - 获取维护报告
+*   `POST /api/maintenance/reports/generate` - 生成维护报告
+
 #### 数据分析 (P05-P06)
 *   `GET /api/energy/history` - 获取历史能耗数据
 *   `POST /api/reports/generate` - 生成能耗报告
@@ -431,9 +448,9 @@ MVP版本将包含以下最核心的能源管理功能：
 ### 10.4 模拟数据支持
 
 #### 开发阶段数据来源
-*   **模拟数据文件：** `/api-mock.js` - 提供完整的模拟数据
+*   **模拟数据文件：** `/utils/api-mock.js` - 提供完整的模拟数据
 *   **API工具：** `/utils/api.js` - 统一的API调用工具
-*   **使用文档：** `/api-usage.md` - 详细的接口使用说明
+*   **使用文档：** `/utils/api-usage.md` - 详细的接口使用说明
 
 #### 数据切换机制
 ```javascript

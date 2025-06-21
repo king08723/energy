@@ -17,19 +17,19 @@
   <!-- 页面内快速导航栏 -->
   <view class="page-nav-container energy-mb-24">
     <view class="page-nav-scroll">
-      <view class="page-nav-item {{activeSection === 'overview' ? 'active' : ''}}" bindtap="scrollToSection" data-section="overview">
+      <view class="page-nav-item {{activeNavSection === 'overview' ? 'active' : ''}}" bindtap="scrollToSection" data-section="overview">
         <view class="nav-icon overview"></view>
         <view class="nav-text">能耗概览</view>
       </view>
-      <view class="page-nav-item {{activeSection === 'trend' ? 'active' : ''}}" bindtap="scrollToSection" data-section="trend">
+      <view class="page-nav-item {{activeNavSection === 'trend' ? 'active' : ''}}" bindtap="scrollToSection" data-section="trend">
         <view class="nav-icon trend"></view>
         <view class="nav-text">趋势分析</view>
       </view>
-      <view class="page-nav-item {{activeSection === 'compare' ? 'active' : ''}}" bindtap="scrollToSection" data-section="compare">
+      <view class="page-nav-item {{activeNavSection === 'compare' ? 'active' : ''}}" bindtap="scrollToSection" data-section="compare">
         <view class="nav-icon compare"></view>
         <view class="nav-text">对比分析</view>
       </view>
-      <view class="page-nav-item {{activeSection === 'report' ? 'active' : ''}}" bindtap="scrollToSection" data-section="report">
+      <view class="page-nav-item {{activeNavSection === 'report' ? 'active' : ''}}" bindtap="scrollToSection" data-section="report">
         <view class="nav-icon report"></view>
         <view class="nav-text">报告生成</view>
       </view>
@@ -111,42 +111,10 @@
     </view>
   </view>
 
-  <!-- 快捷操作区域 - 提升至页面上部 -->
-  <view class="energy-glass-card energy-p-24 energy-mb-24">
-    <view class="energy-title-small energy-mb-16">快捷操作</view>
-    <view class="quick-actions-grid">
-      <view class="quick-action-card" bindtap="onNavigateToSaving" hover-class="quick-action-hover">
-        <view class="action-icon saving">
-          <text class="icon">💡</text>
-        </view>
-        <view class="action-title energy-text-primary">节能建议</view>
-      </view>
-      
-      <view class="quick-action-card" bindtap="onNavigateToAlerts" hover-class="quick-action-hover">
-        <view class="action-icon alerts">
-          <text class="icon">⚠️</text>
-        </view>
-        <view class="action-title energy-text-primary">告警详情</view>
-      </view>
-      
-      <view class="quick-action-card" bindtap="onNavigateToDevices" hover-class="quick-action-hover">
-        <view class="action-icon devices">
-          <text class="icon">🔌</text>
-        </view>
-        <view class="action-title energy-text-primary">设备管理</view>
-      </view>
 
-      <view class="quick-action-card" bindtap="onGenerateReport" hover-class="quick-action-hover">
-        <view class="action-icon report">
-          <text class="icon">📊</text>
-        </view>
-        <view class="action-title energy-text-primary">生成报告</view>
-      </view>
-    </view>
-  </view>
 
-  <!-- 能耗概览与趋势图表焦点区域 -->
-  <view class="energy-glass-card energy-p-24 energy-mb-24" id="overview-section">
+  <!-- 能耗概览区域 -->
+  <view class="energy-glass-card energy-p-24 energy-mb-24" id="section-overview">
     <view class="section-header">
       <view class="energy-title-small">能耗概览</view>
       <view class="section-actions">
@@ -228,9 +196,11 @@
         </view>
       </view>
     </scroll-view>
+  </view>
 
-    <!-- 能耗趋势图表 -->
-    <view class="trend-section" id="trend-section">
+  <!-- 趋势分析区域 -->
+  <view class="energy-glass-card energy-p-24 energy-mb-24" id="section-trend">
+    <view class="trend-section">
       <view class="chart-header">
         <view class="energy-title-small">能耗趋势</view>
         <view class="chart-controls">
@@ -295,7 +265,8 @@
       <!-- 图表容器 -->
       <view class="chart-container">
         <canvas 
-          canvas-id="energyChart" 
+          type="2d"
+          id="energyChart" 
           class="energy-chart"
           bindtouchstart="onChartTouchStart"
           bindtouchmove="onChartTouchMove"
@@ -347,7 +318,7 @@
   </view>
 
   <!-- 能耗对比分析 -->
-  <view class="energy-glass-card energy-p-24 energy-mb-24" id="compare-section">
+  <view class="energy-glass-card energy-p-24 energy-mb-24" id="section-compare">
     <view class="section-header">
       <view class="energy-title-small">对比分析</view>
       <view class="section-actions">
@@ -409,7 +380,7 @@
   </view>
 
   <!-- 报告生成 - 简化为折叠面板 -->
-  <view class="energy-glass-card energy-p-24" id="report-section">
+  <view class="energy-glass-card energy-p-24" id="section-report">
     <view class="collapsible-header" bindtap="toggleReportPanel">
       <view class="energy-title-small">报告生成</view>
       <view class="collapse-icon {{showReportPanel ? 'expanded' : ''}}">▼</view>
@@ -487,6 +458,40 @@
         >
           预览
         </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷操作区域 - 移至页面底部 -->
+  <view class="energy-glass-card energy-p-24 energy-mb-24">
+    <view class="energy-title-small energy-mb-16">快捷操作</view>
+    <view class="quick-actions-grid">
+      <view class="quick-action-card" bindtap="onNavigateToSaving" hover-class="quick-action-hover">
+        <view class="action-icon saving">
+          <text class="icon">💡</text>
+        </view>
+        <view class="action-title energy-text-primary">节能建议</view>
+      </view>
+      
+      <view class="quick-action-card" bindtap="onNavigateToAlerts" hover-class="quick-action-hover">
+        <view class="action-icon alerts">
+          <text class="icon">⚠️</text>
+        </view>
+        <view class="action-title energy-text-primary">告警详情</view>
+      </view>
+      
+      <view class="quick-action-card" bindtap="onNavigateToDevices" hover-class="quick-action-hover">
+        <view class="action-icon devices">
+          <text class="icon">🔌</text>
+        </view>
+        <view class="action-title energy-text-primary">设备管理</view>
+      </view>
+
+      <view class="quick-action-card" bindtap="onGenerateReport" hover-class="quick-action-hover">
+        <view class="action-icon report">
+          <text class="icon">📊</text>
+        </view>
+        <view class="action-title energy-text-primary">生成报告</view>
       </view>
     </view>
   </view>

@@ -39,7 +39,7 @@ export function formatEnergyValue(value, unit = 'kWh', decimals = 2) {
  * @param {number} decimals 小数位数
  * @returns {string} 格式化后的字符串
  */
-export function formatPower(power, decimals = 2) {
+export function formatPower(power, decimals = 1) {
   if (power >= 1000000) {
     return formatNumber(power / 1000000, decimals) + ' MW';
   } else if (power >= 1000) {
@@ -47,6 +47,26 @@ export function formatPower(power, decimals = 2) {
   } else {
     return formatNumber(power, decimals) + ' W';
   }
+}
+
+/**
+ * iOS兼容的日期解析函数
+ * @param {string|Date} dateInput - 日期字符串或日期对象
+ * @returns {Date} 日期对象
+ */
+export function parseDate(dateInput) {
+  if (dateInput instanceof Date) {
+    return dateInput;
+  }
+  
+  let dateStr = dateInput;
+  // 兼容iOS：将"YYYY-MM-DD HH:mm"格式转换为iOS支持的格式
+  if (typeof dateStr === 'string' && dateStr.includes('-') && dateStr.includes(' ') && !dateStr.includes('T')) {
+    // 将"YYYY-MM-DD HH:mm"转换为"YYYY/MM/DD HH:mm:ss"
+    dateStr = dateStr.replace(/-/g, '/') + ':00';
+  }
+  
+  return new Date(dateStr);
 }
 
 /**
@@ -58,7 +78,7 @@ export function formatPower(power, decimals = 2) {
 export function formatDate(date, format = 'YYYY-MM-DD HH:mm') {
   if (!date) return '';
   
-  const d = new Date(date);
+  const d = parseDate(date);
   if (isNaN(d.getTime())) return '';
   
   const year = d.getFullYear();
@@ -296,24 +316,62 @@ export function calculateGrowthRate(current, previous, decimals = 2) {
 
 /**
  * 计算碳排放量
- * @param {number} electricity 电力消耗(kWh)
- * @param {number} gas 燃气消耗(立方米)
- * @param {number} coal 煤炭消耗(吨)
- * @returns {number} 碳排放量(吨CO2)
+ * @param {Object} energyConsumption 能源消耗对象，包含不同能源类型的消耗量
+ * @param {number} energyConsumption.electricity 电力消耗(kWh)
+ * @param {number} energyConsumption.gas 燃气消耗(立方米)
+ * @param {number} energyConsumption.water 水资源消耗(吨)
+ * @param {number} energyConsumption.coal 煤炭消耗(吨)
+ * @param {number} energyConsumption.solar 太阳能发电量(kWh)，负值表示减少的碳排放
+ * @param {number} energyConsumption.storage 储能使用量(kWh)
+ * @returns {Object} 碳排放计算结果，包含总量和各能源类型的排放量
  */
-export function calculateCarbonEmission(electricity = 0, gas = 0, coal = 0) {
-  // 碳排放因子（吨CO2/单位）
+export function calculateCarbonEmission(energyConsumption = {}) {
+  // 标准化输入参数
+  const {
+    electricity = 0,
+    gas = 0,
+    water = 0,
+    coal = 0,
+    solar = 0,
+    storage = 0
+  } = typeof energyConsumption === 'object' ? energyConsumption : { electricity: arguments[0] || 0, gas: arguments[1] || 0, coal: arguments[2] || 0 };
+  
+  // 碳排放因子（kg CO2/单位）
   const factors = {
-    electricity: 0.000581, // 吨CO2/kWh
-    gas: 0.002162, // 吨CO2/立方米
-    coal: 2.493 // 吨CO2/吨
+    electricity: 0.785, // kg CO2/kWh (国家电网平均值)
+    gas: 2.093,         // kg CO2/立方米
+    water: 0.344,       // kg CO2/吨
+    coal: 2493,         // kg CO2/吨
+    solar: 0,           // kg CO2/kWh (太阳能发电无直接碳排放)
+    storage: 0.1        // kg CO2/kWh (考虑充放电损耗)
   };
   
+  // 计算各能源类型的碳排放量
   const electricityEmission = electricity * factors.electricity;
   const gasEmission = gas * factors.gas;
+  const waterEmission = water * factors.water;
   const coalEmission = coal * factors.coal;
+  const solarEmission = solar * factors.solar; // 通常为负值或零，表示减少的碳排放
+  const storageEmission = storage * factors.storage;
   
-  return electricityEmission + gasEmission + coalEmission;
+  // 计算总碳排放量（kg CO2）
+  const totalEmission = electricityEmission + gasEmission + waterEmission + coalEmission + solarEmission + storageEmission;
+  
+  // 转换为吨CO2并保留3位小数
+  const totalEmissionTons = parseFloat((totalEmission / 1000).toFixed(3));
+  
+  return {
+    total: totalEmissionTons, // 总排放量（吨CO2）
+    details: {
+      electricity: parseFloat((electricityEmission / 1000).toFixed(3)),
+      gas: parseFloat((gasEmission / 1000).toFixed(3)),
+      water: parseFloat((waterEmission / 1000).toFixed(3)),
+      coal: parseFloat((coalEmission / 1000).toFixed(3)),
+      solar: parseFloat((solarEmission / 1000).toFixed(3)),
+      storage: parseFloat((storageEmission / 1000).toFixed(3))
+    },
+    unit: 'tCO2e' // 二氧化碳当量，吨
+  };
 }
 
 /**

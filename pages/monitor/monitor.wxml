@@ -1,11 +1,223 @@
-<view class="container">
-  <view class="page-title">实时监控详情</view>
-  <view class="content">
-    <!-- 区域/设备选择器 -->
-    <!-- 分时能耗曲线 -->
-    <!-- 功率/电压/电流等实时参数 -->
-    <!-- 设备运行状态（在线/离线/故障） -->
-    <!-- 环境参数（温度/湿度，如传感器支持） -->
+<!--pages/monitor/monitor.wxml-->
+<view class="energy-container">
+  <!-- 背景装饰 -->
+  <view class="energy-bg-decoration">
+    <view class="energy-bg-circle" style="width: 220rpx; height: 220rpx; top: 5%; right: -60rpx; animation-delay: 0s; opacity: 0.6;"></view>
+    <view class="energy-bg-circle" style="width: 180rpx; height: 180rpx; top: 40%; left: -40rpx; animation-delay: 2s; opacity: 0.5;"></view>
+    <view class="energy-bg-circle" style="width: 150rpx; height: 150rpx; top: 70%; right: 10%; animation-delay: 4s; opacity: 0.4;"></view>
+    <view class="energy-bg-circle" style="width: 100rpx; height: 100rpx; top: 20%; left: 15%; animation-delay: 6s; opacity: 0.3;"></view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="energy-loading"></view>
+    <text class="energy-text-secondary">加载中...</text>
+  </view>
+
+  <!-- 主内容区域 -->
+  <view class="monitor-content" wx:else>
+    <!-- 页面标题与设备信息 -->
+    <view class="energy-glass-card energy-p-24 energy-mb-16">
+      <view class="energy-flex energy-flex-between energy-mb-16">
+        <view class="energy-flex energy-flex-align-center">
+          <view class="back-button" bindtap="onBack">
+            <text class="energy-icon-text">←</text>
+          </view>
+          <text class="energy-title-medium energy-ml-16">
+            <!-- 根据模式显示不同标题 -->
+            <block wx:if="{{mode === 'category'}}">{{categoryData.title}}监控</block>
+            <block wx:else>实时监控详情</block>
+          </text>
+        </view>
+        <view class="refresh-button" bindtap="onRefresh">
+          <text class="energy-icon-text">🔄</text>
+        </view>
+      </view>
+
+      <!-- 设备基本信息 - 仅在设备详情模式或总览模式下显示 -->
+      <view class="device-info-container energy-flex energy-flex-between" wx:if="{{mode !== 'category'}}">
+        <view class="device-basic-info">
+          <text class="energy-title-small energy-mb-8">{{deviceInfo.name}}</text>
+          <view class="device-meta energy-flex energy-flex-align-center">
+            <view class="device-status {{deviceInfo.status}}">
+              <text>{{deviceInfo.status === 'online' ? '在线' : '离线'}}</text>
+            </view>
+            <text class="energy-text-tertiary energy-text-small energy-ml-16">{{deviceInfo.type}}</text>
+          </view>
+        </view>
+        
+        <!-- 信号强度指示器 -->
+        <view class="signal-strength-container">
+          <view class="signal-strength">
+            <view class="signal-bar {{signalStrength >= 1 ? 'active' : ''}}"></view>
+            <view class="signal-bar {{signalStrength >= 2 ? 'active' : ''}}"></view>
+            <view class="signal-bar {{signalStrength >= 3 ? 'active' : ''}}"></view>
+            <view class="signal-bar {{signalStrength >= 4 ? 'active' : ''}}"></view>
+          </view>
+          <text class="energy-text-tertiary energy-text-small">信号强度</text>
+        </view>
+      </view>
+      
+      <!-- 分类汇总信息 - 仅在分类汇总模式下显示 -->
+      <view class="category-info-container" wx:if="{{mode === 'category'}}">
+        <view class="category-overview energy-flex energy-flex-between energy-mb-16">
+          <view class="category-value-container">
+            <text class="category-value energy-text-glow">{{categoryData.totalValue}}<text class="category-unit">{{categoryData.unit}}</text></text>
+            <text class="energy-text-tertiary energy-text-small">总{{categoryData.title}}</text>
+          </view>
+          <view class="category-meta">
+            <view class="category-trend {{categoryData.trend.startsWith('+') ? 'up' : 'down'}}">
+              <text>{{categoryData.trend}}</text>
+            </view>
+            <text class="energy-text-tertiary energy-text-small">设备数量: {{categoryData.devices}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 时间范围选择器 -->
+    <view class="energy-glass-card energy-p-24 energy-mb-16">
+      <view class="time-range-selector energy-flex">
+        <view 
+          class="time-range-item {{timeRange === '1h' ? 'active' : ''}}"
+          bindtap="onTimeRangeChange"
+          data-range="1h"
+        >1小时</view>
+        <view 
+          class="time-range-item {{timeRange === '6h' ? 'active' : ''}}"
+          bindtap="onTimeRangeChange"
+          data-range="6h"
+        >6小时</view>
+        <view 
+          class="time-range-item {{timeRange === '12h' ? 'active' : ''}}"
+          bindtap="onTimeRangeChange"
+          data-range="12h"
+        >12小时</view>
+        <view 
+          class="time-range-item {{timeRange === '24h' ? 'active' : ''}}"
+          bindtap="onTimeRangeChange"
+          data-range="24h"
+        >24小时</view>
+        <view 
+          class="time-range-item {{timeRange === '7d' ? 'active' : ''}}"
+          bindtap="onTimeRangeChange"
+          data-range="7d"
+        >7天</view>
+      </view>
+    </view>
+
+    <!-- 能耗曲线图表 -->
+    <view class="energy-glass-card energy-p-24 energy-mb-16">
+      <view class="energy-title-small energy-mb-16">分时能耗曲线</view>
+      <view class="energy-chart-container">
+        <!-- 使用微信小程序原生canvas组件 -->
+        <view class="energy-chart-placeholder" wx:if="{{!chartRendered}}">
+          <text class="energy-text-tertiary">图表加载中...</text>
+        </view>
+        <view class="energy-chart-native" wx:else>
+          <!-- 启用canvas组件显示分时耗能曲线，使用Canvas 2D接口支持同层渲染 -->
+          <canvas type="2d" id="energyChart" style="width: 100%; height: 200px;"></canvas>
+        </view>
+      </view>
+    </view>
+
+    <!-- 实时参数 -->
+    <view class="energy-glass-card energy-p-24 energy-mb-16" wx:if="{{mode !== 'category'}}">
+      <view class="energy-title-small energy-mb-16">实时参数</view>
+      <view class="params-grid">
+        <view class="param-item">
+          <text class="param-value energy-text-glow">{{realTimeParams.power}}<text class="param-unit">kW</text></text>
+          <text class="param-label energy-text-tertiary">当前功率</text>
+        </view>
+        <view class="param-item">
+          <text class="param-value energy-text-glow">{{realTimeParams.voltage}}<text class="param-unit">V</text></text>
+          <text class="param-label energy-text-tertiary">电压</text>
+        </view>
+        <view class="param-item">
+          <text class="param-value energy-text-glow">{{realTimeParams.current}}<text class="param-unit">A</text></text>
+          <text class="param-label energy-text-tertiary">电流</text>
+        </view>
+        <view class="param-item">
+          <text class="param-value energy-text-glow">{{realTimeParams.frequency}}<text class="param-unit">Hz</text></text>
+          <text class="param-label energy-text-tertiary">频率</text>
+        </view>
+        <view class="param-item">
+          <text class="param-value energy-text-glow">{{realTimeParams.powerFactor}}</text>
+          <text class="param-label energy-text-tertiary">功率因数</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 分类分布 - 仅在分类汇总模式下显示 -->
+    <view class="energy-glass-card energy-p-24 energy-mb-16" wx:if="{{mode === 'category'}}">
+      <view class="energy-title-small energy-mb-16">分布情况</view>
+      <view class="distribution-container">
+        <!-- 分布条形图 -->
+        <view class="distribution-bars">
+          <view class="distribution-bar-item" wx:for="{{categoryData.distribution}}" wx:key="name">
+            <view class="distribution-bar-label">
+              <text>{{item.name}}</text>
+              <text class="distribution-bar-value">{{item.value}} {{categoryData.unit}}</text>
+            </view>
+            <view class="distribution-bar-container">
+              <view class="distribution-bar-fill" style="width: {{item.percentage}}%;"></view>
+              <text class="distribution-bar-percentage">{{item.percentage}}%</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 环境参数 -->
+    <view class="energy-glass-card energy-p-24 energy-mb-16" wx:if="{{mode !== 'category'}}">
+      <view class="energy-title-small energy-mb-16">环境参数</view>
+      <view class="params-grid">
+        <view class="param-item">
+          <text class="param-value energy-text-glow">{{environmentParams.temperature}}<text class="param-unit">°C</text></text>
+          <text class="param-label energy-text-tertiary">温度</text>
+        </view>
+        <view class="param-item">
+          <text class="param-value energy-text-glow">{{environmentParams.humidity}}<text class="param-unit">%</text></text>
+          <text class="param-label energy-text-tertiary">湿度</text>
+        </view>
+        <view class="param-item">
+          <text class="param-value energy-text-glow">{{environmentParams.airQuality}}</text>
+          <text class="param-label energy-text-tertiary">空气质量</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 告警列表 -->
+    <view class="energy-glass-card energy-p-24 energy-mb-16" wx:if="{{mode !== 'category'}}">
+      <view class="energy-flex energy-flex-between energy-mb-16">
+        <text class="energy-title-small">告警信息</text>
+        <view class="energy-btn energy-btn-outline energy-btn-small" wx:if="{{alerts.length > 0}}" bindtap="onViewAllAlerts">
+          <text>查看全部</text>
+        </view>
+      </view>
+      
+      <!-- 无告警提示 -->
+      <view class="no-alerts" wx:if="{{alerts.length === 0}}">
+        <text class="energy-text-tertiary">暂无告警信息</text>
+      </view>
+      
+      <!-- 告警列表 -->
+      <view class="alert-list" wx:else>
+        <view class="alert-item {{item.level}}" wx:for="{{alerts}}" wx:key="id" bindtap="onViewAlert" data-id="{{item.id}}">
+          <view class="alert-icon {{item.level}}"></view>
+          <view class="alert-content">
+            <text class="alert-title">{{item.title}}</text>
+            <text class="alert-message">{{item.message}}</text>
+            <text class="alert-time">{{item.time}}</text>
+          </view>
+          <view class="alert-arrow"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 连接状态指示器 -->
+    <view class="connection-status {{connected ? 'connected' : 'disconnected'}}">
+      <text>{{connected ? '实时数据已连接' : '实时数据连接断开'}}</text>
+    </view>
   </view>
 </view>

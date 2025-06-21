@@ -5,6 +5,8 @@ const { formatUptime } = require('../../utils/utils.js');
 
 Page({
   data: {
+    // 实时连接状态
+    realTimeStatus: 'disconnected', // connected, disconnected, error
     // 设备统计数据
     deviceStats: {
       total: 0,
@@ -191,183 +193,385 @@ Page({
   },
 
   onShow: function () {
-    // 页面显示时刷新数据
+    // 页面显示时刷新数据和启动实时监控
     this.refreshDeviceData();
+    this.initRealTimeMonitor();
+    
+    // 数据预加载 - 预测用户可能访问的页面
+    API.preloadData('devices');
+  },
+
+  onHide: function() {
+    // 页面隐藏时断开实时连接
+    this.disconnectRealTime();
+  },
+
+  onUnload: function() {
+    // 页面卸载时断开实时连接
+    this.disconnectRealTime();
+  },
+
+  // 实时连接相关属性
+  socketTask: null,
+  isRealTimeConnected: false,
+
+  /**
+   * 初始化设备数据 - 使用API优化功能和缓存机制
+   */
+  async initDeviceData() {
+    try {
+      // 显示加载状态
+      wx.showLoading({
+        title: '加载设备数据...',
+        mask: true
+      });
+      
+      // 优先尝试使用缓存数据快速显示
+      const cachedDeviceData = API.cache.get('device_{}');
+      const cachedGroupsData = API.cache.get('groups_{}');
+      
+      if (cachedDeviceData && cachedGroupsData) {
+        // 使用缓存数据快速显示
+        this.loadCachedData(cachedDeviceData, cachedGroupsData);
+        
+        // 在后台静默更新数据
+        this.updateDataInBackground();
+        return;
+      }
+      
+      // 没有缓存，使用批量数据获取接口
+      const requests = [
+        { type: 'device', params: {} },
+        { type: 'groups', params: {} }
+      ];
+      
+      const batchResult = await API.getBatchData(requests);
+      
+      if (batchResult.success) {
+        // 处理设备数据
+        if (batchResult.data.device && batchResult.data.device.success) {
+          let devices = batchResult.data.device.data.list;
+          devices = this.formatDeviceData(devices);
+          
+          // 计算总页数和分页状态
+          const totalPages = Math.ceil(devices.length / this.data.pageSize);
+          const showPagination = devices.length > this.data.pageSize;
+          
+          this.setData({
+            allDevices: devices,
+            filteredDevices: devices,
+            currentPage: 1,
+            totalPages: totalPages,
+            showPagination: showPagination
+          });
+          
+          // 加载第一页数据
+          this.loadDevicesWithPagination(1);
+        }
+        
+        // 处理分组数据
+        if (batchResult.data.groups && batchResult.data.groups.success) {
+          this.setData({
+            deviceGroups: batchResult.data.groups.data.list || this.data.deviceGroups
+          });
+        }
+        
+        // 处理部分数据获取失败的情况
+        if (batchResult.errors && batchResult.errors.length > 0) {
+          console.warn('部分数据获取失败:', batchResult.errors);
+        }
+      } else {
+        throw new Error('批量数据获取失败');
+      }
+    } catch (error) {
+      console.error('初始化设备数据失败:', error);
+      wx.showToast({
+        title: '加载失败',
+        icon: 'error'
+      });
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   /**
-   * 初始化设备数据 - 8条设备数据，严格按5条/页分页
+   * 加载缓存数据
    */
-  initDeviceData() {
-    // 模拟设备数据
-    let mockDevices = [
-      {        id: 'device_001',        name: '生产线电表A1',        type: 'meter',  // 修正：电表类型改为meter        icon: '⚡',
-        status: 'online',
-        statusText: '在线',
-        location: '生产车间A',
-        power: 1250,
-        powerTrend: 'up',
-        group: 'production',
-        lastUpdate: '2分钟前',
-        healthStatus: 'good',
-        uptime: '72小时15分钟',
-        temperature: 45,
-        isUpdating: true,
-        alerts: []
-      },
-      {
-        id: 'device_002',
-        name: '温湿度传感器B2',
-        type: 'sensor',
-        icon: '🌡️',
-        status: 'online',
-        statusText: '在线',
-        location: '办公区域B',
-        power: null,
-        powerTrend: 'stable',
-        group: 'office',
-        lastUpdate: '1分钟前',
-        healthStatus: 'good',
-        uptime: '168小时30分钟',
-        temperature: 23,
-        isUpdating: false,
-        alerts: []
-      },
-      {        id: 'device_003',        name: '智能开关C3',        type: 'switch',  // 修正：开关类型改为switch        icon: '🔌',
-        status: 'offline',
-        statusText: '离线',
-        location: '公共走廊C',
-        power: 0,
-        powerTrend: 'down',
-        group: 'public',
-        lastUpdate: '30分钟前',
-        healthStatus: 'error',
-        uptime: '0小时0分钟',
-        temperature: null,
-        isUpdating: false,
-        alerts: [
-          {
-            message: '设备离线超过30分钟',
-            time: '30分钟前',
-            level: 'warning',
-            severity: 'critical'
-          }
-        ]
-      },
-      {        id: 'device_004',        name: '中央空调控制器',        type: 'hvac',  // 修正：空调类型改为hvac        icon: '❄️',
-        status: 'online',
-        statusText: '在线',
-        location: '办公区域A',
-        power: 3200,
-        powerTrend: 'up',
-        group: 'office',
-        lastUpdate: '刚刚',
-        healthStatus: 'warning',
-        uptime: '24小时8分钟',
-        temperature: 38,
-        isUpdating: true,
-        alerts: [
-          {
-            message: '能耗异常偏高',
-            time: '5分钟前',
-            level: 'warning',
-            severity: 'warning'
-          }
-        ]
-      },
-      {
-        id: 'device_005',
-        name: '水表监测器',
-        type: 'sensor',
-        icon: '💧',
-        status: 'online',
-        statusText: '在线',
-        location: '公共区域',
-        power: null,
-        powerTrend: 'stable',
-        group: 'public',
-        lastUpdate: '5分钟前',
-        healthStatus: 'good',
-        uptime: '120小时45分钟',
-        temperature: null,
-        isUpdating: false,
-        alerts: []
-      },
-      {        id: 'device_006',        name: '电量计量表D1',        type: 'meter',  // 修正：电量计量表应该是meter类型        icon: '⚡',
-        status: 'online',
-        statusText: '在线',
-        location: '生产区域B',
-        power: 850,
-        powerTrend: 'stable',
-        group: 'production',
-        lastUpdate: '3分钟前',
-        healthStatus: 'good',
-        uptime: '96小时20分钟',
-        temperature: 35,
-        isUpdating: false,
-        alerts: []
-      },
-      {        id: 'device_007',        name: '智能门锁E2',        type: 'switch',  // 修正：智能门锁改为switch类型        icon: '🔒',
-        status: 'online',
-        statusText: '在线',
-        location: '办公区域C',
-        power: 45,
-        powerTrend: 'down',
-        group: 'office',
-        lastUpdate: '1分钟前',
-        healthStatus: 'good',
-        uptime: '240小时10分钟',
-        temperature: 28,
-        isUpdating: false,
-        alerts: []
-      },
-      {        id: 'device_008',        name: '环境监测站F3',        type: 'sensor',  // 修正：环境监测站改为sensor类型        icon: '🌿',
-        status: 'online',
-        statusText: '在线',
-        location: '公共区域D',
-        power: 120,
-        powerTrend: 'stable',
-        group: 'public',
-        lastUpdate: '刚刚',
-        healthStatus: 'good',
-        uptime: '48小时5分钟',
-        temperature: 22,
-        isUpdating: false,
-        alerts: [
-          {
-            message: '空气质量数据更新',
-            time: '刚刚',
-            level: 'info',
-            severity: 'info'
-          }
-        ]
+  loadCachedData(deviceData, groupsData) {
+    try {
+      // 处理设备数据
+      if (deviceData && deviceData.devices) {
+        const formattedDevices = this.formatDeviceData(deviceData.devices);
+        const paginatedDevices = this.paginateDevices(formattedDevices);
+        
+        this.setData({
+          devices: formattedDevices,
+          displayDevices: paginatedDevices,
+          totalDevices: formattedDevices.length,
+          deviceStats: deviceData.stats || {}
+        });
       }
-    ];
-    
-    // 格式化设备运行时间为简洁格式（小时h分钟m）
-    mockDevices = mockDevices.map(device => {
+      
+      // 处理分组数据
+      if (groupsData && groupsData.groups) {
+        this.setData({
+          deviceGroups: groupsData.groups
+        });
+      }
+      
+      wx.hideLoading();
+      console.log('缓存数据加载完成');
+    } catch (error) {
+      console.error('加载缓存数据失败:', error);
+    }
+  },
+
+  /**
+   * 后台静默更新数据
+   */
+  async updateDataInBackground() {
+    try {
+      // 使用批量数据获取接口，强制刷新
+      const requests = [
+        { type: 'device', params: {} },
+        { type: 'groups', params: {} }
+      ];
+      
+      const batchResult = await API.getBatchData(requests, {
+        forceRefresh: true
+      });
+      
+      if (batchResult.success) {
+        const { device: deviceResult, groups: groupsResult } = batchResult.data;
+        
+        // 更新设备数据
+        if (deviceResult && deviceResult.success) {
+          const formattedDevices = this.formatDeviceData(deviceResult.data.devices);
+          const paginatedDevices = this.paginateDevices(formattedDevices);
+          
+          this.setData({
+            devices: formattedDevices,
+            displayDevices: paginatedDevices,
+            totalDevices: formattedDevices.length,
+            deviceStats: deviceResult.data.stats || {}
+          });
+          
+          // 缓存新数据
+          API.cache.set('device_{}', deviceResult.data);
+        }
+        
+        // 更新分组数据
+        if (groupsResult && groupsResult.success) {
+          this.setData({
+            deviceGroups: groupsResult.data.groups
+          });
+          
+          // 缓存新数据
+          API.cache.set('groups_{}', groupsResult.data);
+        }
+        
+        console.log('后台数据更新完成');
+      }
+    } catch (error) {
+      console.error('后台更新数据失败:', error);
+      // 静默失败，不影响用户体验
+    }
+  },
+
+  /**
+   * 格式化设备数据
+   */
+  formatDeviceData(devices) {
+    return devices.map(device => {
+      // 添加一些UI所需的额外属性
+      device.statusText = device.status === 'online' ? '在线' : '离线';
+      device.healthStatus = device.hasAlert ? 'warning' : 'good';
+      
+      // 根据设备类型设置图标
+      switch(device.type) {
+        case 'meter': device.icon = '⚡'; break;
+        case 'sensor': device.icon = '🌡️'; break;
+        case 'switch': device.icon = '🔌'; break;
+        case 'hvac': device.icon = '❄️'; break;
+        default: device.icon = '📱';
+      }
+      
+      // 格式化功率数据，确保保留一位小数
+      if (device.power !== undefined && device.power !== null) {
+        device.power = parseFloat(device.power).toFixed(1);
+      }
+      
+      // 格式化运行时间
       if (device.uptime) {
-        // 使用formatUptime函数将"XX小时XX分钟"格式转换为"XXhXXm"格式
-        device.uptime = formatUptime(device.uptime);
+        const uptimeStr = typeof device.uptime === 'number' ? 
+          `${Math.floor(device.uptime)}小时${Math.round((device.uptime % 1) * 60)}分钟` : 
+          device.uptime;
+        device.uptime = formatUptime(uptimeStr);
+      }
+      
+      return device;
+    });
+  },
+
+  /**
+   * 初始化实时监控
+   */
+  initRealTimeMonitor() {
+    // 获取所有设备ID用于实时监控
+    const deviceIds = this.data.allDevices.map(device => device.id);
+    
+    if (deviceIds.length === 0) return;
+    
+    this.socketTask = API.subscribeRealTimeData({
+      deviceIds: deviceIds,
+      
+      // 连接成功回调
+      onConnect: () => {
+        console.log('设备页面实时数据连接成功');
+        this.isRealTimeConnected = true;
+        this.setData({ realTimeStatus: 'connected' });
+      },
+      
+      // 接收消息回调
+      onMessage: (data) => {
+        this.handleRealTimeMessage(data);
+      },
+      
+      // 连接断开回调
+      onDisconnect: (event) => {
+        console.log('设备页面实时数据连接断开:', event);
+        this.isRealTimeConnected = false;
+        this.setData({ realTimeStatus: 'disconnected' });
+        
+        // 尝试重连
+        setTimeout(() => {
+          if (!this.isRealTimeConnected) {
+            this.initRealTimeMonitor();
+          }
+        }, 5000);
+      },
+      
+      // 错误回调
+      onError: (error) => {
+        console.error('设备页面实时数据连接错误:', error);
+        this.isRealTimeConnected = false;
+        this.setData({ realTimeStatus: 'error' });
+      }
+    });
+  },
+
+  /**
+   * 处理实时消息
+   */
+  handleRealTimeMessage(message) {
+    const { type, deviceId, data } = message;
+    
+    switch (type) {
+      case 'device_update':
+        this.updateDeviceStatus(deviceId, data);
+        break;
+      case 'device_alert':
+        this.handleDeviceAlert(deviceId, data);
+        break;
+    }
+  },
+
+  /**
+   * 更新设备状态
+   */
+  updateDeviceStatus(deviceId, statusData) {
+    const { allDevices, filteredDevices } = this.data;
+    
+    // 更新所有设备数据
+    const updatedAllDevices = allDevices.map(device => {
+      if (device.id === deviceId) {
+        return {
+          ...device,
+          status: statusData.status,
+          statusText: statusData.status === 'online' ? '在线' : '离线',
+          power: statusData.power,
+          energy: statusData.energy,
+          lastUpdate: statusData.timestamp
+        };
       }
       return device;
     });
     
-    // 计算总页数和分页状态
-    const totalPages = Math.ceil(mockDevices.length / this.data.pageSize);
-    const showPagination = mockDevices.length > this.data.pageSize; // 超过5个设备时显示分页
+    // 更新过滤后的设备数据
+    const updatedFilteredDevices = filteredDevices.map(device => {
+      if (device.id === deviceId) {
+        return {
+          ...device,
+          status: statusData.status,
+          statusText: statusData.status === 'online' ? '在线' : '离线',
+          power: statusData.power,
+          energy: statusData.energy,
+          lastUpdate: statusData.timestamp
+        };
+      }
+      return device;
+    });
     
-    // 存储所有设备数据并初始化分页状态
     this.setData({
-      allDevices: mockDevices,
-      filteredDevices: mockDevices, // 初始化过滤数据为所有数据
+      allDevices: updatedAllDevices,
+      filteredDevices: updatedFilteredDevices
+    });
+    
+    // 重新计算统计数据
+    this.updateDeviceStats();
+  },
+
+  /**
+   * 处理设备告警
+   */
+  handleDeviceAlert(deviceId, alertData) {
+    // 更新设备的告警状态
+    const { allDevices } = this.data;
+    const device = allDevices.find(d => d.id === deviceId);
+    
+    if (device) {
+      device.hasAlert = true;
+      device.healthStatus = 'warning';
+      
+      // 显示告警提示
+      if (alertData.level === 'high' || alertData.level === 'critical') {
+        wx.showToast({
+          title: `设备${device.name}发生${alertData.level === 'critical' ? '严重' : '重要'}告警`,
+          icon: 'none',
+          duration: 3000
+        });
+      }
+    }
+  },
+
+  /**
+   * 断开实时连接
+   */
+  disconnectRealTime() {
+    if (this.socketTask) {
+      API.unsubscribeRealTimeData(this.socketTask);
+      this.socketTask = null;
+      this.isRealTimeConnected = false;
+    }
+  },
+
+  /**
+   * 存储所有设备数据并初始化分页状态
+   */
+  initPaginationData(devices) {
+    const totalPages = Math.ceil(devices.length / this.data.pageSize);
+    const showPagination = devices.length > this.data.pageSize;
+    
+    this.setData({
+      allDevices: devices,
+      filteredDevices: devices,
       currentPage: 1,
       totalPages: totalPages,
       showPagination: showPagination,
-      hasMore: mockDevices.length > this.data.pageSize // 判断是否有更多数据
+      hasMore: devices.length > this.data.pageSize // 判断是否有更多数据
     });
-    
-    // 严格按照分页逻辑加载第一页数据（5条）
+        
+    // 严格按照分页逻辑加载第一页数据
     this.loadDevicesWithPagination(1);
   },
 
@@ -665,16 +869,16 @@ Page({
    * 更新设备统计数据
    */
   updateDeviceStats() {
-    const { devices } = this.data;
+    const { devices, allDevices } = this.data;
     const currentStats = this.data.deviceStats;
     
-    // 计算设备类型分布
+    // 计算设备类型分布 - 使用当前页面设备数据，因为这些只是UI展示
     const sensorDevices = devices.filter(d => d.type === 'sensor').length;
     const controlDevices = devices.filter(d => d.type === 'control').length;
     const monitorDevices = devices.filter(d => d.type === 'monitor').length;
     const otherDevices = devices.filter(d => !['sensor', 'control', 'monitor'].includes(d.type)).length;
     
-    // 计算告警严重程度分布
+    // 计算告警严重程度分布 - 使用当前页面设备数据，因为这些只是UI展示
     let criticalAlerts = 0;
     let warningAlerts = 0;
     let infoAlerts = 0;
@@ -697,17 +901,48 @@ Page({
       }
     });
     
+    // 计算健康度 - 基于所有设备的状态
+    const totalDevices = allDevices.length;
+    const onlineDevices = allDevices.filter(d => d.status === 'online').length;
+    const alertDevices = allDevices.filter(d => d.hasAlert).length;
+    
+    // 健康度计算：在线设备比例占50%权重，无告警设备比例占50%权重
+    const onlineRatio = totalDevices > 0 ? onlineDevices / totalDevices : 0;
+    const healthyRatio = totalDevices > 0 ? (totalDevices - alertDevices) / totalDevices : 0;
+    const healthScore = Math.round((onlineRatio * 0.5 + healthyRatio * 0.5) * 100);
+    
+    // 根据健康度确定健康等级和颜色
+    let healthLevel = 'success';
+    let healthColor = '#10B981';
+    
+    if (healthScore < 60) {
+      healthLevel = 'error';
+      healthColor = '#EF4444';
+    } else if (healthScore < 80) {
+      healthLevel = 'warning';
+      healthColor = '#F59E0B';
+    }
+    
     const stats = {
-      ...currentStats, // 保留其他字段如signalStrength、healthScore等
-      total: devices.length,
-      online: devices.filter(d => d.status === 'online').length,
-      alerts: devices.filter(d => d.alerts && d.alerts.length > 0).length,
-      // 设备类型分布
+      ...currentStats, // 保留其他字段
+      // 保留API返回的总设备数，不使用当前页面设备数量
+      // total: devices.length, // 旧代码：使用当前页面设备数量
+      
+      // 使用所有设备数据计算在线和告警数量，确保与总设备数保持一致
+      online: onlineDevices, // 使用上面计算的在线设备数
+      alerts: alertDevices, // 使用上面计算的告警设备数
+      
+      // 更新健康度相关数据
+      healthScore: healthScore,
+      healthLevel: healthLevel,
+      healthColor: healthColor,
+      
+      // 设备类型分布 - 这些只影响UI展示，保持不变
       sensorDevices,
       controlDevices,
       monitorDevices,
       otherDevices,
-      // 告警严重程度分布
+      // 告警严重程度分布 - 这些只影响UI展示，保持不变
       criticalAlerts,
       warningAlerts,
       infoAlerts
@@ -717,31 +952,82 @@ Page({
   },
 
   /**
-   * 刷新设备数据
+   * 刷新设备数据 - 使用API优化功能和缓存机制
    */
-  refreshDeviceData() {
-    // 这里可以调用API获取最新设备数据
-    console.log('刷新设备数据');
-    
-    // 格式化所有设备的运行时间
-    const { allDevices } = this.data;
-    const updatedDevices = allDevices.map(device => {
-      if (device.uptime) {
-        // 确保运行时间格式为"XXhXXm"
-        if (!device.uptime.includes('h') && !device.uptime.includes('m')) {
-          device.uptime = formatUptime(device.uptime);
+  async refreshDeviceData(forceRefresh = false) {
+    try {
+      // 显示刷新状态
+      this.setData({
+        isRefreshing: true
+      });
+      
+      // 使用增强版数据获取接口，支持缓存机制
+      const deviceResult = await API.getDataWithCache('device', {
+        includeStats: true // 包含统计信息
+      }, {
+        forceRefresh: forceRefresh, // 是否强制刷新
+        useCache: !forceRefresh, // 是否使用缓存
+        cacheExpiration: 3 * 60 * 1000 // 设备数据缓存3分钟
+      });
+      
+      if (deviceResult.success) {
+        let devices = deviceResult.data.list;
+        
+        // 使用格式化方法处理设备数据
+        devices = this.formatDeviceData(devices);
+        
+        // 计算总页数和分页状态
+        const totalPages = Math.ceil(devices.length / this.data.pageSize);
+        const showPagination = devices.length > this.data.pageSize;
+        
+        // 更新设备数据
+        this.setData({
+          allDevices: devices,
+          filteredDevices: devices,
+          currentPage: 1,
+          totalPages: totalPages,
+          showPagination: showPagination,
+          hasMore: devices.length > this.data.pageSize,
+          // 更新设备统计数据
+          deviceStats: {
+            ...this.data.deviceStats,
+            total: deviceResult.data.summary?.total || devices.length,
+            online: deviceResult.data.summary?.online || devices.filter(d => d.status === 'online').length,
+            alerts: deviceResult.data.summary?.alarm || devices.filter(d => d.hasAlert).length
+          }
+        });
+        
+        // 重新加载第一页数据
+        this.loadDevicesWithPagination(1);
+        
+        // 显示刷新成功提示
+        wx.showToast({
+          title: '数据已更新',
+          icon: 'success',
+          duration: 1500
+        });
+        
+        // 如果实时连接断开，尝试重新连接
+        if (!this.isRealTimeConnected) {
+          this.initRealTimeMonitor();
         }
+      } else {
+        throw new Error(deviceResult.message || '获取设备数据失败');
       }
-      return device;
-    });
-    
-    // 更新设备数据
-    this.setData({
-      allDevices: updatedDevices,
-      filteredDevices: updatedDevices
-    });
-    
-    this.updateDeviceStats();
+    } catch (error) {
+      console.error('刷新设备数据失败:', error);
+      // 请求失败处理
+      wx.showToast({
+        title: '刷新数据失败',
+        icon: 'none',
+        duration: 2000
+      });
+    } finally {
+      // 无论成功失败，都结束刷新状态
+      this.setData({
+        isRefreshing: false
+      });
+    }
   },
 
   /**
@@ -1296,9 +1582,9 @@ Page({
    */
   editDevice(device) {
     wx.showToast({
-      title: '编辑功能开发中',
-      icon: 'none'
-    });
+        title: '没有权限YJ03',
+        icon: 'none'
+      });
   },
 
   /**
@@ -1306,9 +1592,9 @@ Page({
    */
   deviceSettings(device) {
     wx.showToast({
-      title: '设置功能开发中',
-      icon: 'none'
-    });
+        title: '没有权限YJ03',
+        icon: 'none'
+      });
   },
 
   /**
@@ -1444,7 +1730,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           wx.showToast({
-            title: '维护功能开发中',
+            title: '没有权限YJ03',
             icon: 'none'
           });
         }
@@ -1462,7 +1748,7 @@ Page({
       success: function(res) {
         if (res.confirm) {
           wx.showToast({
-            title: '分析功能开发中',
+            title: '没有权限YJ03',
             icon: 'none'
           });
         }
@@ -1643,16 +1929,10 @@ Page({
    * 下拉刷新
    */
   onPullDownRefresh: function() {
-    // 模拟刷新数据
-    setTimeout(function() {
-      this.refreshDeviceStats();
-      this.filterDevices();
+    // 使用新的刷新机制，强制从网络获取最新数据
+    this.refreshDeviceData(true).finally(() => {
       wx.stopPullDownRefresh();
-      wx.showToast({
-        title: '刷新成功',
-        icon: 'success'
-      });
-    }.bind(this), 1000);
+    });
   },
 
   /**

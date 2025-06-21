@@ -1,0 +1,34 @@
+<!-- components/step-indicator/step-indicator.wxml -->
+<view class="step-indicator">
+  <view 
+    wx:for="{{stepsArray}}" 
+    wx:key="number" 
+    class="step-item {{item.status}}" 
+    bindtap="onStepTap"
+    data-index="{{index}}"
+  >
+    <!-- 步骤连接线 -->
+    <view wx:if="{{index > 0}}" class="step-line">
+      <view class="line-inner" style="background-color: {{item.status === 'waiting' ? inactiveColor : activeColor}}"></view>
+    </view>
+    
+    <!-- 步骤圆点 -->
+    <view class="step-dot" style="border-color: {{item.status === 'waiting' ? inactiveColor : activeColor}}">
+      <view wx:if="{{item.status === 'completed'}}" class="step-dot-inner completed" style="background-color: {{activeColor}}">
+        <!-- 完成图标 -->
+        <view class="step-check">✓</view>
+      </view>
+      <view wx:elif="{{item.status === 'current'}}" class="step-dot-inner current" style="background-color: {{activeColor}}">
+        {{item.number}}
+      </view>
+      <view wx:else class="step-dot-inner waiting">
+        {{item.number}}
+      </view>
+    </view>
+    
+    <!-- 步骤标题 -->
+    <view class="step-title" style="color: {{item.status === 'waiting' ? inactiveColor : activeColor}}">
+      {{item.title}}
+    </view>
+  </view>
+</view>

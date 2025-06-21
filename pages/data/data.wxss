@@ -119,40 +119,55 @@
   color: var(--energy-text-primary);
 }
 
-/* 时间范围选择器 */
+/* 时间范围选择器 - 参考首页chart-tab设计 */
 .time-selector-container {
   width: 100%;
 }
 
 .time-tabs {
   display: flex;
-  /* 更改为半透明浅色背景 */
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 12rpx;
-  padding: 8rpx;
+  gap: 12rpx;
+  /* 移除背景，让每个tab独立显示 */
+  padding: 0;
   margin-bottom: 24rpx;
+  justify-content: space-between;
 }
 
 .time-tab {
   flex: 1;
   text-align: center;
-  padding: 16rpx 12rpx;
-  border-radius: 8rpx;
-  font-size: 28rpx;
-  color: var(--energy-text-secondary);
+  padding: 16rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  /* 未选中状态 - 参考首页chart-tab */
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   cursor: pointer;
+  /* 增强轮廓清晰度 */
+  box-shadow: 0 2rpx 8rpx rgba(100, 116, 139, 0.08);
 }
 
 .time-tab.active {
-  background: linear-gradient(135deg, var(--energy-primary), var(--energy-secondary));
-  color: var(--energy-text-primary);
-  box-shadow: 0 4rpx 12rpx rgba(0, 255, 255, 0.3);
+  /* 选中状态 - 参考首页chart-tab.active */
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 4rpx 16rpx rgba(59, 130, 246, 0.2);
+  font-weight: 600;
+  /* 增强选中效果 */
+  transform: translateY(-1rpx);
 }
 
 .time-tab-hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(0.98);
+  /* 悬停效果优化 */
+  background: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59, 130, 246, 0.2);
+  transform: translateY(-1rpx);
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.1);
 }
 
 /* 自定义时间选择器 */

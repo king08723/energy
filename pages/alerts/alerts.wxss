@@ -4,7 +4,11 @@
 .container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding-bottom: 120rpx; /* 为底部导航留出空间 */
+  padding: 0 0 120rpx 0; /* 修改：移除顶部padding，只保留底部padding */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* ==================== 页面标题区域 ==================== */
@@ -13,6 +17,7 @@
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-bottom: 2rpx solid #e9ecef;
   margin-bottom: 24rpx;
+  width: 100%;
 }
 
 .page-title {
@@ -29,14 +34,22 @@
   font-weight: 400;
 }
 
-/* ==================== 筛选器区域 ==================== */
+/* ==================== 筛选器区域 - 优化布局和交互 ==================== */
 .filter-section {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   margin: 0 32rpx 32rpx;
-  background: #ffffff;
+  background: var(--bg-card);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--border-primary);
   border-radius: 16rpx;
-  padding: 32rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
-  border: 2rpx solid #f1f3f4;
+  padding: 24rpx;
+  box-shadow: var(--shadow-primary);
+  transition: all 0.3s ease;
+  width: calc(100% - 64rpx); /* 添加宽度计算，考虑左右margin */
+  align-self: center; /* 在flex容器中居中 */
 }
 
 .filter-tabs {
@@ -49,20 +62,39 @@
 }
 
 .filter-tab {
+  position: relative;
+  overflow: hidden;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 16rpx 12rpx;
   border-radius: 8rpx;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: pointer;
 }
 
+.filter-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--primary-cyan);
+  transition: all 0.3s ease;
+}
+
+.filter-tab.active::after {
+  width: 100%;
+  left: 0;
+}
+
 .filter-tab.active {
-  background: #ffffff;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 4rpx 12rpx rgba(0, 123, 255, 0.15);
   border: 2rpx solid #007bff;
+  transform: translateY(-2rpx);
 }
 
 .tab-text {
@@ -113,9 +145,11 @@
 }
 
 .action-btn:hover {
-  background: #e9ecef;
-  border-color: #dee2e6;
+  background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+  border-color: #007bff;
   transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  color: #007bff;
 }
 
 .action-btn:active {
@@ -123,36 +157,156 @@
   box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
 }
 
-/* ==================== 告警列表 ==================== */
-.alerts-list {
-  padding: 0 32rpx;
+/* ==================== 告警统计卡片 - 新增样式 ==================== */
+.alerts-summary {
+  width: calc(100% - 64rpx);
+  margin: 0 32rpx 32rpx;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+  background: var(--bg-card);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--border-primary);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: var(--shadow-primary);
+  transition: all 0.3s ease;
+  align-self: center;
 }
 
-/* 核心：白底黑字的告警项设计 */
-.alert-item {
+.summary-item {
   display: flex;
-  background: #ffffff; /* 白色背景 */
-  border: 2rpx solid #e9ecef;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx;
+  border-radius: 12rpx;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--border-secondary);
+  transition: all 0.3s ease;
+}
+
+.summary-item:hover {
+  transform: translateY(-2rpx);
+  box-shadow: var(--shadow-hover);
+}
+
+.summary-count {
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-bottom: 8rpx;
+}
+
+.summary-label {
+  font-size: 24rpx;
+  color: #8c959d; /* 修改：颜色从#6c757d变浅为#8c959d */
+}
+
+/* 告警统计数量颜色 - 统一配置，移除重复定义 */
+.summary-item.critical {
+  border-color: rgba(220, 53, 69, 0.3);
+}
+
+.summary-item.critical .summary-count {
+  color: #dc3545;
+}
+
+.summary-item.warning {
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.summary-item.warning .summary-count {
+  color: #ffc107;
+}
+
+.summary-item.info {
+  border-color: rgba(23, 162, 184, 0.3);
+}
+
+.summary-item.info .summary-count {
+  color: #17a2b8;
+}
+
+.summary-item.unread {
+  border-color: rgba(0, 123, 255, 0.3);
+}
+
+.summary-item.unread .summary-count {
+  color: #007bff;
+}
+
+/* ==================== 告警列表 - 优化布局和视觉层次 ==================== */
+.alerts-list {
+  width: 100%;
+  padding: 0 32rpx;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768rpx) {
+  .alerts-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 24rpx;
+  }
+}
+
+/* 核心：告警项设计 - 优化布局和视觉效果 */
+.alert-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-gap: 16rpx;
+  background: var(--bg-card);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--border-primary);
   border-radius: 16rpx;
   margin-bottom: 16rpx;
-  padding: 32rpx;
-  transition: all 0.3s ease;
+  padding: 24rpx;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  color: #212529 !important; /* 强制黑色文字 */
 }
 
-/* 确保告警项内所有文字都是黑色 */
-.alert-item text,
-.alert-item view {
-  color: #212529 !important;
+.alert-item:hover {
+  transform: translateY(-4rpx);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-hover);
 }
 
-/* 未读告警的视觉强调 */
+/* 未读告警的增强视觉强调 */
 .alert-item.unread {
-  border-left: 8rpx solid #007bff;
-  box-shadow: 0 4rpx 16rpx rgba(0, 123, 255, 0.15);
+  border-left: 8rpx solid var(--primary-cyan);
+  box-shadow: var(--shadow-glow);
+  position: relative;
+}
+
+/* 未读告警右上角指示器 */
+.alert-item.unread::before {
+  content: '';
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  width: 16rpx;
+  height: 16rpx;
+  background: #007bff;
+  border-radius: 50%;
+  border: 2rpx solid #ffffff;
+  animation: pulse-unread-indicator 2s infinite;
+  z-index: 2;
+}
+
+/* 未读指示器动画 */
+@keyframes pulse-unread-indicator {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+  50% { 
+    transform: scale(1.3); 
+    opacity: 0.7; 
+  }
 }
 
 /* 已读告警的淡化效果 */
@@ -162,26 +316,50 @@
 }
 
 /* 不同级别告警的边框颜色 */
+/* 不同级别告警的增强视觉效果 */
 .alert-item.critical {
+  border-left-width: 12rpx !important;
   border-left-color: #dc3545 !important;
-  box-shadow: 0 4rpx 16rpx rgba(220, 53, 69, 0.15);
+  background: rgba(220, 53, 69, 0.05);
+  box-shadow: 0 4rpx 16rpx rgba(220, 53, 69, 0.2);
 }
 
 .alert-item.warning {
+  border-left-width: 10rpx !important;
   border-left-color: #ffc107 !important;
+  background: rgba(255, 193, 7, 0.03);
   box-shadow: 0 4rpx 16rpx rgba(255, 193, 7, 0.15);
 }
 
 .alert-item.info {
+  border-left-width: 8rpx !important;
   border-left-color: #17a2b8 !important;
+  background: rgba(23, 162, 184, 0.03);
   box-shadow: 0 4rpx 16rpx rgba(23, 162, 184, 0.15);
 }
 
-/* 悬停效果 */
+/* 增强的悬停效果 */
 .alert-item:hover {
-  transform: translateY(-4rpx);
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
+  transform: translateY(-6rpx);
+  box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.15);
   border-color: #007bff;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 不同级别告警的悬停效果 */
+.alert-item.critical:hover {
+  box-shadow: 0 12rpx 32rpx rgba(220, 53, 69, 0.25);
+  border-left-color: #dc3545;
+}
+
+.alert-item.warning:hover {
+  box-shadow: 0 12rpx 32rpx rgba(255, 193, 7, 0.2);
+  border-left-color: #ffc107;
+}
+
+.alert-item.info:hover {
+  box-shadow: 0 12rpx 32rpx rgba(23, 162, 184, 0.2);
+  border-left-color: #17a2b8;
 }
 
 /* 点击效果 */
@@ -189,12 +367,12 @@
   transform: translateY(-2rpx);
 }
 
-/* ==================== 告警指示器 ==================== */
+/* ==================== 告警级别指示器 - 优化位置和样式 ==================== */
 .alert-indicator {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-right: 24rpx;
+  margin-right: 0;
   position: relative;
 }
 
@@ -203,26 +381,52 @@
   height: 24rpx;
   border-radius: 50%;
   margin-bottom: 8rpx;
-  border: 3rpx solid #ffffff;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+  border: 3rpx solid transparent;
+  box-shadow: var(--shadow-glow);
 }
 
+/* 严重告警状态点 - 增强动画效果 */
 .status-dot.critical {
-  background: #dc3545;
+  background: var(--color-error);
+  box-shadow: 0 0 12rpx rgba(255, 71, 87, 0.8);
+  position: relative;
+  border: 2rpx solid #ffffff;
+}
+
+.status-dot.critical::after {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  border-radius: 50%;
+  background: transparent;
+  border: 2rpx solid var(--color-error);
+  opacity: 0.6;
   animation: pulse-critical 2s infinite;
 }
 
+/* 严重告警脉冲动画 - 增强效果 */
+@keyframes pulse-critical {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 0.6; 
+  }
+  50% { 
+    transform: scale(1.5); 
+    opacity: 0.2; 
+  }
+}
+
 .status-dot.warning {
-  background: #ffc107;
-  animation: pulse-warning 2s infinite;
+  background: var(--color-warning);
+  box-shadow: 0 0 8rpx rgba(255, 165, 2, 0.6);
 }
 
 .status-dot.info {
   background: #17a2b8;
-}
-
-.status-dot.normal {
-  background: #28a745;
+  box-shadow: 0 0 8rpx rgba(23, 162, 184, 0.6);
 }
 
 .unread-badge {
@@ -234,23 +438,20 @@
   animation: pulse-unread 1.5s infinite;
 }
 
-/* ==================== 告警主要内容 ==================== */
+/* ==================== 告警主要内容 - 优化布局 ==================== */
 .alert-main {
-  flex: 1;
-  color: #212529 !important; /* 强制黑色文字 */
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
 }
 
-/* 确保所有子元素都是黑色文字 */
-.alert-main text,
-.alert-main view {
-  color: #212529 !important;
-}
-
+/* 告警标题和时间 */
 .alert-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16rpx;
+  margin-bottom: 12rpx;
 }
 
 .alert-title {
@@ -272,14 +473,97 @@
   border: 1rpx solid #e9ecef;
 }
 
+/* 告警级别和类型信息 - 移动到更合理位置 */
+.alert-meta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-bottom: 12rpx;
+}
+
+.alert-level {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid;
+  font-size: 24rpx;
+}
+
+.alert-level .level-icon {
+  font-size: 24rpx;
+}
+
+/* 告警级别标签 - 增强视觉识别和无障碍性 */
+.alert-level.critical {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+  font-weight: 700;
+}
+
+.alert-level.critical::before {
+  content: '🚨';
+  margin-right: 4rpx;
+}
+
+.alert-level.warning {
+  background: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+  font-weight: 600;
+}
+
+.alert-level.warning::before {
+  content: '⚠️';
+  margin-right: 4rpx;
+}
+
+.alert-level.info {
+  background: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
+  font-weight: 500;
+}
+
+.alert-level.info::before {
+  content: 'ℹ️';
+  margin-right: 4rpx;
+}
+
+.level-text {
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.alert-type {
+  font-size: 24rpx;
+  color: #6c757d;
+  background: #e9ecef;
+  padding: 6rpx 12rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #dee2e6;
+}
+
+/* 告警内容 - 优化展示 */
 .alert-content {
   line-height: 1.6;
   color: #212529 !important; /* 强制黑色内容 */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.alert-item.expanded .alert-content {
+  max-height: 500rpx;
 }
 
 .alert-device {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12rpx;
   margin-bottom: 12rpx;
   padding: 12rpx 16rpx;
@@ -302,7 +586,6 @@
 .device-location {
   font-size: 24rpx;
   color: #6c757d !important;
-  margin-left: auto;
 }
 
 .alert-description {
@@ -312,63 +595,36 @@
   line-height: 1.5;
 }
 
-.alert-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.alert-level {
+/* 告警详情按钮 - 新增样式 */
+.alert-detail-btn {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8rpx;
-  padding: 8rpx 16rpx;
-  border-radius: 8rpx;
-  border: 1rpx solid;
+  font-size: 26rpx;
+  color: #007bff;
+  padding: 8rpx 0;
+  margin-top: 8rpx;
+  align-self: flex-end;
+  transition: all 0.3s ease;
 }
 
-.alert-level.critical {
-  background: #f8d7da;
-  border-color: #f5c6cb;
-  color: #721c24;
+.alert-detail-btn:active {
+  opacity: 0.7;
+  transform: scale(0.98);
 }
 
-.alert-level.warning {
-  background: #fff3cd;
-  border-color: #ffeaa7;
-  color: #856404;
-}
-
-.alert-level.info {
-  background: #d1ecf1;
-  border-color: #bee5eb;
-  color: #0c5460;
-}
-
-.level-icon {
+.alert-detail-btn .iconfont {
   font-size: 24rpx;
 }
 
-.level-text {
-  font-size: 24rpx;
-  font-weight: 600;
-}
-
-.alert-type {
-  font-size: 24rpx;
-  color: #6c757d;
-  background: #e9ecef;
-  padding: 8rpx 16rpx;
-  border-radius: 8rpx;
-  border: 1rpx solid #dee2e6;
-}
-
-/* ==================== 快速操作 ==================== */
+/* ==================== 快速操作 - 优化布局和交互 ==================== */
 .alert-actions {
   display: flex;
   flex-direction: column;
   gap: 12rpx;
-  margin-left: 16rpx;
+  margin-left: 0;
+  grid-column: 3;
 }
 
 .action-item {
@@ -377,16 +633,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
-  border: 2rpx solid #e9ecef;
-  border-radius: 12rpx;
+  background: rgba(0, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-primary);
+  border-radius: 50%;
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .action-item:hover {
-  background: #e9ecef;
+  background: rgba(0, 255, 255, 0.25);
   transform: scale(1.1);
+  box-shadow: var(--shadow-glow);
 }
 
 .action-item:active {
@@ -398,11 +656,37 @@
   color: #495057;
 }
 
-/* ==================== 空状态 ==================== */
+/* 操作按钮特定样式 */
+.action-item.mark-read:hover {
+  background: rgba(40, 167, 69, 0.15);
+}
+
+.action-item.mark-read:hover .iconfont {
+  color: #28a745;
+}
+
+.action-item.ignore:hover {
+  background: rgba(108, 117, 125, 0.15);
+}
+
+.action-item.ignore:hover .iconfont {
+  color: #6c757d;
+}
+
+.action-item.handle:hover {
+  background: rgba(0, 123, 255, 0.15);
+}
+
+.action-item.handle:hover .iconfont {
+  color: #007bff;
+}
+
+/* ==================== 空状态 - 优化视觉效果 ==================== */
 .empty-state {
   text-align: center;
   padding: 120rpx 40rpx;
-  color: #6c757d;
+  color: var(--text-muted);
+  animation: fadeInUp 0.5s ease forwards;
 }
 
 .empty-icon {
@@ -411,28 +695,30 @@
 
 .empty-icon .iconfont {
   font-size: 120rpx;
-  color: #dee2e6;
+  color: var(--border-secondary);
+  text-shadow: var(--shadow-glow);
 }
 
 .empty-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #495057;
+  color: var(--text-secondary);
   margin-bottom: 12rpx;
 }
 
 .empty-subtitle {
   font-size: 28rpx;
-  color: #6c757d;
+  color: var(--text-tertiary);
 }
 
-/* ==================== 加载更多 ==================== */
+/* ==================== 加载更多 - 优化交互 ==================== */
 .load-more {
   text-align: center;
   padding: 40rpx;
-  color: #007bff;
+  color: var(--primary-cyan);
   font-size: 28rpx;
   cursor: pointer;
+  text-shadow: var(--shadow-text);
 }
 
 .loading {
@@ -445,18 +731,35 @@
 .loading-spinner {
   width: 32rpx;
   height: 32rpx;
-  border: 4rpx solid #e9ecef;
-  border-top: 4rpx solid #007bff;
+  border: 4rpx solid var(--border-secondary);
+  border-top: 4rpx solid var(--primary-cyan);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  box-shadow: var(--shadow-glow);
 }
 
-/* ==================== 动画效果 ==================== */
-@keyframes pulse-critical {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.8; }
+/* 告警定位时的高亮效果 */
+.alert-item.highlight {
+  animation: highlight-pulse 1.5s ease-in-out infinite;
+  border-width: 2rpx;
+  box-shadow: 0 0 20rpx rgba(0, 123, 255, 0.5);
+  transform: translateY(-4rpx) scale(1.02);
+  z-index: 5;
 }
 
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 20rpx rgba(0, 123, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 30rpx rgba(0, 123, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 20rpx rgba(0, 123, 255, 0.5);
+  }
+}
+
+/* 优化后的动画定义 - 移除重复，统一管理 */
 @keyframes pulse-warning {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.1); opacity: 0.9; }
@@ -472,11 +775,26 @@
   100% { transform: rotate(360deg); }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .rotating {
   animation: spin 1s linear infinite;
 }
 
-/* ==================== 响应式设计 ==================== */
+.alert-item.new {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+/* ==================== 响应式设计 - 适配小屏设备 ==================== */
 @media (max-width: 750rpx) {
   .container {
     padding-bottom: 100rpx;
@@ -491,12 +809,21 @@
     padding: 24rpx;
   }
   
+  .alerts-summary {
+    width: calc(100% - 48rpx);
+    margin: 0 24rpx 24rpx;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 12rpx;
+    padding: 20rpx;
+  }
+  
   .alerts-list {
     padding: 0 24rpx;
   }
   
   .alert-item {
-    padding: 24rpx;
+    padding: 20rpx;
   }
   
   .alert-actions {

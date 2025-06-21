@@ -1,0 +1,327 @@
+<!--pages/intelligent-analysis/intelligent-analysis.wxml-->
+<view class="intelligent-analysis">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">智能分析</text>
+    <text class="page-subtitle">AI驱动的设备健康与能效分析</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在分析数据...</text>
+  </view>
+
+  <!-- 主要内容 -->
+  <view wx:else class="main-content">
+    <!-- 标签页导航 -->
+    <view class="tab-nav">
+      <view 
+        class="tab-item {{selectedTab === 'devices' ? 'active' : ''}}"
+        data-tab="devices"
+        bindtap="onTabChange"
+      >
+        <text class="tab-icon">📱</text>
+        <text class="tab-text">设备分析</text>
+      </view>
+      <view 
+        class="tab-item {{selectedTab === 'alerts' ? 'active' : ''}}"
+        data-tab="alerts"
+        bindtap="onTabChange"
+      >
+        <text class="tab-icon">⚠️</text>
+        <text class="tab-text">告警分析</text>
+      </view>
+      <view 
+        class="tab-item {{selectedTab === 'optimization' ? 'active' : ''}}"
+        data-tab="optimization"
+        bindtap="onTabChange"
+      >
+        <text class="tab-icon">🚀</text>
+        <text class="tab-text">优化建议</text>
+      </view>
+    </view>
+
+    <!-- 设备分析页面 -->
+    <view wx:if="{{selectedTab === 'devices'}}" class="devices-analysis">
+      <!-- 过滤器 -->
+      <view class="filter-bar">
+        <view 
+          class="filter-item {{filterType === 'all' ? 'active' : ''}}"
+          data-filter="all"
+          bindtap="onFilterChange"
+        >
+          全部
+        </view>
+        <view 
+          class="filter-item {{filterType === 'high_risk' ? 'active' : ''}}"
+          data-filter="high_risk"
+          bindtap="onFilterChange"
+        >
+          高风险
+        </view>
+        <view 
+          class="filter-item {{filterType === 'medium_risk' ? 'active' : ''}}"
+          data-filter="medium_risk"
+          bindtap="onFilterChange"
+        >
+          中风险
+        </view>
+        <view 
+          class="filter-item {{filterType === 'low_risk' ? 'active' : ''}}"
+          data-filter="low_risk"
+          bindtap="onFilterChange"
+        >
+          低风险
+        </view>
+      </view>
+
+      <!-- 设备列表 -->
+      <view class="device-list">
+        <!-- 空状态提示 -->
+        <view wx:if="{{filteredDevices.length === 0}}" class="empty-state">
+          <text class="empty-icon">📱</text>
+          <text class="empty-title">暂无设备数据</text>
+          <text class="empty-description">
+            {{filterType === 'all' ? '当前没有设备数据' : '当前筛选条件下没有设备'}}
+          </text>
+        </view>
+        
+        <!-- 设备卡片 -->
+        <view 
+          wx:for="{{filteredDevices}}"
+          wx:key="id"
+          class="device-card"
+          data-device-id="{{item.id}}"
+          bindtap="onDeviceDetail"
+        >
+          <!-- 设备基本信息 -->
+          <view class="device-header">
+            <view class="device-info">
+              <text class="device-name">{{item.name}}</text>
+              <text class="device-location">{{item.location}}</text>
+            </view>
+            <view 
+              class="risk-badge"
+              style="background-color: {{item.intelligentAnalysis.riskLevel === 'high' ? '#ff4757' : item.intelligentAnalysis.riskLevel === 'medium' ? '#ffa502' : '#2ed573'}}"
+            >
+              {{item.intelligentAnalysis.riskLevel === 'high' ? '高风险' : item.intelligentAnalysis.riskLevel === 'medium' ? '中风险' : '低风险'}}
+            </view>
+          </view>
+
+          <!-- 智能分析结果 -->
+          <view class="analysis-results">
+            <!-- 效率分数 -->
+            <view class="metric-item">
+              <text class="metric-label">效率分数</text>
+              <view class="metric-value">
+                <text class="metric-number">{{item.intelligentAnalysis.efficiencyScore}}</text>
+                <text class="metric-unit">分</text>
+              </view>
+            </view>
+
+            <!-- 预测故障 -->
+            <view class="metric-item">
+              <text class="metric-label">故障预测</text>
+              <view class="metric-value">
+                <text class="metric-status {{item.intelligentAnalysis.predictedFailure ? 'warning' : 'normal'}}">
+                  {{item.intelligentAnalysis.predictedFailure ? '可能故障' : '正常'}}
+                </text>
+              </view>
+            </view>
+
+            <!-- 维护建议 -->
+            <view class="metric-item">
+              <text class="metric-label">维护建议</text>
+              <view class="metric-value">
+                <text class="metric-status {{item.intelligentAnalysis.maintenanceRecommended ? 'warning' : 'normal'}}">
+                  {{item.intelligentAnalysis.maintenanceRecommended ? '需要维护' : '无需维护'}}
+                </text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 根因分析 -->
+          <view class="root-cause-analysis">
+            <view class="analysis-header">
+              <text class="analysis-title">根因分析</text>
+              <text class="confidence-score">置信度: {{item.intelligentAnalysis.rootCauseAnalysis.confidence}}%</text>
+            </view>
+            <view class="primary-cause">
+              <text class="cause-label">主要原因:</text>
+              <text class="cause-text">
+                {{item.intelligentAnalysis.rootCauseAnalysis.primaryCause === 'network_issue' ? '网络问题' : 
+                  item.intelligentAnalysis.rootCauseAnalysis.primaryCause === 'hardware_fault' ? '硬件故障' :
+                  item.intelligentAnalysis.rootCauseAnalysis.primaryCause === 'software_error' ? '软件错误' : '环境因素'}}
+              </text>
+            </view>
+          </view>
+
+          <!-- 影响评估 -->
+          <view class="impact-assessment">
+            <text class="assessment-title">影响评估</text>
+            <view class="impact-metrics">
+              <view class="impact-item">
+                <text class="impact-label">能耗损失</text>
+                <text class="impact-value">{{item.intelligentAnalysis.impactAssessment.energyLoss}} kWh</text>
+              </view>
+              <view class="impact-item">
+                <text class="impact-label">成本影响</text>
+                <text class="impact-value">¥{{item.intelligentAnalysis.impactAssessment.costImpact}}</text>
+              </view>
+              <view class="impact-item">
+                <text class="impact-label">碳排放</text>
+                <text class="impact-value">{{item.intelligentAnalysis.impactAssessment.carbonImpact}} kg</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 告警分析页面 -->
+    <view wx:elif="{{selectedTab === 'alerts'}}" class="alerts-analysis">
+      <view class="alert-summary">
+        <text class="summary-title">告警概览</text>
+        <view class="summary-stats">
+          <view class="stat-item">
+            <text class="stat-number">{{alertStats.total}}</text>
+            <text class="stat-label">总告警数</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-number">{{alertStats.critical}}</text>
+            <text class="stat-label">严重告警</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-number">{{alertStats.major}}</text>
+            <text class="stat-label">主要告警</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-number">{{alertStats.minor}}</text>
+            <text class="stat-label">次要告警</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-number">{{alertStats.unread}}</text>
+            <text class="stat-label">未处理</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 告警列表 -->
+      <view class="alert-list">
+        <!-- 空状态提示 -->
+        <view wx:if="{{alerts.length === 0}}" class="empty-state">
+          <text class="empty-icon">⚠️</text>
+          <text class="empty-title">暂无告警数据</text>
+          <text class="empty-description">当前系统运行正常，没有告警信息</text>
+        </view>
+        
+        <!-- 告警卡片 -->
+        <view 
+          wx:for="{{alerts}}"
+          wx:key="id"
+          class="alert-card"
+          data-alert-id="{{item.id}}"
+          bindtap="onAlertDetail"
+        >
+          <view class="alert-header">
+            <view class="alert-info">
+              <text class="alert-title">{{item.title}}</text>
+              <text class="alert-device">{{item.deviceName}}</text>
+            </view>
+            <view class="alert-level {{item.level}}">
+              {{item.level === 'critical' ? '严重' : item.level === 'warning' ? '警告' : item.level === 'info' ? '信息' : '未知'}}
+            </view>
+          </view>
+          <view class="alert-content">
+            <text class="alert-description">{{item.content}}</text>
+          </view>
+          <view class="alert-footer">
+            <text class="alert-time">{{item.createTime}}</text>
+            <text class="alert-status">{{item.status === 'unread' ? '未读' : item.status === 'read' ? '已读' : item.status === 'ignored' ? '已忽略' : item.status === 'resolved' ? '已解决' : '未知'}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 优化建议页面 -->
+    <view wx:elif="{{selectedTab === 'optimization'}}" class="optimization-recommendations">
+      <view class="recommendations-header">
+        <text class="recommendations-title">智能优化建议</text>
+        <text class="recommendations-subtitle">基于AI分析的个性化优化方案</text>
+      </view>
+
+      <!-- 建议列表 -->
+      <view class="recommendation-list">
+        <view 
+          wx:for="{{optimizationRecommendations}}"
+          wx:key="id"
+          class="recommendation-card"
+        >
+          <!-- 建议头部 -->
+          <view class="recommendation-header">
+            <view class="recommendation-info">
+              <text class="recommendation-title">{{item.title}}</text>
+              <view class="recommendation-type {{item.type}}">
+                {{item.type === 'urgent' ? '紧急' : item.type === 'maintenance' ? '维护' : '优化'}}
+              </view>
+            </view>
+            <view class="priority-badge">
+              <text class="priority-text">优先级 {{item.priority}}</text>
+            </view>
+          </view>
+
+          <!-- 建议描述 -->
+          <view class="recommendation-description">
+            <text class="description-text">{{item.description}}</text>
+          </view>
+
+          <!-- 影响设备 -->
+          <view class="affected-devices">
+            <text class="devices-label">影响设备:</text>
+            <view class="devices-list">
+              <text 
+                wx:for="{{item.devices}}"
+                wx:for-item="device"
+                wx:key="*this"
+                class="device-tag"
+              >
+                {{device}}
+              </text>
+            </view>
+          </view>
+
+          <!-- 预期收益 -->
+          <view class="estimated-savings">
+            <text class="savings-title">预期收益</text>
+            <view class="savings-metrics">
+              <view class="savings-item">
+                <text class="savings-label">节能</text>
+                <text class="savings-value">{{item.estimatedSavings.energy}} kWh</text>
+              </view>
+              <view class="savings-item">
+                <text class="savings-label">节费</text>
+                <text class="savings-value">¥{{item.estimatedSavings.cost}}</text>
+              </view>
+              <view class="savings-item">
+                <text class="savings-label">减排</text>
+                <text class="savings-value">{{item.estimatedSavings.carbon}} kg</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 执行按钮 -->
+          <view class="recommendation-actions">
+            <button 
+              class="execute-btn"
+              data-recommendation-id="{{item.id}}"
+              bindtap="onExecuteRecommendation"
+            >
+              执行建议
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

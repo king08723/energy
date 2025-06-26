@@ -32,7 +32,7 @@
   <!-- 主标题 - 优化设计 -->
   <view class="main-title">
     <view class="title-section">
-      <text class="title-text">路博能源</text>
+      <text class="title-text">陆博能效云</text>
       <text class="title-subtitle">智慧能源管理平台</text>
     </view>
     <view class="title-actions">

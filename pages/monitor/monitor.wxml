@@ -220,4 +220,5 @@
       <text>{{connected ? '实时数据已连接' : '实时数据连接断开'}}</text>
     </view>
   </view>
+  <custom-footer></custom-footer>
 </view>

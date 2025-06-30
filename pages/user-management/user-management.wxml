@@ -6,4 +6,5 @@
     <!-- 角色分配（管理员/普通用户/访客） -->
     <!-- 权限配置（设备控制、数据查看等） -->
   </view>
+  <custom-footer></custom-footer>
 </view>

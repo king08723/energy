@@ -1,0 +1,5 @@
+<view class="footer-container">
+  <text class="footer-company-name">© {{currentYear}} 江西陆博能效科技有限公司</text>
+  <text class="footer-copyright">版权所有 / All Rights Reserved</text>
+  <text class="footer-icp">赣ICP备2023010023号</text>
+</view>

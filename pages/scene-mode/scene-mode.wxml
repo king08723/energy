@@ -131,4 +131,5 @@
     <text class="add-icon">+</text>
     <text class="add-text">添加场景模式</text>
   </view>
+  <custom-footer></custom-footer>
 </view>

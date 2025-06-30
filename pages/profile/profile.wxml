@@ -176,4 +176,5 @@
       <text class="energy-text-secondary">加载中...</text>
     </view>
   </view>
+  <custom-footer></custom-footer>
 </view>

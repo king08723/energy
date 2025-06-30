@@ -7,7 +7,7 @@
 
 // 引入统一数据模型
 const { EnergyDataModel, SceneModeModel, AutomationRuleModel } = require('./energy-data-model.js');
-const { parseDate } = require('./utils.js');
+const { parseDate } = require('./utils-commonjs.js');
 
 // 定义首页今日能耗的固定值常量，用于首页和数据分析页“今日”数据
 const TODAY_ENERGY_DATA = {
@@ -29,7 +29,7 @@ class EnergyMockAPI {
     this.energyModel = new EnergyDataModel();
     this.sceneModeModel = new SceneModeModel();
     this.automationRuleModel = new AutomationRuleModel();
-    
+
     // 初始化数据缓存
     this.cache = {
       deviceList: null,
@@ -44,10 +44,10 @@ class EnergyMockAPI {
       automationRules: null,
       automationRulesTimestamp: 0
     };
-    
+
     // 缓存过期时间（毫秒）
     this.cacheExpiration = 5 * 60 * 1000; // 5分钟
-    
+
     // 初始化模拟数据
     this.initUsers();
     this.initDevices();
@@ -61,7 +61,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 用户管理相关 ====================
-  
+
   /**
    * 用户登录
    * @param {string} phone - 手机号
@@ -130,7 +130,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 首页数据 ====================
-  
+
   /**
    * 获取首页概览数据
    * @returns {Object} 首页数据
@@ -138,7 +138,7 @@ class EnergyMockAPI {
   getHomeOverview() {
     // 使用统一的今日能耗数据
     const todayEnergy = TODAY_ENERGY_DATA;
-    
+
     // 碳排放因子已在文件顶部定义，直接使用
     // 首页的碳排放因子可能包含solar和storage，这里将顶部的通用因子与首页特有的因子合并
     const combinedCarbonEmissionFactors = {
@@ -146,26 +146,26 @@ class EnergyMockAPI {
       solar: 0,          // kg CO2/kWh (太阳能发电无直接碳排放)
       storage: 0.1       // kg CO2/kWh (考虑充放电损耗和电网电力的间接排放)
     };
-    
+
     // 计算各能源类型的碳排放量
     // 计算各能源类型的碳排放量
-     const electricityEmission = todayEnergy.electricity * combinedCarbonEmissionFactors.electricity;
-     const waterEmission = todayEnergy.water * combinedCarbonEmissionFactors.water;
-     const gasEmission = todayEnergy.gas * combinedCarbonEmissionFactors.gas;
-     
-     // 计算总碳排放量（kg CO2）
+    const electricityEmission = todayEnergy.electricity * combinedCarbonEmissionFactors.electricity;
+    const waterEmission = todayEnergy.water * combinedCarbonEmissionFactors.water;
+    const gasEmission = todayEnergy.gas * combinedCarbonEmissionFactors.gas;
+
+    // 计算总碳排放量（kg CO2）
     const totalEmission = electricityEmission + waterEmission + gasEmission;
-    
+
     // 计算总能耗 - 综合能耗
     const totalEnergy = todayEnergy.electricity + todayEnergy.water + todayEnergy.gas;
-    
+
     // 计算昨日能耗数据（模拟数据，略低于今日）
     const yesterdayFactor = 0.92; // 昨日能耗为今日的92%
     const yesterdayTotal = totalEnergy * yesterdayFactor;
-    
+
     // 计算能耗趋势（相比昨日的增长率）
     const energyTrend = ((totalEnergy - yesterdayTotal) / yesterdayTotal * 100).toFixed(1);
-    
+
     return {
       success: true,
       data: {
@@ -251,7 +251,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 设备管理相关 ====================
-  
+
   /**
    * 获取设备列表 - 优化版本（支持缓存）
    * @param {Object} params - 查询参数
@@ -259,13 +259,13 @@ class EnergyMockAPI {
    */
   getDeviceList(params = {}) {
     const now = Date.now();
-    
+
     // 检查缓存是否有效
-    if (this.cache.deviceList && 
-        (now - this.cache.deviceListTimestamp) < this.cacheExpiration) {
+    if (this.cache.deviceList &&
+      (now - this.cache.deviceListTimestamp) < this.cacheExpiration) {
       // 使用缓存数据
       let result = [...this.cache.deviceList];
-      
+
       // 应用筛选
       if (params.type) {
         result = result.filter(device => device.type === params.type);
@@ -275,12 +275,12 @@ class EnergyMockAPI {
       }
       if (params.keyword) {
         const keyword = params.keyword.toLowerCase();
-        result = result.filter(device => 
-          device.name.toLowerCase().includes(keyword) || 
+        result = result.filter(device =>
+          device.name.toLowerCase().includes(keyword) ||
           device.location.toLowerCase().includes(keyword)
         );
       }
-      
+
       return {
         success: true,
         data: {
@@ -295,15 +295,15 @@ class EnergyMockAPI {
         }
       };
     }
-    
+
     // 缓存无效，重新生成数据
     const devices = this.devices.map(device => {
       // 深拷贝设备对象，避免修改原始数据
-      const deviceCopy = {...device};
-      
+      const deviceCopy = { ...device };
+
       // 查找该设备的所有告警
       const deviceAlerts = this.alerts.filter(alert => alert.deviceId === device.id);
-      
+
       // 如果有告警，添加到设备对象中
       if (deviceAlerts.length > 0) {
         deviceCopy.alerts = deviceAlerts.map(alert => ({
@@ -319,14 +319,14 @@ class EnergyMockAPI {
         deviceCopy.alerts = [];
         deviceCopy.hasAlert = false;
       }
-      
+
       return deviceCopy;
     });
-    
+
     // 更新缓存
     this.cache.deviceList = devices;
     this.cache.deviceListTimestamp = now;
-    
+
     // 应用筛选
     let result = [...devices];
     if (params.type) {
@@ -337,12 +337,12 @@ class EnergyMockAPI {
     }
     if (params.keyword) {
       const keyword = params.keyword.toLowerCase();
-      result = result.filter(device => 
-        device.name.toLowerCase().includes(keyword) || 
+      result = result.filter(device =>
+        device.name.toLowerCase().includes(keyword) ||
         device.location.toLowerCase().includes(keyword)
       );
     }
-    
+
     return {
       success: true,
       data: {
@@ -478,7 +478,7 @@ class EnergyMockAPI {
     };
     return data;
   }
-  
+
   /**
    * 获取维护状态的文本描述
    * @param {string} status - 维护状态代码
@@ -536,9 +536,9 @@ class EnergyMockAPI {
       hasAlert: false,
       addTime: new Date().toISOString()
     };
-    
+
     this.devices.push(newDevice);
-    
+
     return {
       success: true,
       data: newDevice,
@@ -547,7 +547,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 历史数据与报告 ====================
-  
+
   /**
    * 获取历史能耗数据
    * @param {Object} params - 查询参数
@@ -610,31 +610,31 @@ class EnergyMockAPI {
     // 根据时间范围生成不同的基础数据
     const baseMultiplier = this.getTimeRangeMultiplier(timeRange);
     const randomFactor = Math.random() * 0.3 + 0.85; // 0.85-1.15的随机因子
-    
+
     // 动态生成分项能耗数据
     // 根据新的基数和倍数生成能耗数据，确保与日数据量级匹配
     const electricityValue = Math.round((18500 * baseMultiplier * randomFactor) * 100) / 100; // 电力基数保持18500
     const waterValue = Math.round((922.5 * baseMultiplier * randomFactor) * 100) / 100; // 水能耗基数调整为922.5 (12.3 * 30 / 0.4)
     const gasValue = Math.round((652.5 * baseMultiplier * randomFactor) * 100) / 100; // 燃气能耗基数调整为652.5 (8.7 * 30 / 0.4)
     const totalValue = electricityValue + waterValue + gasValue;
-    
+
     // 计算百分比
     const electricityPercentage = Math.round((electricityValue / totalValue) * 100);
     const waterPercentage = Math.round((waterValue / totalValue) * 100);
     const gasPercentage = 100 - electricityPercentage - waterPercentage;
-    
+
     // 动态生成统计数据
     const total = totalValue;
     const average = Math.round((total / this.getTimeRangeDays(timeRange)) * 100) / 100;
     const peak = Math.round((average * 1.6) * 100) / 100;
     const valley = Math.round((average * 0.3) * 100) / 100;
     const growth = Math.round(((Math.random() - 0.5) * 20) * 10) / 10; // -10% 到 +10%
-    
+
     // 动态生成碳排放数据
     const carbonTotal = Math.round((electricityValue * carbonEmissionFactors.electricity / 1000 + gasValue * carbonEmissionFactors.gas / 1000) * 100) / 100; // 转换为吨
     const carbonElectricity = Math.round((electricityValue * carbonEmissionFactors.electricity / 1000) * 100) / 100; // 转换为吨
     const carbonGas = Math.round((gasValue * carbonEmissionFactors.gas / 1000) * 100) / 100; // 转换为吨
-    
+
     return {
       success: true,
       data: {
@@ -671,7 +671,7 @@ class EnergyMockAPI {
    */
   generateEnergyReport(params) {
     const { reportType, timeRange } = params;
-    
+
     return {
       success: true,
       data: {
@@ -701,7 +701,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 告警管理 ====================
-  
+
   /**
    * 获取告警列表 - 优化版本（支持缓存）
    * @param {Object} params - 查询参数
@@ -709,13 +709,13 @@ class EnergyMockAPI {
    */
   getAlertList(params = {}) {
     const now = Date.now();
-    
+
     // 检查缓存是否有效
-    if (this.cache.alertList && 
-        (now - this.cache.alertListTimestamp) < this.cacheExpiration) {
+    if (this.cache.alertList &&
+      (now - this.cache.alertListTimestamp) < this.cacheExpiration) {
       // 使用缓存数据
       let result = [...this.cache.alertList];
-      
+
       // 应用筛选
       if (params.status) {
         result = result.filter(alert => alert.status === params.status);
@@ -726,7 +726,7 @@ class EnergyMockAPI {
       if (params.type) {
         result = result.filter(alert => alert.type === params.type);
       }
-      
+
       return {
         success: true,
         data: {
@@ -740,14 +740,14 @@ class EnergyMockAPI {
         }
       };
     }
-    
+
     // 缓存无效，重新生成数据
     const alerts = [...this.alerts];
-    
+
     // 更新缓存
     this.cache.alertList = alerts;
     this.cache.alertListTimestamp = now;
-    
+
     // 应用筛选
     let result = [...alerts];
     if (params.status) {
@@ -790,7 +790,7 @@ class EnergyMockAPI {
 
     // 获取相关设备信息
     const device = this.devices.find(d => d.id === alert.deviceId);
-    
+
     // 获取处理历史（模拟数据）
     const handleHistory = [
       {
@@ -924,16 +924,16 @@ class EnergyMockAPI {
       console.error('formatTime: 无效的时间参数', timeInput);
       return '时间格式错误';
     }
-    
+
     // 检查Date对象是否有效
     if (isNaN(date.getTime())) {
       console.error('formatTime: 无效的日期', timeInput);
       return '无效日期';
     }
-    
+
     const now = new Date();
     const diff = now - date;
-    
+
     if (diff < 60 * 1000) {
       return '刚刚';
     } else if (diff < 60 * 60 * 1000) {
@@ -980,16 +980,16 @@ class EnergyMockAPI {
       default:
         return { success: false, message: '不支持的处理动作' };
     }
-    
+
     // 清除相关缓存，确保数据一致性
     this.cache.alertList = null;
     this.cache.alertListTimestamp = 0;
     this.cache.deviceList = null;
     this.cache.deviceListTimestamp = 0;
-    
+
     // 更新设备的hasAlert状态
     this.updateDeviceAlertStatus();
-    
+
     return {
       success: true,
       data: alert,
@@ -998,7 +998,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 自动化规则 ====================
-  
+
   /**
    * 获取自动化规则列表
    * @returns {Object} 规则列表
@@ -1023,9 +1023,9 @@ class EnergyMockAPI {
       enabled: true,
       executeCount: 0
     };
-    
+
     this.automationRules.push(newRule);
-    
+
     return {
       success: true,
       data: newRule,
@@ -1054,7 +1054,7 @@ class EnergyMockAPI {
       message: '规则更新成功'
     };
   }
-  
+
   /**
    * 执行自动化规则
    * @param {string} ruleId - 规则ID
@@ -1065,11 +1065,11 @@ class EnergyMockAPI {
     if (!rule) {
       return { success: false, message: '规则不存在' };
     }
-    
+
     if (!rule.enabled) {
       return { success: false, message: '规则已禁用' };
     }
-    
+
     // 模拟规则执行
     const executionResult = {
       ruleId,
@@ -1080,18 +1080,18 @@ class EnergyMockAPI {
       energyImpact: this.automationRuleModel.calculateRuleEnergyImpact(rule),
       status: Math.random() > 0.05 ? 'success' : 'failed'
     };
-    
+
     // 更新规则执行计数
     rule.executeCount = (rule.executeCount || 0) + 1;
     rule.lastExecuteTime = executionResult.executeTime;
-    
+
     return {
       success: true,
       data: executionResult,
       message: '规则执行完成'
     };
   }
-  
+
   /**
    * 获取规则执行历史
    * @param {string} ruleId - 规则ID
@@ -1103,17 +1103,17 @@ class EnergyMockAPI {
     if (!rule) {
       return { success: false, message: '规则不存在' };
     }
-    
+
     // 模拟执行历史数据
     const history = [];
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 7;
     const executionCount = Math.min(rule.executeCount || 0, days * 3);
-    
+
     for (let i = 0; i < executionCount; i++) {
       const date = new Date();
       date.setDate(date.getDate() - Math.floor(i / 3));
       date.setHours(Math.floor(Math.random() * 24));
-      
+
       history.push({
         id: `exec_${ruleId}_${i}`,
         ruleId,
@@ -1126,13 +1126,13 @@ class EnergyMockAPI {
         triggerCondition: rule.conditions ? rule.conditions[0]?.type : 'unknown'
       });
     }
-    
+
     return {
       success: true,
       data: history.sort((a, b) => new Date(b.executeTime) - new Date(a.executeTime))
     };
   }
-  
+
   /**
    * 测试规则执行
    * @param {Object} ruleData - 规则数据
@@ -1149,23 +1149,23 @@ class EnergyMockAPI {
       warnings: [],
       errors: []
     };
-    
+
     // 模拟一些测试警告
     if (Math.random() > 0.8) {
       testResult.warnings.push('部分设备可能不在线');
     }
-    
+
     if (Math.random() > 0.9) {
       testResult.errors.push('条件配置存在冲突');
       testResult.conditionsValid = false;
     }
-    
+
     return {
       success: true,
       data: testResult
     };
   }
-  
+
   /**
    * 获取规则性能统计
    * @param {string} ruleId - 规则ID
@@ -1176,7 +1176,7 @@ class EnergyMockAPI {
     if (!rule) {
       return { success: false, message: '规则不存在' };
     }
-    
+
     const stats = {
       ruleId,
       ruleName: rule.name,
@@ -1188,19 +1188,19 @@ class EnergyMockAPI {
       lastExecuteTime: rule.lastExecuteTime || null,
       performance: 'excellent' // excellent, good, average, poor
     };
-    
+
     stats.totalCostSaved = stats.totalEnergySaved * 0.65; // 电价0.65元/kWh
-    
+
     if (stats.successRate < 0.95) stats.performance = 'good';
     if (stats.successRate < 0.9) stats.performance = 'average';
     if (stats.successRate < 0.8) stats.performance = 'poor';
-    
+
     return {
       success: true,
       data: stats
     };
   }
-  
+
   /**
    * 批量启用/禁用规则
    * @param {Array} ruleIds - 规则ID列表
@@ -1209,7 +1209,7 @@ class EnergyMockAPI {
    */
   batchUpdateRuleStatus(ruleIds, enabled) {
     const results = [];
-    
+
     ruleIds.forEach(ruleId => {
       const rule = this.automationRules.find(r => r.id === ruleId);
       if (rule) {
@@ -1229,7 +1229,7 @@ class EnergyMockAPI {
         });
       }
     });
-    
+
     return {
       success: true,
       data: {
@@ -1240,20 +1240,20 @@ class EnergyMockAPI {
       }
     };
   }
-  
+
   /**
    * 获取规则冲突检测
    * @returns {Object} 冲突检测结果
    */
   detectRuleConflicts() {
     const conflicts = [];
-    
+
     // 模拟规则冲突检测
     for (let i = 0; i < this.automationRules.length; i++) {
       for (let j = i + 1; j < this.automationRules.length; j++) {
         const rule1 = this.automationRules[i];
         const rule2 = this.automationRules[j];
-        
+
         // 模拟冲突检测逻辑
         if (Math.random() > 0.9 && rule1.enabled && rule2.enabled) {
           conflicts.push({
@@ -1268,7 +1268,7 @@ class EnergyMockAPI {
         }
       }
     }
-    
+
     return {
       success: true,
       data: {
@@ -1280,7 +1280,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 场景模式 ====================
-  
+
   /**
    * 获取场景模式列表
    * @returns {Object} 场景列表
@@ -1322,7 +1322,7 @@ class EnergyMockAPI {
       message: '场景切换成功'
     };
   }
-  
+
   /**
    * 获取场景执行历史
    * @param {string} sceneId - 场景ID
@@ -1338,12 +1338,12 @@ class EnergyMockAPI {
     // 模拟执行历史数据
     const history = [];
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 7;
-    
+
     for (let i = 0; i < Math.min(days * 2, 20); i++) {
       const date = new Date();
       date.setDate(date.getDate() - Math.floor(i / 2));
       date.setHours(Math.floor(Math.random() * 24));
-      
+
       history.push({
         id: `exec_${sceneId}_${i}`,
         sceneId,
@@ -1355,13 +1355,13 @@ class EnergyMockAPI {
         status: Math.random() > 0.1 ? 'success' : 'failed'
       });
     }
-    
+
     return {
       success: true,
       data: history.sort((a, b) => new Date(b.executeTime) - new Date(a.executeTime))
     };
   }
-  
+
   /**
    * 创建自定义场景
    * @param {Object} sceneData - 场景数据
@@ -1376,16 +1376,16 @@ class EnergyMockAPI {
       isCustom: true,
       executeCount: 0
     };
-    
+
     this.sceneMode.push(newScene);
-    
+
     return {
       success: true,
       data: newScene,
       message: '场景创建成功'
     };
   }
-  
+
   /**
    * 更新场景配置
    * @param {string} sceneId - 场景ID
@@ -1407,7 +1407,7 @@ class EnergyMockAPI {
       message: '场景更新成功'
     };
   }
-  
+
   /**
    * 获取场景对能耗的影响分析
    * @param {string} sceneId - 场景ID
@@ -1420,7 +1420,7 @@ class EnergyMockAPI {
     }
 
     const impact = this.sceneModeModel.getSceneDeviceImpact(sceneId);
-    
+
     return {
       success: true,
       data: {
@@ -1434,7 +1434,7 @@ class EnergyMockAPI {
       }
     };
   }
-  
+
   /**
    * 批量获取设备状态
    * @param {Array} deviceIds - 设备ID列表
@@ -1442,7 +1442,7 @@ class EnergyMockAPI {
    */
   getDevicesByIds(deviceIds) {
     const devices = this.devices.filter(device => deviceIds.includes(device.id));
-    
+
     return {
       success: true,
       data: devices.map(device => ({
@@ -1457,7 +1457,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 节能方案 ====================
-  
+
   /**
    * 获取节能方案
    * @returns {Object} 节能方案
@@ -1483,7 +1483,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 数据初始化方法 ====================
-  
+
   initUsers() {
     this.users = [
       {
@@ -1586,8 +1586,8 @@ class EnergyMockAPI {
         type: 'lighting',
         category: 'electricity',
         location: '办公楼2层',
-        status: 'online',
-        isOn: true,
+        status: 'offline',
+        isOn: false,
         hasAlert: false,
         power: 8.2,
         brightness: 80,
@@ -1706,12 +1706,12 @@ class EnergyMockAPI {
               const randomDays = Math.floor(Math.random() * maxDays);
               const randomHours = Math.floor(Math.random() * 24);
               const randomMinutes = Math.floor(Math.random() * 60);
-              
+
               const date = new Date(now);
               date.setDate(date.getDate() - randomDays);
               date.setHours(date.getHours() - randomHours);
               date.setMinutes(date.getMinutes() - randomMinutes);
-              
+
               return date.toISOString();
             })(),
             severity: 'warning',
@@ -1810,12 +1810,12 @@ class EnergyMockAPI {
               const randomDays = Math.floor(Math.random() * maxDays);
               const randomHours = Math.floor(Math.random() * 24);
               const randomMinutes = Math.floor(Math.random() * 60);
-              
+
               const date = new Date(now);
               date.setDate(date.getDate() - randomDays);
               date.setHours(date.getHours() - randomHours);
               date.setMinutes(date.getMinutes() - randomMinutes);
-              
+
               return date.toISOString();
             })(),
             severity: 'critical',
@@ -1823,7 +1823,7 @@ class EnergyMockAPI {
           }
         ]
       },
-      
+
       // 水资源设备
       {
         id: 'device_006',
@@ -1890,8 +1890,8 @@ class EnergyMockAPI {
         type: 'water_heater',
         category: 'water',
         location: '员工宿舍',
-        status: 'online',
-        isOn: true,
+        status: 'offline',
+        isOn: false,
         hasAlert: true,
         power: 12.0,
         temperature: 55,
@@ -1914,12 +1914,12 @@ class EnergyMockAPI {
               const randomDays = Math.floor(Math.random() * maxDays);
               const randomHours = Math.floor(Math.random() * 24);
               const randomMinutes = Math.floor(Math.random() * 60);
-              
+
               const date = new Date(now);
               date.setDate(date.getDate() - randomDays);
               date.setHours(date.getHours() - randomHours);
               date.setMinutes(date.getMinutes() - randomMinutes);
-              
+
               return date.toISOString();
             })(),
             severity: 'warning',
@@ -1976,12 +1976,12 @@ class EnergyMockAPI {
               const randomDays = Math.floor(Math.random() * maxDays);
               const randomHours = Math.floor(Math.random() * 24);
               const randomMinutes = Math.floor(Math.random() * 60);
-              
+
               const date = new Date(now);
               date.setDate(date.getDate() - randomDays);
               date.setHours(date.getHours() - randomHours);
               date.setMinutes(date.getMinutes() - randomMinutes);
-              
+
               return date.toISOString();
             })(),
             severity: 'critical',
@@ -2019,12 +2019,12 @@ class EnergyMockAPI {
               const randomDays = Math.floor(Math.random() * maxDays);
               const randomHours = Math.floor(Math.random() * 24);
               const randomMinutes = Math.floor(Math.random() * 60);
-              
+
               const date = new Date(now);
               date.setDate(date.getDate() - randomDays);
               date.setHours(date.getHours() - randomHours);
               date.setMinutes(date.getMinutes() - randomMinutes);
-              
+
               return date.toISOString();
             })(),
             severity: 'warning',
@@ -2032,10 +2032,98 @@ class EnergyMockAPI {
           }
         ]
       },
-      
-      // 燃气设备
       {
         id: 'device_011',
+        name: '净水处理系统',
+        type: 'water_treatment',
+        category: 'water',
+        location: '净水车间',
+        status: 'online',
+        isOn: true,
+        hasAlert: false,
+        power: 32.5,
+        flowRate: 120, // m³/h
+        waterQuality: 'excellent',
+        brand: '海德能',
+        model: 'RO-5000',
+        healthStatus: 92,
+        uptime: 6800,
+        maintenanceStatus: 'normal',
+        lastMaintenance: '2023-11-25',
+        specifications: {
+          treatmentCapacity: 5000, // 处理能力 m³/d
+          recoveryRate: 75, // 回收率 %
+          membraneType: 'RO反渗透膜',
+          filterStages: 5,
+          operatingPressure: 1.5, // 工作压力 MPa
+          powerConsumption: 35, // 功耗 kW
+          dimensions: '6000×2000×2500', // 尺寸 mm
+          weight: 3500 // 重量 kg
+        }
+      },
+      {
+        id: 'device_012',
+        name: '循环水处理站',
+        type: 'cooling_water',
+        category: 'water',
+        location: '循环水站',
+        status: 'online',
+        isOn: true,
+        hasAlert: false,
+        power: 45.8,
+        flowRate: 200, // m³/h
+        temperature: 32,
+        pressure: 0.4, // MPa
+        brand: '蓝星',
+        model: 'CWT-8000',
+        healthStatus: 89,
+        uptime: 5200,
+        maintenanceStatus: 'normal',
+        lastMaintenance: '2023-10-15',
+        specifications: {
+          circulationCapacity: 8000, // 循环量 m³/h
+          coolingCapacity: 2000, // 冷却能力 kW
+          temperatureRange: '25~45', // 温度范围 °C
+          chemicalDosing: '自动加药',
+          filterType: '砂滤+活性炭',
+          pumpPower: 50, // 泵功率 kW
+          dimensions: '8000×4000×3000', // 尺寸 mm
+          weight: 12000 // 重量 kg
+        }
+      },
+      {
+        id: 'device_013',
+        name: '污水预处理系统',
+        type: 'water_treatment',
+        category: 'water',
+        location: '污水处理区',
+        status: 'online',
+        isOn: true,
+        hasAlert: false,
+        power: 28.3,
+        flowRate: 80, // m³/h
+        waterQuality: 'good',
+        brand: '碧水源',
+        model: 'MBR-3000',
+        healthStatus: 85,
+        uptime: 4100,
+        maintenanceStatus: 'normal',
+        lastMaintenance: '2023-12-05',
+        specifications: {
+          treatmentCapacity: 3000, // 处理能力 m³/d
+          treatmentProcess: 'MBR膜生物反应器',
+          membraneArea: 500, // 膜面积 m²
+          sludgeAge: 25, // 污泥龄 天
+          efficiencyBOD: 95, // BOD去除率 %
+          efficiencyCOD: 90, // COD去除率 %
+          dimensions: '10000×6000×4000', // 尺寸 mm
+          weight: 15000 // 重量 kg
+        }
+      },
+
+      // 燃气设备
+      {
+        id: 'device_014',
         name: '智能燃气表',
         type: 'gas_meter',
         category: 'gas',
@@ -2097,7 +2185,7 @@ class EnergyMockAPI {
         }
       },
       {
-        id: 'device_012',
+        id: 'device_015',
         name: '燃气锅炉',
         type: 'gas_boiler',
         category: 'gas',
@@ -2170,12 +2258,12 @@ class EnergyMockAPI {
               const randomDays = Math.floor(Math.random() * maxDays);
               const randomHours = Math.floor(Math.random() * 24);
               const randomMinutes = Math.floor(Math.random() * 60);
-              
+
               const date = new Date(now);
               date.setDate(date.getDate() - randomDays);
               date.setHours(date.getHours() - randomHours);
               date.setMinutes(date.getMinutes() - randomMinutes);
-              
+
               return date.toISOString();
             })(),
             severity: 'critical',
@@ -2184,7 +2272,7 @@ class EnergyMockAPI {
         ]
       },
       {
-        id: 'device_013',
+        id: 'device_016',
         name: '燃气泄漏检测器',
         type: 'gas_detector',
         category: 'gas',
@@ -2211,12 +2299,12 @@ class EnergyMockAPI {
               const randomDays = Math.floor(Math.random() * maxDays);
               const randomHours = Math.floor(Math.random() * 24);
               const randomMinutes = Math.floor(Math.random() * 60);
-              
+
               const date = new Date(now);
               date.setDate(date.getDate() - randomDays);
               date.setHours(date.getHours() - randomHours);
               date.setMinutes(date.getMinutes() - randomMinutes);
-              
+
               return date.toISOString();
             })(),
             severity: 'warning',
@@ -2224,16 +2312,16 @@ class EnergyMockAPI {
           }
         ]
       },
-      
+
       // 其他设备
       {
-        id: 'device_014',
+        id: 'device_017',
         name: '生产线电机',
         type: 'motor',
         category: 'electricity',
         location: '生产车间B区',
-        status: 'online',
-        isOn: true,
+        status: 'offline',
+        isOn: false,
         hasAlert: false,
         power: 22.8,
         speed: 1750, // RPM
@@ -2289,7 +2377,7 @@ class EnergyMockAPI {
         }
       },
       {
-        id: 'device_015',
+        id: 'device_018',
         name: '压缩空气系统',
         type: 'air_compressor',
         category: 'electricity',
@@ -2317,12 +2405,12 @@ class EnergyMockAPI {
               const randomDays = Math.floor(Math.random() * maxDays);
               const randomHours = Math.floor(Math.random() * 24);
               const randomMinutes = Math.floor(Math.random() * 60);
-              
+
               const date = new Date(now);
               date.setDate(date.getDate() - randomDays);
               date.setHours(date.getHours() - randomHours);
               date.setMinutes(date.getMinutes() - randomMinutes);
-              
+
               return date.toISOString();
             })(),
             severity: 'info',
@@ -2331,7 +2419,7 @@ class EnergyMockAPI {
         ]
       },
       {
-        id: 'device_016',
+        id: 'device_019',
         name: '环境监测站',
         type: 'environment_monitor',
         category: 'other',
@@ -2396,7 +2484,7 @@ class EnergyMockAPI {
         }
       },
       {
-        id: 'device_017',
+        id: 'device_020',
         name: '仓库温湿度监控',
         type: 'environment_sensor',
         category: 'other',
@@ -2424,12 +2512,12 @@ class EnergyMockAPI {
               const randomDays = Math.floor(Math.random() * maxDays);
               const randomHours = Math.floor(Math.random() * 24);
               const randomMinutes = Math.floor(Math.random() * 60);
-              
+
               const date = new Date(now);
               date.setDate(date.getDate() - randomDays);
               date.setHours(date.getHours() - randomHours);
               date.setMinutes(date.getMinutes() - randomMinutes);
-              
+
               return date.toISOString();
             })(),
             severity: 'warning',
@@ -2438,7 +2526,7 @@ class EnergyMockAPI {
         ]
       },
       {
-        id: 'device_018',
+        id: 'device_021',
         name: '电动汽车充电桩',
         type: 'ev_charger',
         category: 'electricity',
@@ -2457,7 +2545,7 @@ class EnergyMockAPI {
         lastMaintenance: '2023-12-15'
       },
       {
-        id: 'device_019',
+        id: 'device_022',
         name: '数据中心UPS',
         type: 'ups',
         category: 'electricity',
@@ -2519,7 +2607,7 @@ class EnergyMockAPI {
         }
       },
       {
-        id: 'device_020',
+        id: 'device_023',
         name: '会议室智能系统',
         type: 'smart_control',
         category: 'other',
@@ -2537,7 +2625,7 @@ class EnergyMockAPI {
         lastMaintenance: '2024-01-05'
       }
     ];
-    
+
     return this.devices;
   }
 
@@ -2563,20 +2651,20 @@ class EnergyMockAPI {
   updateDeviceAlertStatus(alertsData) {
     // 使用提供的告警数据或默认使用this.alerts
     const alerts = alertsData || this.alerts;
-    
+
     // 如果没有告警数据，直接返回
     if (!alerts) return;
-    
+
     // 获取所有未解决的告警（未读、已读、已忽略，但不包括已解决）
     const activeAlerts = alerts.filter(alert => alert.status !== 'resolved');
-    
+
     // 获取所有有未解决告警的设备ID
     const deviceIdsWithAlerts = new Set(activeAlerts.map(alert => alert.deviceId));
-    
+
     // 更新设备的hasAlert字段
     this.devices.forEach(device => {
       device.hasAlert = deviceIdsWithAlerts.has(device.id);
-      
+
       // 添加智能分析结果
       if (device.hasAlert) {
         const deviceAlerts = activeAlerts.filter(alert => alert.deviceId === device.id);
@@ -2603,26 +2691,26 @@ class EnergyMockAPI {
       }
     });
   }
-  
+
   initAlerts() {
     // 定义告警数据
     const now = new Date();
-    
+
     // 生成随机时间，最长不超过20天
     const getRandomTime = () => {
       const maxDays = 20;
       const randomDays = Math.floor(Math.random() * maxDays);
       const randomHours = Math.floor(Math.random() * 24);
       const randomMinutes = Math.floor(Math.random() * 60);
-      
+
       const date = new Date(now);
       date.setDate(date.getDate() - randomDays);
       date.setHours(date.getHours() - randomHours);
       date.setMinutes(date.getMinutes() - randomMinutes);
-      
+
       return date.toISOString();
     };
-    
+
     const alerts = [
       {
         id: 'alert_001',
@@ -2701,7 +2789,7 @@ class EnergyMockAPI {
         description: '太阳能热水系统当前水温为35°C，低于正常运行温度45°C。可能原因：天气阴雨、集热器故障或管路问题。建议检查系统运行状态。',
         level: 'warning',
         type: 'temperature_low',
-        deviceId: 'device_015',
+        deviceId: 'device_010',
         deviceName: '太阳能热水系统',
         location: '宿舍楼顶',
         status: 'unread',
@@ -2709,13 +2797,13 @@ class EnergyMockAPI {
         handleTime: null
       }
     ];
-    
+
     // 保存告警数据
     this.alerts = alerts;
-    
+
     // 更新设备的告警状态
     this.updateDeviceAlertStatus(this.alerts);
-    
+
     return this.alerts;
   }
 
@@ -2792,7 +2880,7 @@ class EnergyMockAPI {
         createTime: '2024-01-05T09:20:00Z',
         executeCount: 10
       },
-      
+
       // 条件类型规则
       {
         id: 'rule_004',
@@ -2862,7 +2950,7 @@ class EnergyMockAPI {
         createTime: '2024-01-07T08:40:00Z',
         executeCount: 1
       },
-      
+
       // 场景类型规则
       {
         id: 'rule_007',
@@ -3313,7 +3401,7 @@ class EnergyMockAPI {
         }
       }
     ];
-    
+
     return this.deviceGroups;
   }
 
@@ -3326,11 +3414,11 @@ class EnergyMockAPI {
   generateGroupHistoricalData(type, count) {
     const data = [];
     const now = new Date();
-    
+
     for (let i = count - 1; i >= 0; i--) {
       const date = new Date(now);
       let timeKey, consumption;
-      
+
       switch (type) {
         case 'daily':
           date.setDate(date.getDate() - i);
@@ -3363,7 +3451,7 @@ class EnergyMockAPI {
           };
           break;
       }
-      
+
       data.push({
         time: timeKey,
         ...consumption,
@@ -3371,7 +3459,7 @@ class EnergyMockAPI {
         cost: consumption.electricity * 0.7 + consumption.water * 3.5 + consumption.gas * 2.8
       });
     }
-    
+
     return data;
   }
 
@@ -3384,15 +3472,15 @@ class EnergyMockAPI {
    */
   getDeviceGroups(params = {}) {
     let groups = [...this.deviceGroups];
-    
+
     // 筛选逻辑
     if (params.keyword) {
-      groups = groups.filter(g => 
-        g.name.includes(params.keyword) || 
+      groups = groups.filter(g =>
+        g.name.includes(params.keyword) ||
         g.description.includes(params.keyword)
       );
     }
-    
+
     return {
       success: true,
       data: {
@@ -3427,9 +3515,9 @@ class EnergyMockAPI {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    
+
     this.deviceGroups.push(newGroup);
-    
+
     return {
       success: true,
       data: newGroup,
@@ -3451,13 +3539,13 @@ class EnergyMockAPI {
         message: '分组不存在'
       };
     }
-    
+
     // 更新分组信息
     Object.assign(this.deviceGroups[groupIndex], {
       ...groupData,
       updatedAt: new Date().toISOString()
     });
-    
+
     return {
       success: true,
       data: this.deviceGroups[groupIndex],
@@ -3478,9 +3566,9 @@ class EnergyMockAPI {
         message: '分组不存在'
       };
     }
-    
+
     this.deviceGroups.splice(groupIndex, 1);
-    
+
     return {
       success: true,
       message: '分组删除成功'
@@ -3501,13 +3589,13 @@ class EnergyMockAPI {
         message: '分组不存在'
       };
     }
-    
+
     // 添加设备到分组
     deviceIds.forEach(deviceId => {
       if (!group.deviceIds.includes(deviceId)) {
         group.deviceIds.push(deviceId);
         group.deviceCount++;
-        
+
         // 检查设备是否在线
         const device = this.devices.find(d => d.id === deviceId);
         if (device && device.status === 'online') {
@@ -3515,9 +3603,9 @@ class EnergyMockAPI {
         }
       }
     });
-    
+
     group.updatedAt = new Date().toISOString();
-    
+
     return {
       success: true,
       data: group,
@@ -3539,14 +3627,14 @@ class EnergyMockAPI {
         message: '分组不存在'
       };
     }
-    
+
     // 从分组中移除设备
     deviceIds.forEach(deviceId => {
       const index = group.deviceIds.indexOf(deviceId);
       if (index > -1) {
         group.deviceIds.splice(index, 1);
         group.deviceCount--;
-        
+
         // 检查设备是否在线
         const device = this.devices.find(d => d.id === deviceId);
         if (device && device.status === 'online') {
@@ -3554,9 +3642,9 @@ class EnergyMockAPI {
         }
       }
     });
-    
+
     group.updatedAt = new Date().toISOString();
-    
+
     return {
       success: true,
       data: group,
@@ -3578,9 +3666,9 @@ class EnergyMockAPI {
         message: '分组不存在'
       };
     }
-    
+
     const results = [];
-    
+
     // 对分组中的每个设备执行控制命令
     group.deviceIds.forEach(deviceId => {
       const result = this.controlDevice(deviceId, command);
@@ -3590,9 +3678,9 @@ class EnergyMockAPI {
         message: result.message
       });
     });
-    
+
     const successCount = results.filter(r => r.success).length;
-    
+
     return {
       success: true,
       data: {
@@ -3607,7 +3695,7 @@ class EnergyMockAPI {
   }
 
   // ==================== 辅助方法 ====================
-  
+
   generateLoadCurve() {
     const hours = [];
     for (let i = 0; i < 24; i++) {
@@ -3628,7 +3716,7 @@ class EnergyMockAPI {
   getDeviceEnergyData(deviceId, timeRange) {
     const device = this.devices.find(d => d.id === deviceId);
     if (!device) return { success: false, message: '设备不存在' };
-    
+
     // 使用统一模型计算能耗
     return {
       success: true,
@@ -3645,10 +3733,10 @@ class EnergyMockAPI {
   generateTimeSeriesData(timeRange, type) {
     const now = new Date();
     const result = [];
-    
+
     // 根据时间范围设置数据点数量和间隔
     let points, interval;
-    switch(timeRange) {
+    switch (timeRange) {
       case '1h': points = 60; interval = 60 * 1000; break; // 每分钟一个点
       case '6h': points = 72; interval = 5 * 60 * 1000; break; // 每5分钟一个点
       case '12h': points = 72; interval = 10 * 60 * 1000; break; // 每10分钟一个点
@@ -3656,37 +3744,37 @@ class EnergyMockAPI {
       case '7d': points = 168; interval = 60 * 60 * 1000; break; // 每小时一个点
       default: points = 24; interval = 60 * 60 * 1000; // 默认每小时一个点
     }
-    
+
     // 使用确定性函数生成数据
     for (let i = 0; i < points; i++) {
       const time = new Date(now.getTime() - (points - i - 1) * interval);
-      
+
       // 基于时间的确定性函数，而非随机数
       const hour = time.getHours();
       const dayOfWeek = time.getDay(); // 0是周日，1-6是周一到周六
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       const isWorkHour = hour >= 9 && hour <= 18;
-      
+
       // 基础值 + 时间模式调整
       let value;
       if (isWeekend) {
-        value = 30 + Math.sin(hour/4) * 10; // 周末负载较低
+        value = 30 + Math.sin(hour / 4) * 10; // 周末负载较低
       } else if (isWorkHour) {
-        value = 70 + Math.sin((hour-9)/9 * Math.PI) * 30; // 工作时间负载曲线
+        value = 70 + Math.sin((hour - 9) / 9 * Math.PI) * 30; // 工作时间负载曲线
       } else {
-        value = 40 + Math.sin(hour/12 * Math.PI) * 15; // 非工作时间负载
+        value = 40 + Math.sin(hour / 12 * Math.PI) * 15; // 非工作时间负载
       }
-      
+
       // 根据类型调整数值
       if (type === 'water') value = value * 0.4;
       if (type === 'gas') value = value * 0.2;
-      
+
       result.push({
         time: time.toISOString(),
         value: parseFloat(value.toFixed(2))
       });
     }
-    
+
     return result;
   }
 
@@ -3699,14 +3787,14 @@ class EnergyMockAPI {
     const electricityData = this.generateTimeSeriesData(timeRange, 'electricity');
     const waterData = this.generateTimeSeriesData(timeRange, 'water');
     const gasData = this.generateTimeSeriesData(timeRange, 'gas');
-    
+
     // 合并数据并格式化为旧版本格式
     return electricityData.map((item, index) => {
       const time = new Date(item.time);
-      const formattedTime = timeRange === '7d' ? 
-        this.formatTime(time, 'MM-DD') : 
+      const formattedTime = timeRange === '7d' ?
+        this.formatTime(time, 'MM-DD') :
         this.formatTime(time, 'HH:mm');
-      
+
       return {
         time: formattedTime,
         electricity: item.value,
@@ -3715,7 +3803,7 @@ class EnergyMockAPI {
       };
     });
   }
-  
+
   // 辅助方法：格式化时间
   formatTime(dateInput, format) {
     // 处理不同类型的时间输入
@@ -3730,19 +3818,19 @@ class EnergyMockAPI {
       console.error('formatTime: 无效的时间参数', dateInput);
       return '时间格式错误';
     }
-    
+
     // 检查Date对象是否有效
     if (isNaN(date.getTime())) {
       console.error('formatTime: 无效的日期', dateInput);
       return '无效日期';
     }
-    
+
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    
+
     if (format === 'MM-DD') {
       return `${month}-${day}`;
     } else if (format === 'HH:mm') {
@@ -3762,9 +3850,9 @@ class EnergyMockAPI {
     let count = 24; // 默认24小时
     let interval = 60; // 默认间隔60分钟
     let format = 'HH:mm';
-    
+
     // 根据时间范围设置数据点数量和间隔
-    switch(timeRange) {
+    switch (timeRange) {
       case '1h':
         count = 12; // 1小时显示12个刻度（每5分钟一个）
         interval = 5; // 5分钟间隔
@@ -3790,11 +3878,11 @@ class EnergyMockAPI {
         count = 12;
         interval = 60;
     }
-    
+
     // 生成时间点
     const now = new Date();
     const data = [];
-    
+
     // 确保生成固定数量的数据点
     for (let i = 0; i < count; i++) {
       // 计算时间偏移，确保数据点分布均匀
@@ -3802,9 +3890,9 @@ class EnergyMockAPI {
       const timeOffset = (count - 1 - i) * interval * 60 * 1000;
       const time = new Date(now.getTime() - timeOffset);
       let value = 0;
-      
+
       // 根据能源类型设置不同的数据生成函数
-      switch(energyType) {
+      switch (energyType) {
         case 'power':
           // 电力消耗曲线
           if (timeRange === '7d') {
@@ -3814,7 +3902,7 @@ class EnergyMockAPI {
             // 工作日和周末的用电量差异更大
             value = isWeekend ? 70 + Math.random() * 30 : 120 + Math.random() * 40;
           } else {
-            value = 100 + Math.sin(time.getHours()/3) * 50 + (time.getHours() % 5) * 2;
+            value = 100 + Math.sin(time.getHours() / 3) * 50 + (time.getHours() % 5) * 2;
           }
           break;
         case 'water':
@@ -3833,7 +3921,7 @@ class EnergyMockAPI {
               value = 25 + Math.random() * 10;
             }
           } else {
-            value = 20 + Math.cos(time.getHours()/6) * 15 + (time.getHours() % 4) * 1.2;
+            value = 20 + Math.cos(time.getHours() / 6) * 15 + (time.getHours() % 4) * 1.2;
           }
           break;
         case 'gas':
@@ -3868,19 +3956,19 @@ class EnergyMockAPI {
               value = 50 + Math.random() * 20;
             }
           } else {
-            value = 70 + Math.sin(time.getHours()/4) * 30 + (time.getHours() % 7) * 2;
+            value = 70 + Math.sin(time.getHours() / 4) * 30 + (time.getHours() % 7) * 2;
           }
           break;
         default:
           value = 50 + Math.random() * 50;
       }
-      
+
       data.push({
         time: this.formatTime(time, format),
         value: parseFloat(value.toFixed(1))
       });
     }
-    
+
     return data;
   }
 
@@ -3893,7 +3981,7 @@ class EnergyMockAPI {
    */
   generateHistoryChartData(timeRange, energyType, fixedData) {
     const data = [];
-    
+
     // 如果是“今日”数据且提供了固定值，则生成基于固定值的曲线
     if (timeRange === 'day' && fixedData) {
       const now = new Date();
@@ -3948,7 +4036,7 @@ class EnergyMockAPI {
         date.setHours(date.getHours() - i);
         label = `${String(date.getHours()).padStart(2, '0')}:00`;
       }
-      
+
       // 根据能源类型生成不同的随机值
       let value;
       switch (energyType) {
@@ -3972,7 +4060,7 @@ class EnergyMockAPI {
         value: parseFloat(value.toFixed(2))
       });
     }
-    
+
     return data;
   }
 
@@ -4021,9 +4109,9 @@ class EnergyMockAPI {
         // 根据能源类型生成相应的分类汇总数据
         let categoryData = {};
         let timeSeriesData = [];
-        
+
         // 根据能源类型设置不同的数据
-        switch(energyType) {
+        switch (energyType) {
           case 'power':
             categoryData = {
               title: '电力消耗',
@@ -4103,10 +4191,10 @@ class EnergyMockAPI {
             };
             timeSeriesData = [];
         }
-        
+
         // 添加时间序列数据到分类数据中
         categoryData.timeSeriesData = timeSeriesData;
-        
+
         return {
           success: true,
           data: {
@@ -4114,7 +4202,7 @@ class EnergyMockAPI {
           }
         };
       }
-      
+
       // 如果没有指定能源类型，返回总览数据
       return {
         success: true,
@@ -4129,36 +4217,36 @@ class EnergyMockAPI {
         }
       };
     }
-    
+
     // 获取指定设备的实时数据
     const realTimeData = deviceIds.map(id => {
       const device = this.devices.find(d => d.id === id);
       if (!device) return null;
-      
+
       // 根据设备状态生成实时参数（关机设备功率为0）
       let power = 0;
       if (device.isOn && device.status === 'online') {
         // 只有开机且在线的设备才有功率
         power = device.power ? device.power * (0.9 + Math.random() * 0.2) : 0;
       }
-      
+
       const voltage = 220 * (0.95 + Math.random() * 0.1);
       const current = power > 0 ? (power * 1000 / voltage).toFixed(2) : 0;
       const frequency = 50 * (0.99 + Math.random() * 0.02);
       const powerFactor = 0.85 + Math.random() * 0.15;
-      
+
       // 根据设备类别生成相应的实时参数
       let realTimeParams = {};
-      
+
       // 基础电力参数（所有设备都有）
       realTimeParams.power = power.toFixed(1);
       realTimeParams.voltage = voltage.toFixed(1);
       realTimeParams.current = current;
       realTimeParams.frequency = frequency.toFixed(2);
       realTimeParams.powerFactor = powerFactor.toFixed(2);
-      
+
       // 根据设备类别添加特定参数
-      switch(device.category) {
+      switch (device.category) {
         case 'water':
           // 水设备的实时参数（关机设备流量为0）
           if (device.isOn && device.status === 'online') {
@@ -4188,7 +4276,7 @@ class EnergyMockAPI {
           // 电力设备保持原有参数即可
           break;
       }
-      
+
       // 计算碳排放率（基于功率和设备类型，关机设备排放为0）
       let carbonEmissionRate = 0;
       if (device.isOn && device.status === 'online') {
@@ -4206,7 +4294,7 @@ class EnergyMockAPI {
         }
       }
       realTimeParams.carbon = carbonEmissionRate.toFixed(2); // 碳排放率 kg CO2/h
-      
+
       return {
         deviceId: device.id,
         timestamp: Date.now(),
@@ -4221,7 +4309,7 @@ class EnergyMockAPI {
         alerts: this.alerts.filter(a => a.deviceId === device.id && a.status === 'active').slice(0, 3)
       };
     }).filter(data => data !== null);
-    
+
     return {
       success: true,
       data: realTimeData
@@ -4232,18 +4320,18 @@ class EnergyMockAPI {
   getIntelligentAnalysisOverview() {
     const devices = this.getDevices().data;
     const devicesWithAnalysis = devices.filter(device => device.intelligentAnalysis);
-    
+
     const highRiskCount = devicesWithAnalysis.filter(d => d.intelligentAnalysis.riskLevel === 'high').length;
     const mediumRiskCount = devicesWithAnalysis.filter(d => d.intelligentAnalysis.riskLevel === 'medium').length;
     const lowRiskCount = devicesWithAnalysis.filter(d => d.intelligentAnalysis.riskLevel === 'low').length;
-    
+
     const predictedFailures = devicesWithAnalysis.filter(d => d.intelligentAnalysis.predictedFailure).length;
     const maintenanceNeeded = devicesWithAnalysis.filter(d => d.intelligentAnalysis.maintenanceRecommended).length;
-    
-    const avgEfficiencyScore = devicesWithAnalysis.length > 0 
+
+    const avgEfficiencyScore = devicesWithAnalysis.length > 0
       ? Math.round(devicesWithAnalysis.reduce((sum, d) => sum + d.intelligentAnalysis.efficiencyScore, 0) / devicesWithAnalysis.length)
       : 0;
-    
+
     return {
       success: true,
       data: {
@@ -4279,7 +4367,7 @@ class EnergyMockAPI {
         message: '设备不存在或无智能分析数据'
       };
     }
-    
+
     return {
       success: true,
       data: {
@@ -4297,11 +4385,11 @@ class EnergyMockAPI {
   generateAnalysisTrend() {
     const days = 7;
     const trend = [];
-    
+
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      
+
       trend.push({
         date: date.toISOString().split('T')[0],
         efficiencyScore: Math.floor(Math.random() * 30) + 70,
@@ -4309,7 +4397,7 @@ class EnergyMockAPI {
         alertCount: Math.floor(Math.random() * 5)
       });
     }
-    
+
     return trend;
   }
 
@@ -4317,7 +4405,7 @@ class EnergyMockAPI {
   generateDeviceRecommendations(device) {
     const recommendations = [];
     const analysis = device.intelligentAnalysis;
-    
+
     if (analysis.riskLevel === 'high') {
       recommendations.push({
         type: 'urgent',
@@ -4328,7 +4416,7 @@ class EnergyMockAPI {
         estimatedCost: '¥500-1000'
       });
     }
-    
+
     if (analysis.predictedFailure) {
       recommendations.push({
         type: 'maintenance',
@@ -4339,7 +4427,7 @@ class EnergyMockAPI {
         estimatedCost: '¥800-1500'
       });
     }
-    
+
     if (analysis.efficiencyScore < 80) {
       recommendations.push({
         type: 'optimization',
@@ -4350,7 +4438,7 @@ class EnergyMockAPI {
         estimatedCost: '¥200-500'
       });
     }
-    
+
     return recommendations;
   }
 

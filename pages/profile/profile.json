@@ -1,4 +1,6 @@
 {
-  "usingComponents": {},
+  "usingComponents": {
+    "custom-footer": "../../components/footer/index"
+  },
   "navigationBarTitleText": "我的"
 }

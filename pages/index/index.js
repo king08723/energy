@@ -1,8 +1,7 @@
 
 // pages/index/index.js
 const API = require('../../utils/api.js');
-const { parseDate } = require('../../utils/utils.js');
-const { formatEnergy, formatPower, formatNumber, formatTime } = require('../../utils/utils.js');
+const { parseDate, formatNumber } = require('../../utils/utils.js');
 
 Page({
   data: {
@@ -73,6 +72,22 @@ Page({
   isPageVisible: true,
   lastUserInteraction: 0,
 
+  // 断开实时数据连接
+  disconnectRealTime: function () {
+    if (this.socketTask) {
+      this.socketTask.close({
+        code: 1000,
+        reason: 'Page hidden or unloaded'
+      });
+      this.socketTask = null;
+      this.isRealTimeConnected = false;
+      this.setData({ realTimeStatus: 'disconnected' });
+      if (this.data.debugMode) {
+        console.log('主动断开实时数据连接');
+      }
+    }
+  },
+
   // 初始化实时监控数据显示（避免显示0值）
   initRealTimeMonitorDisplay: function () {
     // 基于当前时间生成确定性的初始数据，避免显示0值
@@ -128,10 +143,64 @@ Page({
       monitorData: initialMonitorData
     });
 
-    console.log('实时监控数据初始化完成，避免显示0值');
+    // console.log('实时监控数据初始化完成，避免显示0值');
+  },
+
+  /**
+   * 验证API方法可用性
+   * 在使用前检查所有必需的API方法是否正确初始化
+   */
+  verifyAPIAvailability() {
+    const requiredMethods = [
+      'getBatchData',
+      'preloadData',
+      'subscribeRealTimeData',
+      'unsubscribeRealTimeData',
+      'getDataWithCache',
+      'cache'
+    ];
+
+    const missingMethods = [];
+    const availableMethods = [];
+
+    requiredMethods.forEach(methodName => {
+      if (typeof API[methodName] === 'function' || (methodName === 'cache' && typeof API[methodName] === 'object')) {
+        availableMethods.push(methodName);
+        console.log(`✅ API.${methodName} 可用`);
+      } else {
+        missingMethods.push(methodName);
+        console.error(`❌ API.${methodName} 不可用或未正确初始化`);
+      }
+    });
+
+    if (missingMethods.length > 0) {
+      console.error('API方法初始化检查失败:', {
+        missing: missingMethods,
+        available: availableMethods,
+        apiObject: Object.keys(API)
+      });
+
+      // 显示错误提示
+      wx.showToast({
+        title: `API初始化失败: ${missingMethods.join(', ')}`,
+        icon: 'none',
+        duration: 3000
+      });
+
+      return false;
+    } else {
+      console.log('✅ 所有API方法初始化检查通过');
+      return true;
+    }
   },
 
   onLoad: function (options) {
+    // 验证API方法可用性
+    const apiAvailable = this.verifyAPIAvailability();
+    if (!apiAvailable) {
+      console.error('API方法不可用，页面功能可能受限');
+    }
+
     // 初始化页面状态
     this.lastUserInteraction = Date.now();
     this.isPageVisible = true;
@@ -189,7 +258,11 @@ Page({
     }
 
     // 使用统一API进行数据预加载（包含今日用电负荷数据）
-    API.preloadData('index');
+    if (API && typeof API.preloadData === 'function') {
+      API.preloadData('index');
+    } else {
+      console.warn('API.preloadData方法不可用，跳过数据预加载');
+    }
 
     // 延迟启动实时数据更新，确保基础数据已加载
     setTimeout(() => {
@@ -581,8 +654,7 @@ Page({
     }
   },
 
-  // 更新能耗实时数据
-  updateEnergyRealTimeData: function (data) {
+  handleRealtimeUpdate: function (data) {
     const { overview, monitorData } = this.data;
 
     if (data.totalEnergy !== undefined && overview) {
@@ -595,7 +667,9 @@ Page({
       monitorData.realTimeData.carbon.trend = this.calculateTrend(data.carbonEmission, monitorData.realTimeData.carbon.value);
     }
 
-    this.setData({ overview, monitorData });
+    // 验证数据类型后再设置
+    const validatedData = this.validateComponentData({ overview, monitorData });
+    this.setData(validatedData);
   },
 
   // 处理新告警
@@ -634,21 +708,7 @@ Page({
     return 'stable';
   },
 
-  // 断开实时连接 - 使用统一API接口
-  disconnectRealTime: function () {
-    if (this.socketTask) {
-      API.unsubscribeRealTimeData(this.socketTask);
-      this.socketTask = null;
-      this.isRealTimeConnected = false;
-      this.setData({ realTimeStatus: 'disconnected' });
-    }
 
-    // 清除降级轮询定时器
-    if (this.pollingTimer) {
-      clearInterval(this.pollingTimer);
-      this.pollingTimer = null;
-    }
-  },
 
   // 刷新实时数据 - 使用统一API接口
   // 已删除refreshRealTimeData方法 - 改为使用缓存数据
@@ -719,7 +779,9 @@ Page({
       });
     }
 
-    this.setData({ overview, monitorData });
+    // 验证数据类型后再设置
+    const validatedData = this.validateComponentData({ overview, monitorData });
+    this.setData(validatedData);
   },
 
   // 降级到轮询模式
@@ -803,7 +865,47 @@ Page({
     return false;
   },
 
+  /**
+   * 加载首页数据
+   *
+   * 功能说明：
+   * - 负责加载首页所需的所有数据，包括概览数据、监控数据、告警数据和设备列表
+   * - 支持缓存优先策略，提升用户体验
+   * - 支持强制刷新模式，确保数据最新性
+   * - 使用批量API接口，减少网络请求次数
+   *
+   * 数据加载策略：
+   * 1. 非强制刷新时：优先使用缓存数据快速显示，后台静默更新
+   * 2. 强制刷新时：直接从API获取最新数据
+   * 3. 批量获取：一次性获取多种类型数据，提高效率
+   *
+   * 数据处理逻辑：
+   * - 概览数据：处理今日能耗、用电负荷曲线等
+   * - 监控数据：保护初始显示数据，避免覆盖有意义的初始值
+   * - 告警数据：获取最近3条告警信息
+   * - 设备数据：用于实时数据聚合和WebSocket连接
+   *
+   * 错误处理：
+   * - 支持部分数据获取失败的容错机制
+   * - 显示具体错误信息给用户
+   * - 确保页面状态正确更新
+   *
+   * @param {boolean} forceRefresh - 是否强制刷新数据，默认false
+   * @returns {Promise<void>} 异步操作Promise
+   *
+   * @example
+   * // 正常加载（优先使用缓存）
+   * this.loadHomeData();
+   *
+   * // 强制刷新
+   * this.loadHomeData(true);
+   *
+   * @since 1.0.0
+   * @updated 2.1.0 - 添加初始数据保护逻辑
+   * @author Energy Management System
+   */
   loadHomeData: async function (forceRefresh = false) {
+    let loadingShown = false;
     try {
       // 显示加载状态
       if (forceRefresh) {
@@ -811,6 +913,7 @@ Page({
           title: '刷新数据...',
           mask: true
         });
+        loadingShown = true;
       } else {
         this.setData({ loading: true });
       }
@@ -836,7 +939,19 @@ Page({
         { type: 'device', params: {} } // 设备列表
       ];
 
+      // 检查API.getBatchData是否可用
+      if (!API || typeof API.getBatchData !== 'function') {
+        console.error('API.getBatchData方法不可用，API对象状态:', {
+          apiExists: !!API,
+          apiKeys: API ? Object.keys(API) : [],
+          getBatchDataType: API ? typeof API.getBatchData : 'undefined'
+        });
+        throw new Error('API.getBatchData方法不可用');
+      }
+
+      console.log('开始批量获取首页数据，请求列表:', requests);
       const batchResult = await API.getBatchData(requests);
+      console.log('批量数据获取结果:', batchResult);
 
       if (batchResult.success) {
         const {
@@ -929,8 +1044,9 @@ Page({
             }
           };
 
-          // 更新页面数据
-          this.setData({ overview });
+          // 更新页面数据 - 验证数据类型
+          const validatedData = this.validateComponentData({ overview });
+          this.setData(validatedData);
 
           // 如果有负荷曲线数据，初始化图表
           if (loadCurveData && loadCurveData.length > 0) {
@@ -1005,9 +1121,9 @@ Page({
 
           this.setData({ monitorData });
 
-          if (apiDataIsEmpty && hasInitialData) {
-            console.log('API监控数据为空，保留初始显示数据');
-          }
+          // if (apiDataIsEmpty && hasInitialData) {
+          //   console.log('API监控数据为空，保留初始显示数据');
+          // }
         }
 
         // 处理告警数据 - 使用统一数据格式
@@ -1067,8 +1183,159 @@ Page({
         duration: 3000
       });
     } finally {
-      wx.hideLoading();
+      // 确保只在显示了loading的情况下才隐藏
+      if (loadingShown) {
+        wx.hideLoading();
+      }
+      this.setData({ loading: false });
     }
+  },
+
+  /**
+   * 验证并格式化组件数据
+   * 确保传递给组件的数据类型正确
+   */
+  validateComponentData(data) {
+    console.log('开始验证组件数据:', data);
+
+    if (!data || typeof data !== 'object') {
+      console.warn('传入的数据无效，返回空对象');
+      return {};
+    }
+
+    const validated = {};
+
+    // 安全转换值为字符串的辅助函数
+    const safeStringValue = (val, defaultVal = '0', fieldName = '') => {
+      if (val === null || val === undefined) {
+        // console.log(`字段 ${fieldName}: null/undefined -> ${defaultVal}`);
+        return defaultVal;
+      }
+      if (typeof val === 'string') {
+        // console.log(`字段 ${fieldName}: string "${val}" -> "${val}"`);
+        return val;
+      }
+      if (typeof val === 'number') {
+        const result = val.toString();
+        // console.log(`字段 ${fieldName}: number ${val} -> "${result}"`);
+        return result;
+      }
+      if (typeof val === 'object' && val.value !== undefined) {
+        // console.log(`字段 ${fieldName}: object with value -> recursive call`);
+        return safeStringValue(val.value, defaultVal, fieldName);
+      }
+      const result = String(val);
+      // console.log(`字段 ${fieldName}: ${typeof val} ${val} -> "${result}"`);
+      return result;
+    };
+
+    // 验证overview数据
+    if (data.overview) {
+      console.log('验证overview数据:', data.overview);
+      validated.overview = {
+        totalEnergy: {
+          value: safeStringValue(data.overview.totalEnergy?.value, '0', 'totalEnergy.value'),
+          trend: safeStringValue(data.overview.totalEnergy?.trend, '0', 'totalEnergy.trend'),
+          unit: safeStringValue(data.overview.totalEnergy?.unit, 'kWh', 'totalEnergy.unit')
+        },
+        totalCost: {
+          value: safeStringValue(data.overview.totalCost?.value, '0', 'totalCost.value'),
+          trend: safeStringValue(data.overview.totalCost?.trend, '0', 'totalCost.trend'),
+          unit: safeStringValue(data.overview.totalCost?.unit, '元', 'totalCost.unit')
+        },
+        carbonEmission: {
+          value: safeStringValue(data.overview.carbonEmission?.value, '0', 'carbonEmission.value'),
+          trend: safeStringValue(data.overview.carbonEmission?.trend, '0', 'carbonEmission.trend'),
+          unit: safeStringValue(data.overview.carbonEmission?.unit, 'kg', 'carbonEmission.unit')
+        },
+        energySaving: {
+          value: safeStringValue(data.overview.energySaving?.value, '0', 'energySaving.value'),
+          trend: safeStringValue(data.overview.energySaving?.trend, '0', 'energySaving.trend'),
+          unit: safeStringValue(data.overview.energySaving?.unit, '%', 'energySaving.unit')
+        },
+        // 添加新的能源类型数据验证
+        electricity: {
+          value: safeStringValue(data.overview.electricity?.value, '0'),
+          trend: safeStringValue(data.overview.electricity?.trend, '0'),
+          unit: safeStringValue(data.overview.electricity?.unit, 'kWh')
+        },
+        water: {
+          value: safeStringValue(data.overview.water?.value, '0'),
+          trend: safeStringValue(data.overview.water?.trend, '0'),
+          unit: safeStringValue(data.overview.water?.unit, '吨')
+        },
+        gas: {
+          value: safeStringValue(data.overview.gas?.value, '0'),
+          trend: safeStringValue(data.overview.gas?.trend, '0'),
+          unit: safeStringValue(data.overview.gas?.unit, 'm³')
+        },
+        carbon: {
+          value: safeStringValue(data.overview.carbon?.value, '0'),
+          trend: safeStringValue(data.overview.carbon?.trend, '0'),
+          unit: safeStringValue(data.overview.carbon?.unit, 'kg')
+        },
+        // 今日能耗分类数据
+        todayEnergy: {
+          electricity: {
+            value: safeStringValue(data.overview.todayEnergy?.electricity?.value, '0'),
+            trend: safeStringValue(data.overview.todayEnergy?.electricity?.trend, '0'),
+            unit: safeStringValue(data.overview.todayEnergy?.electricity?.unit, 'kWh')
+          },
+          water: {
+            value: safeStringValue(data.overview.todayEnergy?.water?.value, '0'),
+            trend: safeStringValue(data.overview.todayEnergy?.water?.trend, '0'),
+            unit: safeStringValue(data.overview.todayEnergy?.water?.unit, '吨')
+          },
+          gas: {
+            value: safeStringValue(data.overview.todayEnergy?.gas?.value, '0'),
+            trend: safeStringValue(data.overview.todayEnergy?.gas?.trend, '0'),
+            unit: safeStringValue(data.overview.todayEnergy?.gas?.unit, 'm³')
+          }
+        }
+      };
+    }
+
+    // 验证monitorData
+    if (data.monitorData) {
+      validated.monitorData = {
+        ...data.monitorData,
+        realTimeData: {
+          power: {
+            value: safeStringValue(data.monitorData.realTimeData?.power?.value, '0'),
+            unit: safeStringValue(data.monitorData.realTimeData?.power?.unit, 'kW'),
+            trend: safeStringValue(data.monitorData.realTimeData?.power?.trend, 'stable')
+          },
+          water: {
+            value: safeStringValue(data.monitorData.realTimeData?.water?.value, '0'),
+            unit: safeStringValue(data.monitorData.realTimeData?.water?.unit, '吨/h'),
+            trend: safeStringValue(data.monitorData.realTimeData?.water?.trend, 'stable')
+          },
+          gas: {
+            value: safeStringValue(data.monitorData.realTimeData?.gas?.value, '0'),
+            unit: safeStringValue(data.monitorData.realTimeData?.gas?.unit, 'm³/h'),
+            trend: safeStringValue(data.monitorData.realTimeData?.gas?.trend, 'stable')
+          },
+          carbon: {
+            value: safeStringValue(data.monitorData.realTimeData?.carbon?.value, '0'),
+            unit: safeStringValue(data.monitorData.realTimeData?.carbon?.unit, 'kg/h'),
+            trend: safeStringValue(data.monitorData.realTimeData?.carbon?.trend, 'stable')
+          },
+          temperature: {
+            value: safeStringValue(data.monitorData.realTimeData?.temperature?.value, '25'),
+            unit: safeStringValue(data.monitorData.realTimeData?.temperature?.unit, '°C'),
+            trend: safeStringValue(data.monitorData.realTimeData?.temperature?.trend, 'stable')
+          },
+          humidity: {
+            value: safeStringValue(data.monitorData.realTimeData?.humidity?.value, '60'),
+            unit: safeStringValue(data.monitorData.realTimeData?.humidity?.unit, '%'),
+            trend: safeStringValue(data.monitorData.realTimeData?.humidity?.trend, 'stable')
+          }
+        },
+        energyCurve: data.monitorData.energyCurve || []
+      };
+    }
+
+    return validated;
   },
 
   /**
@@ -1076,6 +1343,12 @@ Page({
    */
   loadCachedHomeData() {
     try {
+      // 检查API.cache是否存在
+      if (!API || !API.cache || typeof API.cache.get !== 'function') {
+        console.warn('API.cache未正确初始化，跳过缓存加载');
+        return null;
+      }
+
       const cachedHome = API.cache.get('home_{}');
       const cachedDevices = API.cache.get('device_{"limit":10}');
       const cachedMonitor = API.cache.get('monitor_{}');
@@ -1262,7 +1535,7 @@ Page({
         categories: energyCurve.map(item => item.time || item.label),
         series: [{
           name: '用电负荷',
-          data: energyCurve.map(item => parseFloat(item.value || item.power || 0).toFixed(1))
+          data: energyCurve.map(item => parseFloat(item.value || item.power || 0))
         }]
       };
     } else {
@@ -1306,20 +1579,7 @@ Page({
         const ctx = canvas.getContext('2d');
 
         // 兼容性处理：使用推荐的新API获取设备像素比
-        let dpr;
-        try {
-          // 优先使用wx.getWindowInfo获取pixelRatio（推荐API）
-          const windowInfo = wx.getWindowInfo();
-          dpr = windowInfo.pixelRatio || 2;
-        } catch (e) {
-          // 降级方案：使用wx.getDeviceInfo
-          try {
-            const deviceInfo = wx.getDeviceInfo();
-            dpr = deviceInfo.pixelRatio || 2;
-          } catch (e2) {
-            dpr = 2; // 默认值
-          }
-        }
+        const dpr = wx.getWindowInfo().pixelRatio || 2;
 
         // 设置canvas尺寸
         canvas.width = res[0].width * dpr;
@@ -1350,13 +1610,14 @@ Page({
         const minValue = Math.min(...numericData);
         const valueRange = maxValue - minValue;
 
-        // 绘制网格线 - 适配浅色主题
+        // 绘制网格线和Y轴标签
         ctx.strokeStyle = 'rgba(100, 116, 139, 0.2)';
         ctx.lineWidth = 0.5;
+        ctx.fillStyle = 'rgba(100, 116, 139, 0.9)';
+        ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'right';
 
-        // Y轴单位标签已移至标题中，此处不再显示
-
-        // 水平网格线
+        // 水平网格线和Y轴标签
         for (let i = 0; i <= 4; i++) {
           const y = padding.top + (chartHeight / 4) * i;
           ctx.beginPath();
@@ -1364,40 +1625,32 @@ Page({
           ctx.lineTo(padding.left + chartWidth, y);
           ctx.stroke();
 
-          // Y轴标签
           const value = maxValue - (valueRange / 4) * i;
-          ctx.fillStyle = 'rgba(100, 116, 139, 0.9)';
-          ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
-          ctx.textAlign = 'right';
           ctx.fillText(value.toFixed(1), padding.left - 15, y + 4);
         }
 
-        // 垂直网格线和X轴标签 - 隔一个显示，从第2个刻度开始
+        // 垂直网格线和X轴标签
+        ctx.strokeStyle = 'rgba(100, 116, 139, 0.15)';
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+
         for (let i = 0; i < categories.length; i++) {
           const x = padding.left + (chartWidth / (categories.length - 1)) * i;
 
-          // 网格线 - 适配浅色主题
-          ctx.strokeStyle = 'rgba(100, 116, 139, 0.15)';
-          ctx.lineWidth = 0.5;
           ctx.beginPath();
           ctx.moveTo(x, padding.top);
           ctx.lineTo(x, padding.top + chartHeight);
           ctx.stroke();
 
-          // X轴标签 - 根据数据点数量调整显示策略
           let shouldShowLabel = false;
           if (categories.length <= 7) {
-            // 本周数据（7个或更少数据点）：显示所有标签
             shouldShowLabel = true;
           } else {
-            // 今日数据（更多数据点）：隔3个显示，从第4个刻度开始
             shouldShowLabel = (i === 3 || (i > 3 && (i - 3) % 4 === 0));
           }
 
           if (shouldShowLabel) {
-            ctx.fillStyle = '#64748b';
-            ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
-            ctx.textAlign = 'center';
             ctx.fillText(categories[i], x, padding.top + chartHeight + 22);
           }
         }
@@ -1409,7 +1662,7 @@ Page({
           return { x, y, value };
         });
 
-        // 绘制渐变填充区域 - 适配浅色主题
+        // 绘制渐变填充区域
         const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartHeight);
         gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
         gradient.addColorStop(0.5, 'rgba(59, 130, 246, 0.1)');
@@ -1425,13 +1678,11 @@ Page({
         ctx.closePath();
         ctx.fill();
 
-        // 绘制折线阴影 - 适配浅色主题
+        // 绘制折线
         ctx.shadowColor = 'rgba(59, 130, 246, 0.3)';
         ctx.shadowBlur = 8;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 2;
-
-        // 绘制折线 - 适配浅色主题
         ctx.strokeStyle = 'rgba(59, 130, 246, 0.9)';
         ctx.lineWidth = 2.5;
         ctx.lineCap = 'round';
@@ -1453,15 +1704,12 @@ Page({
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
 
-        // 绘制数据点 - 根据数据点数量调整显示策略
+        // 绘制数据点和数值标签
         points.forEach((point, index) => {
-          // 根据数据点数量决定显示策略
           let shouldShowPoint = false;
           if (points.length <= 7) {
-            // 本周数据（7个或更少数据点）：显示所有数据点
             shouldShowPoint = true;
           } else {
-            // 今日数据（更多数据点）：隔1个显示，从第2个数据点开始
             shouldShowPoint = (index === 1 || (index > 1 && (index - 1) % 2 === 0));
           }
 
@@ -1472,7 +1720,7 @@ Page({
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 2;
 
-            // 外圈 - 适配浅色主题
+            // 外圈
             ctx.fillStyle = 'rgba(59, 130, 246, 0.9)';
             ctx.beginPath();
             ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
@@ -1484,22 +1732,23 @@ Page({
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 0;
 
-            // 内圈 - 适配浅色主题
+            // 内圈
             ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.beginPath();
             ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
             ctx.fill();
 
-            // 数值标签背景 - 适配浅色主题
-            const textWidth = ctx.measureText(point.value.toFixed(1)).width;
+            // 数值标签背景
+            const textValue = point.value.toFixed(1);
+            const textWidth = ctx.measureText(textValue).width;
             ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
             ctx.fillRect(point.x - textWidth / 2 - 4, point.y - 20, textWidth + 8, 14);
 
-            // 数值标签 - 适配浅色主题，去除KW单位
+            // 数值标签
             ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
             ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(point.value.toFixed(1), point.x, point.y - 10);
+            ctx.fillText(textValue, point.x, point.y - 10);
           }
         });
         if (this.data.debugMode) {
@@ -1535,7 +1784,7 @@ Page({
           data: loadCurveData.map(item => {
             // 处理功率数据，支持多种数据字段
             const power = item.power || item.value || item.load || 0;
-            return parseFloat(power).toFixed(1);
+            return parseFloat(power);
           })
         }]
       };
@@ -1569,13 +1818,13 @@ Page({
         series: [{
           name: '今日用电负荷',
           data: [
-            (40 + (baseDate % 10) * 0.5).toFixed(1),
-            (35 + (baseDate % 8) * 0.4).toFixed(1),
-            (60 + (baseDate % 12) * 0.6).toFixed(1),
-            (75 + (baseDate % 15) * 0.3).toFixed(1),
-            (80 + (baseDate % 10) * 0.2).toFixed(1),
-            (65 + (baseDate % 8) * 0.5).toFixed(1),
-            (50 + (baseDate % 6) * 0.4).toFixed(1)
+            (40 + (baseDate % 10) * 0.5),
+            (35 + (baseDate % 8) * 0.4),
+            (60 + (baseDate % 12) * 0.6),
+            (75 + (baseDate % 15) * 0.3),
+            (80 + (baseDate % 10) * 0.2),
+            (65 + (baseDate % 8) * 0.5),
+            (50 + (baseDate % 6) * 0.4)
           ]
         }]
       };
@@ -1680,7 +1929,7 @@ Page({
               }
               // 确保数值有效
               const numValue = parseFloat(value);
-              return isNaN(numValue) ? '0.0' : numValue.toFixed(1);
+              return isNaN(numValue) ? 0 : numValue;
             })
           }]
         };
@@ -1698,7 +1947,7 @@ Page({
             name: '今日用电负荷',
             data: loadCurveData.map(item => {
               const power = item.power || item.value || item.load || 0;
-              return parseFloat(power).toFixed(1);
+              return parseFloat(power);
             })
           }]
         };
@@ -1713,13 +1962,13 @@ Page({
             series: [{
               name: '今日用电负荷',
               data: [
-                (40 + (baseDate % 10) * 0.5).toFixed(1),
-                (35 + (baseDate % 8) * 0.4).toFixed(1),
-                (60 + (baseDate % 12) * 0.6).toFixed(1),
-                (75 + (baseDate % 15) * 0.3).toFixed(1),
-                (80 + (baseDate % 10) * 0.2).toFixed(1),
-                (65 + (baseDate % 8) * 0.5).toFixed(1),
-                (50 + (baseDate % 6) * 0.4).toFixed(1)
+                (40 + (baseDate % 10) * 0.5),
+                (35 + (baseDate % 8) * 0.4),
+                (60 + (baseDate % 12) * 0.6),
+                (75 + (baseDate % 15) * 0.3),
+                (80 + (baseDate % 10) * 0.2),
+                (65 + (baseDate % 8) * 0.5),
+                (50 + (baseDate % 6) * 0.4)
               ]
             }]
           };
@@ -1732,13 +1981,13 @@ Page({
             series: [{
               name: '本周用电负荷',
               data: [
-                (500 + (weekSeed % 20) * 2).toFixed(1),
-                (480 + (weekSeed % 15) * 1.5).toFixed(1),
-                (600 + (weekSeed % 25) * 1.2).toFixed(1),
-                (590 + (weekSeed % 18) * 1.8).toFixed(1),
-                (630 + (weekSeed % 22) * 1.4).toFixed(1),
-                (370 + (weekSeed % 12) * 2.2).toFixed(1),
-                (290 + (weekSeed % 10) * 1.6).toFixed(1)
+                (500 + (weekSeed % 20) * 2),
+                (480 + (weekSeed % 15) * 1.5),
+                (600 + (weekSeed % 25) * 1.2),
+                (590 + (weekSeed % 18) * 1.8),
+                (630 + (weekSeed % 22) * 1.4),
+                (370 + (weekSeed % 12) * 2.2),
+                (290 + (weekSeed % 10) * 1.6)
               ]
             }]
           };
@@ -1784,12 +2033,12 @@ Page({
     });
   },
 
-  goToMonitor: function (e) {
+  handleMonitorTap: function (e) {
     // 记录用户交互时间
     this.lastUserInteraction = Date.now();
 
-    // 获取点击的能源类型
-    const energyType = e.currentTarget.dataset.type || 'overview';
+    // 从组件事件的 detail 中获取点击的能源类型
+    const energyType = e.detail.type || 'overview';
     wx.navigateTo({
       url: `/pages/monitor/monitor?mode=category&energyType=${energyType}`
     });

@@ -93,6 +93,7 @@
       </view>
     </view>
   </view>
+  <custom-footer></custom-footer>
 </view>
 
 <!-- 添加分组对话框 -->

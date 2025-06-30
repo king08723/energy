@@ -1,0 +1,21 @@
+<!-- components/overview-card/index.wxml -->
+<view class="data-card-list glass-card energy-card-{{type}}">
+  <view class="data-card-list-content">
+    <view class="data-icon {{type}}-icon">
+      <image src="{{icon}}" class="icon-svg" mode="aspectFit"></image>
+    </view>
+    <view class="data-info-list">
+      <view class="data-info-row">
+        <text class="data-title">{{title}}</text>
+        <view class="data-value-container">
+          <text class="data-value">{{safeValue || value || '0'}}</text>
+          <text class="data-unit">{{unit}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="data-trend {{(safeTrend || trend || '0') >= 0 ? 'up' : 'down'}}">
+      <text class="trend-arrow">{{(safeTrend || trend || '0') >= 0 ? '↗' : '↘'}}</text>
+      <text class="trend-value">{{safeTrend || trend || '0'}}%</text>
+    </view>
+  </view>
+</view>

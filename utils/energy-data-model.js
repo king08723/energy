@@ -7,7 +7,7 @@
 
 // 引入配置
 const { ENERGY_TYPES, ENERGY_UNITS } = require('./config.js');
-const { parseDate } = require('./utils.js');
+const { parseDate } = require('./utils-commonjs.js');
 
 /**
  * 能源数据模型类
@@ -18,7 +18,7 @@ class EnergyDataModel {
   constructor() {
     // 设备能耗数据缓存 - 用于存储各设备的能耗数据
     this.deviceEnergyCache = new Map();
-    
+
     // 能源类型的基准消耗率 (单位: kW, m³/h, 吨/h)
     // 这些值作为各类型能源消耗的基准值，后续会与设备类型系数、时间模式系数等相乘得到实际能耗
     this.baseConsumptionRates = {
@@ -28,7 +28,7 @@ class EnergyDataModel {
       [ENERGY_TYPES.SOLAR]: -0.8,      // -0.8 kW (负值表示产能)
       [ENERGY_TYPES.STORAGE]: 0.3      // 0.3 kW
     };
-    
+
     // 设备类型的能耗系数 (相对于基准消耗率的倍数)
     // 不同设备类型有不同的能耗特性，此系数表示相对于基准消耗率的倍数
     this.deviceTypeFactors = {
@@ -38,24 +38,24 @@ class EnergyDataModel {
       'power_meter': 0.01,     // 电表自身消耗很少
       'transformer': 0.5,      // 变压器
       'ups': 0.3,              // 不间断电源
-      
+
       // 水系统设备
       'water_meter': 0.01,     // 水表
       'water_pump': 1.5,       // 水泵
       'cooling_water': 2.0,    // 冷却水系统
       'water_tank': 0.1,       // 水箱
-      
+
       // 燃气设备
       'gas_meter': 0.01,       // 燃气表
       'gas_boiler': 3.0,       // 燃气锅炉
       'gas_detector': 0.01,    // 燃气探测器
-      
+
       // 环境监测设备
       'environment_monitor': 0.05,  // 环境监测器
       'air_quality': 0.05,         // 空气质量监测
       'temperature_sensor': 0.01,  // 温度传感器
       'humidity_sensor': 0.01,
-      
+
       // 其他设备
       'motor': 1.8,               // 电机
       'air_compressor': 2.2,       // 空气压缩机
@@ -63,7 +63,7 @@ class EnergyDataModel {
       'solar_inverter': -1.0,      // 太阳能逆变器 (负值表示产能)
       'energy_storage': 0.2        // 储能设备
     };
-    
+
     // 碳排放系数 (kg CO2 / 单位能源)
     // 这些系数用于计算不同能源类型的碳排放量
     // 参考来源: 国家发改委气候司发布的《中国区域电网基准线排放因子》和《温室气体排放核算与报告要求》
@@ -74,7 +74,7 @@ class EnergyDataModel {
       [ENERGY_TYPES.SOLAR]: 0,          // 0 kg CO2/kWh (太阳能发电无直接碳排放)
       [ENERGY_TYPES.STORAGE]: 0.1       // 0.1 kg CO2/kWh (考虑充放电损耗和电网电力的间接排放)
     };
-    
+
     // 时间模式系数 (不同时间段的能耗系数)
     // 这些系数反映了不同时间段的能源使用模式差异
     this.timePatternFactors = {
@@ -96,7 +96,7 @@ class EnergyDataModel {
       }
     };
   }
-  
+
   /**
    * 获取设备功率（用于能耗计算）
    * @param {string} deviceId 设备ID
@@ -107,7 +107,7 @@ class EnergyDataModel {
     // 暂时返回默认值，实际应用中需要从设备配置或实时数据中获取
     return 1.0; // 默认1kW
   }
-  
+
   /**
    * 获取当前时间模式
    * @param {Date} date - 日期对象
@@ -117,7 +117,7 @@ class EnergyDataModel {
     const hour = date.getHours();
     const dayOfWeek = date.getDay(); // 0是周日，6是周六
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    
+
     let timeSlot;
     if (hour >= 0 && hour < 6) {
       timeSlot = 'night';
@@ -130,17 +130,17 @@ class EnergyDataModel {
     } else {
       timeSlot = 'lateNight';
     }
-    
+
     const dayType = isWeekend ? 'weekend' : 'weekday';
     const factor = this.timePatternFactors[dayType][timeSlot];
-    
+
     return {
       dayType,
       timeSlot,
       factor
     };
   }
-  
+
   /**
    * 计算设备能耗和碳排放
    * @param {Object} device - 设备对象
@@ -157,30 +157,30 @@ class EnergyDataModel {
         carbonEmission: 0
       };
     }
-    
+
     // 获取设备类型的能耗系数
     const deviceType = device.type || 'generic';
     const typeFactor = this.deviceTypeFactors[deviceType] || 1.0;
-    
+
     // 获取时间模式系数
     const { factor: timeFactor } = this.getTimePattern(date);
-    
+
     // 获取设备功率等级系数 (0-100%)
     const powerFactor = (device.powerLevel || 100) / 100;
-    
+
     // 获取设备的能源类型
     const energyType = device.category || ENERGY_TYPES.ELECTRICITY;
-    
+
     // 获取基准消耗率
     const baseRate = this.baseConsumptionRates[energyType] || this.baseConsumptionRates[ENERGY_TYPES.ELECTRICITY];
-    
+
     // 计算能耗值 (考虑负值情况，如太阳能发电)
     const energyValue = baseRate * typeFactor * timeFactor * powerFactor * duration;
-    
+
     // 计算碳排放量 (对于负值能耗，表示减少的碳排放)
     const carbonFactor = this.carbonEmissionFactors[energyType] || 0;
     const carbonEmission = energyValue * carbonFactor;
-    
+
     return {
       value: parseFloat(energyValue.toFixed(3)),
       unit: this.getEnergyUnit(energyType),
@@ -189,7 +189,7 @@ class EnergyDataModel {
       timestamp: date.toISOString() // 添加时间戳
     };
   }
-  
+
   /**
    * 获取能源单位
    * @param {string} energyType - 能源类型
@@ -198,7 +198,7 @@ class EnergyDataModel {
   getEnergyUnit(energyType) {
     return ENERGY_UNITS[energyType] || 'kWh';
   }
-  
+
   /**
    * 累计设备能耗和碳排放
    * @param {string} deviceId - 设备ID
@@ -217,19 +217,19 @@ class EnergyDataModel {
         energyType: energyData.energyType || ENERGY_TYPES.ELECTRICITY // 记录能源类型
       });
     }
-    
+
     const deviceCache = this.deviceEnergyCache.get(deviceId);
-    
+
     // 更新总能耗和碳排放
     deviceCache.total += energyData.value;
     deviceCache.carbonTotal += energyData.carbonEmission;
-    
+
     // 获取日期相关的键
     const dateObj = timestamp instanceof Date ? timestamp : new Date(timestamp);
     const dateKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
     const monthKey = dateKey.substring(0, 7); // YYYY-MM
     const hourKey = `${dateKey}T${dateObj.getHours().toString().padStart(2, '0')}`;
-    
+
     // 更新日能耗
     if (!deviceCache.daily[dateKey]) {
       deviceCache.daily[dateKey] = {
@@ -240,7 +240,7 @@ class EnergyDataModel {
     }
     deviceCache.daily[dateKey].value += energyData.value;
     deviceCache.daily[dateKey].carbonEmission += energyData.carbonEmission;
-    
+
     // 更新月能耗 (新增)
     if (!deviceCache.monthly[monthKey]) {
       deviceCache.monthly[monthKey] = {
@@ -251,7 +251,7 @@ class EnergyDataModel {
     }
     deviceCache.monthly[monthKey].value += energyData.value;
     deviceCache.monthly[monthKey].carbonEmission += energyData.carbonEmission;
-    
+
     // 更新小时能耗
     if (!deviceCache.hourly[hourKey]) {
       deviceCache.hourly[hourKey] = {
@@ -263,7 +263,7 @@ class EnergyDataModel {
     deviceCache.hourly[hourKey].value += energyData.value;
     deviceCache.hourly[hourKey].carbonEmission += energyData.carbonEmission;
   }
-  
+
   /**
    * 获取设备能耗数据
    * @param {string} deviceId - 设备ID
@@ -280,14 +280,14 @@ class EnergyDataModel {
         timeRange: timeRange
       };
     }
-    
+
     const deviceCache = this.deviceEnergyCache.get(deviceId);
     const now = new Date();
     const data = [];
     let interval, count, format;
-    
+
     // 根据时间范围设置不同的数据点数量和时间间隔
-    switch(timeRange) {
+    switch (timeRange) {
       case '1h':
         // 1小时内，每5分钟一个数据点
         interval = 5 * 60 * 1000; // 5分钟
@@ -324,20 +324,20 @@ class EnergyDataModel {
         count = 12; // 24小时内12个数据点
         format = 'HH:mm';
     }
-    
+
     // 确定要获取的数据类型（能耗或碳排放）
     const valueKey = dataType === 'carbon' ? 'carbonEmission' : 'value';
     const unit = dataType === 'carbon' ? 'kg' : (ENERGY_UNITS[deviceCache.energyType] || 'kWh');
-    
+
     // 生成数据点
     for (let i = count - 1; i >= 0; i--) {
       const time = new Date(now.getTime() - i * interval);
       // 格式化时间
       const formattedTime = this.formatTime(time, format);
-      
+
       // 查找对应时间段的能耗数据
       let value = 0;
-      
+
       if (timeRange === '7d') {
         // 对于7天数据，查找对应日期的累计值
         const dateKey = time.toISOString().split('T')[0];
@@ -348,12 +348,12 @@ class EnergyDataModel {
         // 对于小时级数据，查找对应小时的累计值
         const dateKey = time.toISOString().split('T')[0];
         const hourKey = `${dateKey}T${time.getHours().toString().padStart(2, '0')}`;
-        
+
         if (deviceCache.hourly[hourKey]) {
           value = deviceCache.hourly[hourKey][valueKey];
         }
       }
-      
+
       data.push({
         time: formattedTime,
         value: parseFloat(value.toFixed(2)),
@@ -361,7 +361,7 @@ class EnergyDataModel {
         unit: unit
       });
     }
-    
+
     return {
       data,
       timeRange,
@@ -370,7 +370,7 @@ class EnergyDataModel {
       deviceId
     };
   }
-  
+
   /**
    * 格式化时间
    * @param {Date|string|number} dateInput - 日期对象、时间字符串或时间戳
@@ -390,19 +390,19 @@ class EnergyDataModel {
       console.error('formatTime: 无效的时间参数', dateInput);
       return '时间格式错误';
     }
-    
+
     // 检查Date对象是否有效
     if (isNaN(date.getTime())) {
       console.error('formatTime: 无效的日期', dateInput);
       return '无效日期';
     }
-    
+
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    
+
     if (format === 'MM-DD') {
       return `${month}-${day}`;
     } else if (format === 'HH:mm') {
@@ -413,7 +413,7 @@ class EnergyDataModel {
       return `${year}-${month}-${day} ${hours}:${minutes}`;
     }
   }
-  
+
   /**
    * 计算多设备能耗汇总
    * @param {Array} deviceIds - 设备ID数组
@@ -425,7 +425,7 @@ class EnergyDataModel {
     let totalCarbonEmission = 0;
     const deviceData = [];
     let unit = 'kWh'; // 默认单位
-    
+
     // 计算各设备的能耗并汇总
     deviceIds.forEach(deviceId => {
       const energyData = this.getDeviceEnergyData(deviceId, timeRange);
@@ -433,7 +433,7 @@ class EnergyDataModel {
         totalEnergy += energyData.value;
         totalCarbonEmission += energyData.carbonEmission;
         unit = energyData.unit || unit;
-        
+
         // 获取设备信息
         const device = this.getDeviceById(deviceId);
         if (device) {
@@ -449,17 +449,17 @@ class EnergyDataModel {
         }
       }
     });
-    
+
     // 计算各设备占比
     if (totalEnergy > 0) {
       deviceData.forEach(device => {
         device.percentage = parseFloat(((device.energyValue / totalEnergy) * 100).toFixed(1));
       });
     }
-    
+
     // 按能耗降序排序
     deviceData.sort((a, b) => b.energyValue - a.energyValue);
-    
+
     return {
       totalEnergy: parseFloat(totalEnergy.toFixed(3)),
       totalCarbonEmission: parseFloat(totalCarbonEmission.toFixed(3)),
@@ -469,7 +469,7 @@ class EnergyDataModel {
       deviceData
     };
   }
-  
+
   /**
    * 生成多设备能耗时间序列数据
    * @param {Array} deviceIds - 设备ID数组
@@ -480,9 +480,9 @@ class EnergyDataModel {
   generateDevicesEnergyTimeSeries(deviceIds, timeRange = '24h', dataType = 'energy') {
     const now = new Date();
     let interval, count, format;
-    
+
     // 根据时间范围设置不同的数据点数量和时间间隔
-    switch(timeRange) {
+    switch (timeRange) {
       case '1h':
         interval = 5 * 60 * 1000; // 5分钟
         count = 12; // 1小时内12个数据点
@@ -513,28 +513,28 @@ class EnergyDataModel {
         count = 12; // 24小时内12个数据点
         format = 'HH:mm';
     }
-    
+
     // 确定要获取的数据类型（能耗或碳排放）
     const valueKey = dataType === 'carbon' ? 'carbonEmission' : 'value';
     const unit = dataType === 'carbon' ? 'kg' : 'kWh';
-    
+
     // 初始化结果数组
     const result = [];
-    
+
     // 生成时间点
     for (let i = count - 1; i >= 0; i--) {
       const time = new Date(now.getTime() - i * interval);
       const formattedTime = this.formatTime(time, format);
-      
+
       // 计算该时间点的总能耗或碳排放
       let totalValue = 0;
       const deviceValues = {};
-      
+
       deviceIds.forEach(deviceId => {
         if (this.deviceEnergyCache.has(deviceId)) {
           const deviceCache = this.deviceEnergyCache.get(deviceId);
           let deviceValue = 0;
-          
+
           if (timeRange === '7d') {
             // 对于7天数据，查找对应日期的累计值
             const dateKey = time.toISOString().split('T')[0];
@@ -545,14 +545,14 @@ class EnergyDataModel {
             // 对于小时级数据，查找对应小时的累计值
             const dateKey = time.toISOString().split('T')[0];
             const hourKey = `${dateKey}T${time.getHours().toString().padStart(2, '0')}`;
-            
+
             if (deviceCache.hourly[hourKey]) {
               deviceValue = deviceCache.hourly[hourKey][valueKey];
             }
           }
-          
+
           totalValue += deviceValue;
-          
+
           // 存储每个设备的值，用于后续分析
           const device = this.getDeviceById(deviceId);
           if (device) {
@@ -564,7 +564,7 @@ class EnergyDataModel {
           }
         }
       });
-      
+
       result.push({
         time: formattedTime,
         timestamp: time.toISOString(),
@@ -572,7 +572,7 @@ class EnergyDataModel {
         deviceValues // 包含每个设备的贡献值
       });
     }
-    
+
     return {
       data: result,
       timeRange,
@@ -581,7 +581,7 @@ class EnergyDataModel {
       deviceCount: deviceIds.length
     };
   }
-  
+
   /**
    * 获取能源类型分布
    * @param {Array} deviceIds - 设备ID数组
@@ -592,7 +592,7 @@ class EnergyDataModel {
     const distribution = {};
     let total = 0;
     let totalCarbon = 0;
-    
+
     // 初始化各能源类型的值
     Object.keys(ENERGY_TYPES).forEach(key => {
       const energyType = ENERGY_TYPES[key];
@@ -604,13 +604,13 @@ class EnergyDataModel {
         displayName: ENERGY_TYPE_NAMES[energyType] || energyType
       };
     });
-    
+
     // 计算各设备的能耗并按能源类型汇总
     deviceIds.forEach(deviceId => {
       if (this.deviceEnergyCache.has(deviceId)) {
         const energyData = this.getDeviceEnergyData(deviceId, timeRange);
         const device = this.getDeviceById(deviceId);
-        
+
         if (energyData && device) {
           const energyType = device.category || ENERGY_TYPES.ELECTRICITY;
           distribution[energyType].value += energyData.value;
@@ -620,7 +620,7 @@ class EnergyDataModel {
         }
       }
     });
-    
+
     // 计算百分比
     if (total > 0) {
       Object.keys(distribution).forEach(type => {
@@ -629,7 +629,7 @@ class EnergyDataModel {
         distribution[type].carbonEmission = parseFloat(distribution[type].carbonEmission.toFixed(3));
       });
     }
-    
+
     // 过滤掉值为0的能源类型
     const result = {};
     Object.keys(distribution).forEach(type => {
@@ -637,7 +637,7 @@ class EnergyDataModel {
         result[type] = distribution[type];
       }
     });
-    
+
     return {
       distribution: result,
       total: parseFloat(total.toFixed(3)),
@@ -645,7 +645,7 @@ class EnergyDataModel {
       timeRange
     };
   }
-  
+
   /**
    * 获取设备对象
    * @param {string} deviceId - 设备ID
@@ -656,14 +656,14 @@ class EnergyDataModel {
     // 返回设备对象
     return null;
   }
-  
+
   /**
    * 数据同步与观察者模式实现
    */
-  
+
   // 观察者列表
   #observers = [];
-  
+
   /**
    * 注册观察者
    * @param {Function} callback - 回调函数，当设备数据更新时调用
@@ -674,16 +674,16 @@ class EnergyDataModel {
       console.error('注册观察者失败：回调必须是函数');
       return -1;
     }
-    
+
     const observerId = this.#observers.length;
     this.#observers.push({
       id: observerId,
       callback
     });
-    
+
     return observerId;
   }
-  
+
   /**
    * 移除观察者
    * @param {number} observerId - 观察者ID
@@ -697,7 +697,7 @@ class EnergyDataModel {
     }
     return false;
   }
-  
+
   /**
    * 通知所有观察者
    * @param {Object} data - 更新的数据
@@ -711,7 +711,7 @@ class EnergyDataModel {
       }
     });
   }
-  
+
   /**
    * 更新设备状态并计算能耗
    * @param {string} deviceId - 设备ID
@@ -721,10 +721,10 @@ class EnergyDataModel {
   updateDeviceStatus(deviceId, deviceData) {
     // 计算设备能耗
     const energyData = this.calculateDeviceEnergy(deviceData);
-    
+
     // 累计设备能耗
     this.accumulateDeviceEnergy(deviceId, energyData);
-    
+
     // 通知观察者
     this.notifyObservers({
       type: 'device_update',
@@ -732,10 +732,10 @@ class EnergyDataModel {
       deviceData,
       energyData
     });
-    
+
     return energyData;
   }
-  
+
   /**
    * 批量更新设备状态
    * @param {Array} devices - 设备数组
@@ -743,23 +743,23 @@ class EnergyDataModel {
    */
   updateDevicesStatus(devices) {
     const results = {};
-    
+
     devices.forEach(device => {
       if (device.id) {
         results[device.id] = this.updateDeviceStatus(device.id, device);
       }
     });
-    
+
     // 通知观察者批量更新完成
     this.notifyObservers({
       type: 'devices_batch_update',
       devices,
       results
     });
-    
+
     return results;
   }
-  
+
   /**
    * 清除设备能耗缓存
    * @param {string} deviceId - 设备ID，如果不提供则清除所有设备的缓存
@@ -770,7 +770,7 @@ class EnergyDataModel {
     } else {
       this.deviceEnergyCache.clear();
     }
-    
+
     // 通知观察者缓存已清除
     this.notifyObservers({
       type: 'cache_cleared',
@@ -788,7 +788,7 @@ class SceneModeModel {
     this.scenes = [];
     this.activeSceneId = null;
   }
-  
+
   /**
    * 获取场景对设备的影响
    * @param {string} sceneId 场景ID
@@ -797,14 +797,14 @@ class SceneModeModel {
   getSceneDeviceImpact(sceneId) {
     const scene = this.scenes.find(s => s.id === sceneId);
     if (!scene) return null;
-    
+
     return {
       affectedDevices: scene.deviceSettings.length,
       estimatedEnergyChange: this.calculateEnergyImpact(scene),
       executionTime: scene.executionTime || 30 // 秒
     };
   }
-  
+
   /**
    * 计算场景切换对能耗的影响
    * @param {Object} scene 场景对象
@@ -817,7 +817,7 @@ class SceneModeModel {
       return total + powerChange;
     }, 0);
   }
-  
+
   /**
    * 获取设备功率（用于能耗计算）
    * @param {string} deviceId 设备ID
@@ -839,7 +839,7 @@ class AutomationRuleModel {
     this.rules = [];
     this.executionHistory = [];
   }
-  
+
   /**
    * 评估规则触发条件
    * @param {string} ruleId 规则ID
@@ -849,7 +849,7 @@ class AutomationRuleModel {
   evaluateRuleTrigger(ruleId, currentData) {
     const rule = this.rules.find(r => r.id === ruleId);
     if (!rule || !rule.enabled) return false;
-    
+
     switch (rule.trigger.type) {
       case 'time':
         return this.evaluateTimeTrigger(rule.trigger, currentData.currentTime);
@@ -861,7 +861,7 @@ class AutomationRuleModel {
         return false;
     }
   }
-  
+
   /**
    * 评估时间触发条件
    * @param {Object} trigger 触发器配置
@@ -872,15 +872,15 @@ class AutomationRuleModel {
     const now = currentTime || new Date();
     const hour = now.getHours();
     const minute = now.getMinutes();
-    
+
     if (trigger.time) {
       const [triggerHour, triggerMinute] = trigger.time.split(':').map(Number);
       return hour === triggerHour && minute === triggerMinute;
     }
-    
+
     return false;
   }
-  
+
   /**
    * 评估能耗触发条件
    * @param {Object} trigger 触发器配置
@@ -889,9 +889,9 @@ class AutomationRuleModel {
    */
   evaluateEnergyTrigger(trigger, energyData) {
     if (!energyData || !trigger.threshold) return false;
-    
+
     const currentValue = energyData[trigger.metric] || 0;
-    
+
     switch (trigger.operator) {
       case 'gt': return currentValue > trigger.threshold;
       case 'lt': return currentValue < trigger.threshold;
@@ -901,7 +901,7 @@ class AutomationRuleModel {
       default: return false;
     }
   }
-  
+
   /**
    * 评估设备触发条件
    * @param {Object} trigger 触发器配置
@@ -910,13 +910,13 @@ class AutomationRuleModel {
    */
   evaluateDeviceTrigger(trigger, deviceStates) {
     if (!deviceStates || !trigger.deviceId) return false;
-    
+
     const deviceState = deviceStates[trigger.deviceId];
     if (!deviceState) return false;
-    
+
     return deviceState[trigger.property] === trigger.value;
   }
-  
+
   /**
    * 计算规则执行的能耗影响
    * @param {string} ruleId 规则ID
@@ -925,7 +925,7 @@ class AutomationRuleModel {
   calculateRuleEnergyImpact(ruleId) {
     const rule = this.rules.find(r => r.id === ruleId);
     if (!rule) return 0;
-    
+
     return rule.actions.reduce((total, action) => {
       if (action.type === 'device_control') {
         const devicePower = this.getDevicePower(action.deviceId);
@@ -935,7 +935,7 @@ class AutomationRuleModel {
       return total;
     }, 0);
   }
-  
+
   /**
    * 获取设备功率（用于能耗计算）
    * @param {string} deviceId 设备ID

@@ -4,4 +4,5 @@
   <view class="content">
     <text>这里是节能页面的内容</text>
   </view>
+  <custom-footer></custom-footer>
 </view>

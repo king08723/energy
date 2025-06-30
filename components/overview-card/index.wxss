@@ -1,0 +1,146 @@
+@import '../../styles/design-system.wxss';
+
+.data-card-list {
+  padding: 24rpx;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16rpx;
+  position: relative;
+  overflow: hidden;
+  min-height: 100rpx;
+  border: 1px solid rgba(59, 130, 246, 0.08);
+}
+
+.data-card-list:active {
+  transform: scale(0.98);
+}
+
+.data-card-list-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.data-info-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 16rpx;
+  margin-right: 16rpx;
+}
+
+.data-info-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  min-height: 60rpx;
+  padding: 10rpx 0;
+}
+
+.data-info-row .data-title {
+  position: absolute;
+  left: 0;
+}
+
+.data-info-row .data-value-container {
+  position: absolute;
+  left: 60%;
+  transform: translateX(-50%);
+}
+
+.icon-svg {
+  width: 32rpx;
+  height: 32rpx;
+  filter: brightness(0) invert(1);
+}
+
+.data-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.electricity-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
+}
+
+.water-icon {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  box-shadow: 0 4rpx 12rpx rgba(6, 182, 212, 0.3);
+}
+
+.gas-icon {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  box-shadow: 0 4rpx 12rpx rgba(249, 115, 22, 0.3);
+}
+
+.carbon-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.3);
+}
+
+.data-title {
+  font-size: 26rpx;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.data-value-container {
+  display: flex;
+  align-items: baseline;
+  gap: 6rpx;
+}
+
+.data-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.data-unit {
+  font-size: 24rpx;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.data-trend {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+.trend-arrow {
+  font-size: 20rpx;
+}
+
+.trend-value {
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.data-trend.up {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.data-trend.down {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}

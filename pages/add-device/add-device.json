@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "添加设备",
   "usingComponents": {
-    "step-indicator": "/components/step-indicator/step-indicator"
+    "step-indicator": "/components/step-indicator/step-indicator",
+    "custom-footer": "../../components/footer/index"
   }
 }

@@ -500,4 +500,5 @@
   <view class="floating-action-button" bindtap="scrollToTop" wx:if="{{showBackToTop}}">
     <text class="fab-icon">↑</text>
   </view>
+  <custom-footer></custom-footer>
 </view>

@@ -135,4 +135,5 @@
     </view>
     <text wx:else>加载更多</text>
   </view>
+  <custom-footer></custom-footer>
 </view>

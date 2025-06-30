@@ -53,93 +53,38 @@
       
       <!-- 能耗分类列表布局 -->
       <view class="energy-breakdown-list">
-        <!-- 用电量累计 -->
-        <view class="data-card-list glass-card energy-card-electricity" wx:if="{{overview.electricity}}">
-          <view class="data-card-list-content">
-            <view class="data-icon electricity-icon">
-              <image src="../../assets/icons/power.svg" class="icon-svg" mode="aspectFit"></image>
-            </view>
-            <view class="data-info-list">
-              <view class="data-info-row">
-                <text class="data-title">用电量</text>
-                <view class="data-value-container">
-                  <text class="data-value">{{overview.electricity.value}}</text>
-                  <text class="data-unit">{{overview.electricity.unit}}</text>
-                </view>
-              </view>
-            </view>
-            <view class="data-trend {{overview.electricity.trend >= 0 ? 'up' : 'down'}}">
-              <text class="trend-arrow">{{overview.electricity.trend >= 0 ? '↗' : '↘'}}</text>
-              <text class="trend-value">{{overview.electricity.trend}}%</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 用水量累计 -->
-        <view class="data-card-list glass-card energy-card-water" wx:if="{{overview.water}}">
-          <view class="data-card-list-content">
-            <view class="data-icon water-icon">
-              <image src="../../assets/icons/water.svg" class="icon-svg" mode="aspectFit"></image>
-            </view>
-            <view class="data-info-list">
-              <view class="data-info-row">
-                <text class="data-title">用水量</text>
-                <view class="data-value-container">
-                  <text class="data-value">{{overview.water.value}}</text>
-                  <text class="data-unit">{{overview.water.unit}}</text>
-                </view>
-              </view>
-            </view>
-            <view class="data-trend {{overview.water.trend >= 0 ? 'up' : 'down'}}">
-              <text class="trend-arrow">{{overview.water.trend >= 0 ? '↗' : '↘'}}</text>
-              <text class="trend-value">{{overview.water.trend}}%</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 燃气量累计 -->
-        <view class="data-card-list glass-card energy-card-gas" wx:if="{{overview.gas}}">
-          <view class="data-card-list-content">
-            <view class="data-icon gas-icon">
-              <image src="../../assets/icons/gas.svg" class="icon-svg" mode="aspectFit"></image>
-            </view>
-            <view class="data-info-list">
-              <view class="data-info-row">
-                <text class="data-title">燃气量</text>
-                <view class="data-value-container">
-                  <text class="data-value">{{overview.gas.value}}</text>
-                  <text class="data-unit">{{overview.gas.unit}}</text>
-                </view>
-              </view>
-            </view>
-            <view class="data-trend {{overview.gas.trend >= 0 ? 'up' : 'down'}}">
-              <text class="trend-arrow">{{overview.gas.trend >= 0 ? '↗' : '↘'}}</text>
-              <text class="trend-value">{{overview.gas.trend}}%</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 碳排放累计 -->
-        <view class="data-card-list glass-card energy-card-carbon" wx:if="{{overview.carbon}}">
-          <view class="data-card-list-content">
-            <view class="data-icon carbon-icon">
-              <image src="../../assets/icons/carbon.svg" class="icon-svg" mode="aspectFit"></image>
-            </view>
-            <view class="data-info-list">
-              <view class="data-info-row">
-                <text class="data-title">碳排放</text>
-                <view class="data-value-container">
-                  <text class="data-value">{{overview.carbon.value}}</text>
-                  <text class="data-unit">{{overview.carbon.unit}}</text>
-                </view>
-              </view>
-            </view>
-            <view class="data-trend {{overview.carbon.trend >= 0 ? 'up' : 'down'}}">
-              <text class="trend-arrow">{{overview.carbon.trend >= 0 ? '↗' : '↘'}}</text>
-              <text class="trend-value">{{overview.carbon.trend}}%</text>
-            </view>
-          </view>
-        </view>
+        <overview-card 
+          type="electricity" 
+          icon="../../assets/icons/power.svg" 
+          title="用电量" 
+          value="{{overview.electricity.value}}" 
+          unit="{{overview.electricity.unit}}" 
+          trend="{{overview.electricity.trend}}"
+        />
+        <overview-card 
+          type="water" 
+          icon="../../assets/icons/water.svg" 
+          title="用水量" 
+          value="{{overview.water.value}}" 
+          unit="{{overview.water.unit}}" 
+          trend="{{overview.water.trend}}"
+        />
+        <overview-card 
+          type="gas" 
+          icon="../../assets/icons/gas.svg" 
+          title="燃气量" 
+          value="{{overview.gas.value}}" 
+          unit="{{overview.gas.unit}}" 
+          trend="{{overview.gas.trend}}"
+        />
+        <overview-card 
+          type="carbon" 
+          icon="../../assets/icons/carbon.svg" 
+          title="碳排放" 
+          value="{{overview.carbon.value}}" 
+          unit="{{overview.carbon.unit}}" 
+          trend="{{overview.carbon.trend}}"
+        />
       </view>  
       
     </view>
@@ -170,73 +115,42 @@
     
     <!-- 实时数据网格 -->
     <view class="data-grid">
-    <!-- 实时功率卡片 -->
-    <view class="data-card glass-card energy-card-electricity" bindtap="goToMonitor" data-type="power">
-      <view class="data-icon power-icon">
-        <image src="../../assets/icons/power.svg" class="icon-svg" mode="aspectFit"></image>
-      </view>
-      <view class="data-info">
-        <text class="data-title">用电功率</text>
-        <view class="data-value-container">
-          <text class="data-value">{{monitorData.realTimeData.power.value}}</text>
-          <text class="data-unit">{{monitorData.realTimeData.power.unit}}</text>
-        </view>
-      </view>
-      <view class="data-trend {{monitorData.realTimeData.power.trend}}">
-        <text class="trend-arrow">{{monitorData.realTimeData.power.trend === 'up' ? '↗' : monitorData.realTimeData.power.trend === 'down' ? '↘' : '→'}}</text>
-      </view>
-    </view>
-
-    <!-- 用水量卡片 -->
-    <view class="data-card glass-card energy-card-water" bindtap="goToMonitor" data-type="water">
-      <view class="data-icon water-icon">
-        <image src="../../assets/icons/water.svg" class="icon-svg" mode="aspectFit"></image>
-      </view>
-      <view class="data-info">
-        <text class="data-title">用水流量</text>
-        <view class="data-value-container">
-          <text class="data-value">{{monitorData.realTimeData.water.value}}</text>
-          <text class="data-unit">{{monitorData.realTimeData.water.unit}}</text>
-        </view>
-      </view>
-      <view class="data-trend {{monitorData.realTimeData.water.trend}}">
-        <text class="trend-arrow">{{monitorData.realTimeData.water.trend === 'up' ? '↗' : monitorData.realTimeData.water.trend === 'down' ? '↘' : '→'}}</text>
-      </view>
-    </view>
-
-    <!-- 燃气量卡片 -->
-    <view class="data-card glass-card energy-card-gas" bindtap="goToMonitor" data-type="gas">
-      <view class="data-icon gas-icon">
-        <image src="../../assets/icons/gas.svg" class="icon-svg" mode="aspectFit"></image>
-      </view>
-      <view class="data-info">
-        <text class="data-title">燃气流量</text>
-        <view class="data-value-container">
-          <text class="data-value">{{monitorData.realTimeData.gas.value}}</text>
-          <text class="data-unit">{{monitorData.realTimeData.gas.unit}}</text>
-        </view>
-      </view>
-      <view class="data-trend {{monitorData.realTimeData.gas.trend}}">
-        <text class="trend-arrow">{{monitorData.realTimeData.gas.trend === 'up' ? '↗' : monitorData.realTimeData.gas.trend === 'down' ? '↘' : '→'}}</text>
-      </view>
-    </view>
-
-    <!-- 碳排放卡片 -->
-    <view class="data-card glass-card energy-card-carbon" bindtap="goToMonitor" data-type="carbon">
-      <view class="data-icon carbon-icon">
-        <image src="../../assets/icons/carbon.svg" class="icon-svg" mode="aspectFit"></image>
-      </view>
-      <view class="data-info">
-        <text class="data-title">碳排放率</text>
-        <view class="data-value-container">
-          <text class="data-value">{{monitorData.realTimeData.carbon.value}}</text>
-          <text class="data-unit">{{monitorData.realTimeData.carbon.unit}}</text>
-        </view>
-      </view>
-      <view class="data-trend {{monitorData.realTimeData.carbon.trend}}">
-        <text class="trend-arrow">{{monitorData.realTimeData.carbon.trend === 'up' ? '↗' : monitorData.realTimeData.carbon.trend === 'down' ? '↘' : '→'}}</text>
-      </view>
-    </view>
+      <monitor-card 
+        type="power" 
+        icon="../../assets/icons/power.svg" 
+        title="用电功率" 
+        value="{{monitorData.realTimeData.power.value}}" 
+        unit="{{monitorData.realTimeData.power.unit}}" 
+        trend="{{monitorData.realTimeData.power.trend}}"
+        bind:tap="handleMonitorTap"
+      />
+      <monitor-card 
+        type="water" 
+        icon="../../assets/icons/water.svg" 
+        title="用水流量" 
+        value="{{monitorData.realTimeData.water.value}}" 
+        unit="{{monitorData.realTimeData.water.unit}}" 
+        trend="{{monitorData.realTimeData.water.trend}}"
+        bind:tap="handleMonitorTap"
+      />
+      <monitor-card 
+        type="gas" 
+        icon="../../assets/icons/gas.svg" 
+        title="燃气流量" 
+        value="{{monitorData.realTimeData.gas.value}}" 
+        unit="{{monitorData.realTimeData.gas.unit}}" 
+        trend="{{monitorData.realTimeData.gas.trend}}"
+        bind:tap="handleMonitorTap"
+      />
+      <monitor-card 
+        type="carbon" 
+        icon="../../assets/icons/carbon.svg" 
+        title="碳排放率" 
+        value="{{monitorData.realTimeData.carbon.value}}" 
+        unit="{{monitorData.realTimeData.carbon.unit}}" 
+        trend="{{monitorData.realTimeData.carbon.trend}}"
+        bind:tap="handleMonitorTap"
+      />
     </view>
   </view>
   
@@ -335,4 +249,7 @@
     <text class="tip-text">上滑查看更多功能</text>
     <text class="tip-arrow">↑</text>
   </view>
+
+  <!-- 页面底部组件 -->
+  <custom-footer></custom-footer>
 </view>

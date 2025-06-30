@@ -324,4 +324,5 @@
       </view>
     </view>
   </view>
+  <custom-footer></custom-footer>
 </view>

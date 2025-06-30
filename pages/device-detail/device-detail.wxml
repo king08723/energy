@@ -262,4 +262,5 @@
       <text>设备设置</text>
     </view>
   </view>
+  <custom-footer></custom-footer>
 </view>

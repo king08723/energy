@@ -8,8 +8,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "tdesign-miniprogram": "^1.9.4"
-  }
+  "description": ""
 }

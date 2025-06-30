@@ -1,0 +1,36 @@
+.footer-container {
+  padding: 32rpx 24rpx; /* Consistent with energy-glass-card padding */
+  text-align: center;
+  
+  /* Glassmorphism effect from design-system.wxss */
+  background: var(--bg-card);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--border-primary);
+  border-radius: 24rpx; /* Consistent with energy-glass-card */
+  box-shadow: 
+    var(--shadow-primary),
+    0 1rpx 4rpx rgba(0, 255, 255, 0.2) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  
+  position: relative;
+  z-index: 1;
+  margin-top: 40rpx; /* Keep some separation from content above */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx; /* Space between text lines */
+}
+
+.footer-company-name {
+  font-size: 28rpx;
+  color: var(--text-primary); /* Use primary text color from design system */
+  font-weight: 500;
+}
+
+.footer-copyright,
+.footer-icp {
+  font-size: 24rpx;
+  color: var(--text-secondary); /* Use secondary text color from design system */
+}

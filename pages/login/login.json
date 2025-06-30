@@ -1,3 +1,6 @@
 {
+  "usingComponents": {
+    "custom-footer": "../../components/footer/index"
+  },
   "navigationBarTitleText": "登录/注册"
 }

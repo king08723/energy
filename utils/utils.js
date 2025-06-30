@@ -9,11 +9,11 @@
  * @param {number} decimals 小数位数
  * @returns {string} 格式化后的字符串
  */
-export function formatNumber(num, decimals = 2) {
+function formatNumber(num, decimals = 2) {
   if (num === null || num === undefined || isNaN(num)) {
     return '0';
   }
-  
+
   const number = parseFloat(num);
   return number.toLocaleString('zh-CN', {
     minimumFractionDigits: decimals,
@@ -58,14 +58,14 @@ export function parseDate(dateInput) {
   if (dateInput instanceof Date) {
     return dateInput;
   }
-  
+
   let dateStr = dateInput;
   // 兼容iOS：将"YYYY-MM-DD HH:mm"格式转换为iOS支持的格式
   if (typeof dateStr === 'string' && dateStr.includes('-') && dateStr.includes(' ') && !dateStr.includes('T')) {
     // 将"YYYY-MM-DD HH:mm"转换为"YYYY/MM/DD HH:mm:ss"
     dateStr = dateStr.replace(/-/g, '/') + ':00';
   }
-  
+
   return new Date(dateStr);
 }
 
@@ -77,17 +77,17 @@ export function parseDate(dateInput) {
  */
 export function formatDate(date, format = 'YYYY-MM-DD HH:mm') {
   if (!date) return '';
-  
+
   const d = parseDate(date);
   if (isNaN(d.getTime())) return '';
-  
+
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
   const seconds = String(d.getSeconds()).padStart(2, '0');
-  
+
   switch (format) {
     case 'YYYY-MM-DD':
       return `${year}-${month}-${day}`;
@@ -111,15 +111,15 @@ export function formatDate(date, format = 'YYYY-MM-DD HH:mm') {
  */
 export function formatRelativeTime(date) {
   if (!date) return '';
-  
+
   const now = new Date();
   const target = new Date(date);
   const diff = now.getTime() - target.getTime();
-  
+
   const minute = 60 * 1000;
   const hour = 60 * minute;
   const day = 24 * hour;
-  
+
   if (diff < minute) {
     return '刚刚';
   } else if (diff < hour) {
@@ -154,11 +154,11 @@ export function formatPercentage(value, total, decimals = 1) {
  */
 export function formatFileSize(bytes, decimals = 2) {
   if (bytes === 0) return '0 B';
-  
+
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return formatNumber(bytes / Math.pow(k, i), decimals) + ' ' + sizes[i];
 }
 
@@ -191,7 +191,7 @@ export function debounce(func, wait, immediate = false) {
  */
 export function throttle(func, limit) {
   let inThrottle;
-  return function(...args) {
+  return function (...args) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -209,15 +209,15 @@ export function deepClone(obj) {
   if (obj === null || typeof obj !== 'object') {
     return obj;
   }
-  
+
   if (obj instanceof Date) {
     return new Date(obj.getTime());
   }
-  
+
   if (obj instanceof Array) {
     return obj.map(item => deepClone(item));
   }
-  
+
   if (typeof obj === 'object') {
     const clonedObj = {};
     for (const key in obj) {
@@ -302,11 +302,11 @@ export function calculateGrowthRate(current, previous, decimals = 2) {
       formatted: '0%'
     };
   }
-  
+
   const rate = ((current - previous) / previous) * 100;
   const isIncrease = rate > 0;
   const formatted = (isIncrease ? '+' : '') + formatNumber(rate, decimals) + '%';
-  
+
   return {
     rate: Math.abs(rate),
     isIncrease,
@@ -335,7 +335,7 @@ export function calculateCarbonEmission(energyConsumption = {}) {
     solar = 0,
     storage = 0
   } = typeof energyConsumption === 'object' ? energyConsumption : { electricity: arguments[0] || 0, gas: arguments[1] || 0, coal: arguments[2] || 0 };
-  
+
   // 碳排放因子（kg CO2/单位）
   const factors = {
     electricity: 0.785, // kg CO2/kWh (国家电网平均值)
@@ -345,7 +345,7 @@ export function calculateCarbonEmission(energyConsumption = {}) {
     solar: 0,           // kg CO2/kWh (太阳能发电无直接碳排放)
     storage: 0.1        // kg CO2/kWh (考虑充放电损耗)
   };
-  
+
   // 计算各能源类型的碳排放量
   const electricityEmission = electricity * factors.electricity;
   const gasEmission = gas * factors.gas;
@@ -353,13 +353,13 @@ export function calculateCarbonEmission(energyConsumption = {}) {
   const coalEmission = coal * factors.coal;
   const solarEmission = solar * factors.solar; // 通常为负值或零，表示减少的碳排放
   const storageEmission = storage * factors.storage;
-  
+
   // 计算总碳排放量（kg CO2）
   const totalEmission = electricityEmission + gasEmission + waterEmission + coalEmission + solarEmission + storageEmission;
-  
+
   // 转换为吨CO2并保留3位小数
   const totalEmissionTons = parseFloat((totalEmission / 1000).toFixed(3));
-  
+
   return {
     total: totalEmissionTons, // 总排放量（吨CO2）
     details: {
@@ -382,7 +382,7 @@ export function calculateCarbonEmission(energyConsumption = {}) {
 export function getTimeLabels(timeRange) {
   const now = new Date();
   const labels = [];
-  
+
   switch (timeRange) {
     case 'hour':
       // 过去24小时，每小时一个点
@@ -391,7 +391,7 @@ export function getTimeLabels(timeRange) {
         labels.push(formatDate(time, 'HH:mm'));
       }
       break;
-      
+
     case 'day':
       // 过去7天，每天一个点
       for (let i = 6; i >= 0; i--) {
@@ -399,15 +399,15 @@ export function getTimeLabels(timeRange) {
         labels.push(formatDate(time, 'MM-DD'));
       }
       break;
-      
+
     case 'week':
       // 过去4周，每周一个点
       for (let i = 3; i >= 0; i--) {
         const time = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-        labels.push(`第${4-i}周`);
+        labels.push(`第${4 - i}周`);
       }
       break;
-      
+
     case 'month':
       // 过去12个月，每月一个点
       for (let i = 11; i >= 0; i--) {
@@ -415,11 +415,11 @@ export function getTimeLabels(timeRange) {
         labels.push(formatDate(time, 'YYYY-MM'));
       }
       break;
-      
+
     default:
       labels.push('当前');
   }
-  
+
   return labels;
 }
 
@@ -435,7 +435,7 @@ export function setStorage(key, data, expireTime = null) {
     timestamp: Date.now(),
     expireTime
   };
-  
+
   try {
     wx.setStorageSync(key, JSON.stringify(item));
   } catch (error) {
@@ -452,15 +452,15 @@ export function getStorage(key) {
   try {
     const itemStr = wx.getStorageSync(key);
     if (!itemStr) return null;
-    
+
     const item = JSON.parse(itemStr);
-    
+
     // 检查是否过期
     if (item.expireTime && Date.now() > item.timestamp + item.expireTime) {
       wx.removeStorageSync(key);
       return null;
     }
-    
+
     return item.data;
   } catch (error) {
     console.error('获取存储数据失败:', error);
@@ -541,7 +541,7 @@ export function showConfirm(content, title = '提示') {
  */
 export function navigateTo(url, params = {}) {
   let fullUrl = url;
-  
+
   // 添加参数
   if (Object.keys(params).length > 0) {
     const queryString = Object.keys(params)
@@ -549,7 +549,7 @@ export function navigateTo(url, params = {}) {
       .join('&');
     fullUrl += (url.includes('?') ? '&' : '?') + queryString;
   }
-  
+
   wx.navigateTo({ url: fullUrl });
 }
 
@@ -560,7 +560,7 @@ export function navigateTo(url, params = {}) {
  */
 export function redirectTo(url, params = {}) {
   let fullUrl = url;
-  
+
   // 添加参数
   if (Object.keys(params).length > 0) {
     const queryString = Object.keys(params)
@@ -568,7 +568,7 @@ export function redirectTo(url, params = {}) {
       .join('&');
     fullUrl += (url.includes('?') ? '&' : '?') + queryString;
   }
-  
+
   wx.redirectTo({ url: fullUrl });
 }
 
@@ -601,16 +601,14 @@ export function getPageParams() {
 }
 
 // 导入格式化运行时间函数
-import { formatUptime } from './formatUptime.js';
+const { formatUptime } = require('./formatUptime.js');
 
-// 导出格式化运行时间函数
-export { formatUptime };
-
-// 导出所有工具函数
-export default {
+// 导出所有工具函数 - 使用CommonJS格式
+module.exports = {
   formatNumber,
   formatEnergyValue,
   formatPower,
+  parseDate,
   formatDate,
   formatRelativeTime,
   formatPercentage,

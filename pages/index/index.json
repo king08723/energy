@@ -1,4 +1,8 @@
 {
-  "usingComponents": {},
+  "usingComponents": {
+    "monitor-card": "../../components/monitor-card/index",
+    "overview-card": "../../components/overview-card/index",
+    "custom-footer": "../../components/footer/index"
+  },
   "navigationBarTitleText": "主页"
 }

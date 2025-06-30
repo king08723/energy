@@ -5,5 +5,7 @@
   "backgroundTextStyle": "light",
   "navigationBarBackgroundColor": "#1a2332",
   "navigationBarTextStyle": "white",
-  "usingComponents": {}
+  "usingComponents": {
+    "custom-footer": "../../components/footer/index"
+  }
 }

@@ -87,20 +87,5 @@
   font-weight: 500;
 }
 
-/* 响应式调整 */
-@media (max-width: 375px) {
-  .step-title {
-    font-size: 24rpx;
-  }
-  
-  .step-dot {
-    width: 50rpx;
-    height: 50rpx;
-  }
-  
-  .step-dot-inner {
-    width: 40rpx;
-    height: 40rpx;
-    font-size: 24rpx;
-  }
-}
+/* 响应式调整 - 使用rpx单位自适应，移除@media查询 */
+/* WeChat Mini Program组件不完全支持@media查询，使用rpx单位实现响应式 */

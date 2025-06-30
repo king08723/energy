@@ -1,0 +1,16 @@
+<!-- components/monitor-card/index.wxml -->
+<view class="data-card glass-card energy-card-{{type}}" bindtap="onTap">
+  <view class="data-icon {{type}}-icon">
+    <image src="{{icon}}" class="icon-svg" mode="aspectFit"></image>
+  </view>
+  <view class="data-info">
+    <text class="data-title">{{title}}</text>
+    <view class="data-value-container">
+      <text class="data-value">{{safeValue || value || '0'}}</text>
+      <text class="data-unit">{{unit}}</text>
+    </view>
+  </view>
+  <view class="data-trend {{safeTrend || trend || 'stable'}}">
+    <text class="trend-arrow">{{(safeTrend || trend || 'stable') === 'up' ? '↗' : (safeTrend || trend || 'stable') === 'down' ? '↘' : '→'}}</text>
+  </view>
+</view>

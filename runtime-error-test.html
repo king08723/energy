@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运行时错误修复验证测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(248, 250, 252, 0.8);
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 600;
+        }
+
+        .test-button.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .test-button.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .log-container {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .log-entry.error {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 3px solid #ef4444;
+        }
+
+        .log-entry.success {
+            background: rgba(16, 185, 129, 0.2);
+            border-left: 3px solid #10b981;
+        }
+
+        .log-entry.warning {
+            background: rgba(245, 158, 11, 0.2);
+            border-left: 3px solid #f59e0b;
+        }
+
+        .log-entry.info {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.pass {
+            background: #10b981;
+        }
+
+        .status-indicator.fail {
+            background: #ef4444;
+        }
+
+        .status-indicator.pending {
+            background: #f59e0b;
+        }
+
+        .test-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .test-result-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .test-result-card h4 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔧 运行时错误修复验证测试</h1>
+        <p>验证修复后的设备管理页面运行时错误和性能优化</p>
+
+        <!-- 错误修复测试 -->
+        <div class="test-section">
+            <h3>🚨 关键错误修复测试</h3>
+            <div>
+                <button class="test-button" onclick="testBuildDeviceUpdate()">测试 buildDeviceUpdate 错误修复</button>
+                <button class="test-button" onclick="testUpdateDeviceStatus()">测试 updateDeviceStatus 错误处理</button>
+                <button class="test-button" onclick="testRealTimeMessage()">测试实时消息处理</button>
+                <button class="test-button" onclick="testDataStructures()">测试数据结构初始化</button>
+            </div>
+        </div>
+
+        <!-- 边界条件测试 -->
+        <div class="test-section">
+            <h3>🎯 边界条件测试</h3>
+            <div>
+                <button class="test-button" onclick="testNullParameters()">测试空参数处理</button>
+                <button class="test-button" onclick="testUndefinedDevices()">测试未定义设备处理</button>
+                <button class="test-button" onclick="testInvalidData()">测试无效数据处理</button>
+                <button class="test-button danger" onclick="testErrorScenarios()">测试错误场景</button>
+            </div>
+        </div>
+
+        <!-- 性能回归测试 -->
+        <div class="test-section">
+            <h3>⚡ 性能回归测试</h3>
+            <div>
+                <button class="test-button success" onclick="testPerformanceRegression()">运行性能回归测试</button>
+                <button class="test-button" onclick="testMemoryLeaks()">测试内存泄漏修复</button>
+                <button class="test-button" onclick="testCacheEfficiency()">测试缓存效率</button>
+            </div>
+        </div>
+
+        <!-- 测试结果 -->
+        <div class="test-section">
+            <h3>📊 测试结果</h3>
+            <div class="test-results" id="testResults"></div>
+        </div>
+
+        <!-- 日志输出 -->
+        <div class="log-container" id="logContainer"></div>
+    </div>
+
+    <script>
+        // 模拟修复后的设备管理页面对象
+        const devicePage = {
+            data: {
+                debugMode: true,
+                allDevices: [],
+                filteredDevices: [],
+                devices: []
+            },
+
+            // 模拟初始化后的复杂对象
+            performanceMonitor: null,
+            activeTimers: null,
+            dataCache: null,
+
+            // 初始化性能监控（修复后的版本）
+            initPerformanceMonitor() {
+                this.performanceMonitor = {
+                    setDataCount: 0,
+                    searchOperations: 0,
+                    filterOperations: 0,
+                    realTimeUpdates: 0,
+                    memoryUsage: 0,
+                    lastCleanup: Date.now(),
+                    startTime: Date.now()
+                };
+
+                this.activeTimers = new Set();
+
+                this.dataCache = {
+                    lastFilterResult: null,
+                    lastFilterParams: null,
+                    deviceLookup: new Map()
+                };
+            },
+
+            // 修复后的 buildDeviceUpdate 函数
+            buildDeviceUpdate(currentDevice, statusData) {
+                const updates = {};
+
+                // 防御性编程：检查参数有效性
+                if (!currentDevice || typeof currentDevice !== 'object') {
+                    if (this.data.debugMode) {
+                        console.warn('buildDeviceUpdate: currentDevice is invalid', currentDevice);
+                    }
+                    return updates;
+                }
+
+                if (!statusData || typeof statusData !== 'object') {
+                    if (this.data.debugMode) {
+                        console.warn('buildDeviceUpdate: statusData is invalid', statusData);
+                    }
+                    return updates;
+                }
+
+                // 安全地比较和更新字段
+                try {
+                    if (statusData.status !== undefined && currentDevice.status !== statusData.status) {
+                        updates.status = statusData.status;
+                        updates.statusText = statusData.status === 'online' ? '在线' : '离线';
+                    }
+                    if (statusData.power !== undefined && currentDevice.power !== statusData.power) {
+                        updates.power = statusData.power;
+                    }
+                    if (statusData.energy !== undefined && currentDevice.energy !== statusData.energy) {
+                        updates.energy = statusData.energy;
+                    }
+                    if (statusData.timestamp !== undefined && currentDevice.lastUpdate !== statusData.timestamp) {
+                        updates.lastUpdate = statusData.timestamp;
+                    }
+                } catch (error) {
+                    console.error('buildDeviceUpdate: Error processing updates', error, {
+                        currentDevice,
+                        statusData
+                    });
+                }
+
+                return updates;
+            },
+
+            // 修复后的 updateDeviceStatus 函数（简化版）
+            updateDeviceStatus(deviceId, statusData) {
+                // 参数验证
+                if (!deviceId || !statusData) {
+                    if (this.data.debugMode) {
+                        console.warn('updateDeviceStatus: Invalid parameters', { deviceId, statusData });
+                    }
+                    return;
+                }
+
+                try {
+                    if (this.performanceMonitor) {
+                        this.performanceMonitor.realTimeUpdates++;
+                    }
+
+                    // 确保数据结构存在
+                    const { allDevices = [], filteredDevices = [], devices = [] } = this.data;
+
+                    // 模拟设备查找和更新
+                    const device = allDevices.find(d => d && d.id === deviceId);
+                    if (device) {
+                        const updates = this.buildDeviceUpdate(device, statusData);
+                        return updates;
+                    }
+
+                    return null;
+                } catch (error) {
+                    console.error('updateDeviceStatus: Critical error', error, {
+                        deviceId,
+                        statusData
+                    });
+                    return null;
+                }
+            },
+
+            // 修复后的 handleRealTimeMessage 函数
+            handleRealTimeMessage(message) {
+                // 参数验证
+                if (!message || typeof message !== 'object') {
+                    if (this.data.debugMode) {
+                        console.warn('handleRealTimeMessage: Invalid message', message);
+                    }
+                    return;
+                }
+
+                try {
+                    const { type, deviceId, data } = message;
+
+                    // 验证必要字段
+                    if (!type || !deviceId) {
+                        if (this.data.debugMode) {
+                            console.warn('handleRealTimeMessage: Missing required fields', { type, deviceId });
+                        }
+                        return;
+                    }
+
+                    switch (type) {
+                        case 'device_update':
+                            if (data && typeof data === 'object') {
+                                return this.updateDeviceStatus(deviceId, data);
+                            } else {
+                                if (this.data.debugMode) {
+                                    console.warn('handleRealTimeMessage: Invalid device_update data', { deviceId, data });
+                                }
+                            }
+                            break;
+                        default:
+                            if (this.data.debugMode) {
+                                console.warn('handleRealTimeMessage: Unknown message type', { type, deviceId });
+                            }
+                            break;
+                    }
+                } catch (error) {
+                    console.error('handleRealTimeMessage: Critical error', error, { message });
+                }
+            }
+        };
+
+        // 测试结果存储
+        const testResults = [];
+
+        // 日志函数
+        function logMessage(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 添加测试结果
+        function addTestResult(testName, passed, details = '') {
+            testResults.push({ testName, passed, details });
+            updateTestResults();
+        }
+
+        // 更新测试结果显示
+        function updateTestResults() {
+            const resultsContainer = document.getElementById('testResults');
+            resultsContainer.innerHTML = '';
+
+            testResults.forEach(result => {
+                const card = document.createElement('div');
+                card.className = 'test-result-card';
+                card.innerHTML = `
+                    <h4>
+                        <span class="status-indicator ${result.passed ? 'pass' : 'fail'}"></span>
+                        ${result.testName}
+                    </h4>
+                    <p>${result.details}</p>
+                `;
+                resultsContainer.appendChild(card);
+            });
+        }
+
+        // 测试函数
+        function testBuildDeviceUpdate() {
+            logMessage('开始测试 buildDeviceUpdate 错误修复...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                // 测试1: 正常情况
+                const device = { id: 'test1', status: 'offline', power: 100 };
+                const statusData = { status: 'online', power: 200 };
+                const result1 = devicePage.buildDeviceUpdate(device, statusData);
+
+                if (!result1 || typeof result1 !== 'object') {
+                    passed = false;
+                    details += '正常情况测试失败; ';
+                }
+
+                // 测试2: currentDevice 为 null
+                const result2 = devicePage.buildDeviceUpdate(null, statusData);
+                if (Object.keys(result2).length !== 0) {
+                    passed = false;
+                    details += 'null设备测试失败; ';
+                }
+
+                // 测试3: currentDevice 为 undefined
+                const result3 = devicePage.buildDeviceUpdate(undefined, statusData);
+                if (Object.keys(result3).length !== 0) {
+                    passed = false;
+                    details += 'undefined设备测试失败; ';
+                }
+
+                // 测试4: statusData 为 null
+                const result4 = devicePage.buildDeviceUpdate(device, null);
+                if (Object.keys(result4).length !== 0) {
+                    passed = false;
+                    details += 'null状态数据测试失败; ';
+                }
+
+                details = passed ? '所有测试通过' : details;
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`buildDeviceUpdate 测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('buildDeviceUpdate 错误修复', passed, details);
+            logMessage(`buildDeviceUpdate 测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testUpdateDeviceStatus() {
+            logMessage('开始测试 updateDeviceStatus 错误处理...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                // 设置测试数据
+                devicePage.data.allDevices = [
+                    { id: 'device1', status: 'offline', power: 100 },
+                    { id: 'device2', status: 'online', power: 200 }
+                ];
+
+                // 测试1: 正常更新
+                const result1 = devicePage.updateDeviceStatus('device1', { status: 'online' });
+                if (result1 === null) {
+                    passed = false;
+                    details += '正常更新测试失败; ';
+                }
+
+                // 测试2: 无效设备ID
+                const result2 = devicePage.updateDeviceStatus(null, { status: 'online' });
+                if (result2 !== undefined) {
+                    passed = false;
+                    details += '无效设备ID测试失败; ';
+                }
+
+                // 测试3: 无效状态数据
+                const result3 = devicePage.updateDeviceStatus('device1', null);
+                if (result3 !== undefined) {
+                    passed = false;
+                    details += '无效状态数据测试失败; ';
+                }
+
+                // 测试4: 不存在的设备
+                const result4 = devicePage.updateDeviceStatus('nonexistent', { status: 'online' });
+                if (result4 !== null) {
+                    passed = false;
+                    details += '不存在设备测试失败; ';
+                }
+
+                details = passed ? '所有测试通过' : details;
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`updateDeviceStatus 测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('updateDeviceStatus 错误处理', passed, details);
+            logMessage(`updateDeviceStatus 测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testRealTimeMessage() {
+            logMessage('开始测试实时消息处理...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                // 设置测试数据
+                devicePage.data.allDevices = [
+                    { id: 'device1', status: 'offline', power: 100 }
+                ];
+
+                // 测试1: 正常消息
+                devicePage.handleRealTimeMessage({
+                    type: 'device_update',
+                    deviceId: 'device1',
+                    data: { status: 'online' }
+                });
+
+                // 测试2: 无效消息
+                devicePage.handleRealTimeMessage(null);
+                devicePage.handleRealTimeMessage(undefined);
+                devicePage.handleRealTimeMessage('invalid');
+
+                // 测试3: 缺少字段
+                devicePage.handleRealTimeMessage({
+                    type: 'device_update'
+                    // 缺少 deviceId
+                });
+
+                // 测试4: 无效数据
+                devicePage.handleRealTimeMessage({
+                    type: 'device_update',
+                    deviceId: 'device1',
+                    data: null
+                });
+
+                // 测试5: 未知消息类型
+                devicePage.handleRealTimeMessage({
+                    type: 'unknown_type',
+                    deviceId: 'device1',
+                    data: { status: 'online' }
+                });
+
+                details = '所有边界条件测试通过';
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`实时消息处理测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('实时消息处理', passed, details);
+            logMessage(`实时消息处理测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testDataStructures() {
+            logMessage('开始测试数据结构初始化...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                // 重新初始化
+                devicePage.performanceMonitor = null;
+                devicePage.activeTimers = null;
+                devicePage.dataCache = null;
+
+                devicePage.initPerformanceMonitor();
+
+                // 验证初始化
+                if (!devicePage.performanceMonitor || typeof devicePage.performanceMonitor !== 'object') {
+                    passed = false;
+                    details += 'performanceMonitor初始化失败; ';
+                }
+
+                if (!devicePage.activeTimers || typeof devicePage.activeTimers.add !== 'function') {
+                    passed = false;
+                    details += 'activeTimers初始化失败; ';
+                }
+
+                if (!devicePage.dataCache || typeof devicePage.dataCache !== 'object') {
+                    passed = false;
+                    details += 'dataCache初始化失败; ';
+                }
+
+                if (!devicePage.dataCache.deviceLookup || typeof devicePage.dataCache.deviceLookup.set !== 'function') {
+                    passed = false;
+                    details += 'deviceLookup初始化失败; ';
+                }
+
+                details = passed ? '所有数据结构正确初始化' : details;
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`数据结构初始化测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('数据结构初始化', passed, details);
+            logMessage(`数据结构初始化测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testNullParameters() {
+            logMessage('开始测试空参数处理...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                // 测试各种null/undefined参数组合
+                const testCases = [
+                    [null, null],
+                    [undefined, undefined],
+                    ['', null],
+                    [null, {}],
+                    ['device1', null],
+                    [null, { status: 'online' }]
+                ];
+
+                testCases.forEach((testCase, index) => {
+                    try {
+                        devicePage.updateDeviceStatus(testCase[0], testCase[1]);
+                        devicePage.buildDeviceUpdate(testCase[0], testCase[1]);
+                    } catch (error) {
+                        passed = false;
+                        details += `测试用例${index + 1}失败: ${error.message}; `;
+                    }
+                });
+
+                details = passed ? '所有空参数测试通过' : details;
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`空参数处理测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('空参数处理', passed, details);
+            logMessage(`空参数处理测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testUndefinedDevices() {
+            logMessage('开始测试未定义设备处理...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                // 清空设备数据
+                devicePage.data.allDevices = [];
+                devicePage.data.filteredDevices = [];
+                devicePage.data.devices = [];
+
+                // 测试在空设备列表中更新设备
+                devicePage.updateDeviceStatus('nonexistent', { status: 'online' });
+
+                // 测试在包含null元素的设备列表中更新
+                devicePage.data.allDevices = [null, undefined, { id: 'device1' }];
+                devicePage.updateDeviceStatus('device1', { status: 'online' });
+
+                details = '未定义设备处理测试通过';
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`未定义设备处理测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('未定义设备处理', passed, details);
+            logMessage(`未定义设备处理测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testInvalidData() {
+            logMessage('开始测试无效数据处理...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                // 测试各种无效数据类型
+                const invalidData = [
+                    'string',
+                    123,
+                    [],
+                    true,
+                    false,
+                    function () { },
+                    Symbol('test')
+                ];
+
+                invalidData.forEach((data, index) => {
+                    try {
+                        devicePage.buildDeviceUpdate(data, { status: 'online' });
+                        devicePage.buildDeviceUpdate({ id: 'test' }, data);
+                        devicePage.handleRealTimeMessage(data);
+                    } catch (error) {
+                        passed = false;
+                        details += `无效数据类型${index + 1}测试失败: ${error.message}; `;
+                    }
+                });
+
+                details = passed ? '所有无效数据测试通过' : details;
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`无效数据处理测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('无效数据处理', passed, details);
+            logMessage(`无效数据处理测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testErrorScenarios() {
+            logMessage('开始测试错误场景...', 'warning');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                // 模拟各种错误场景
+
+                // 1. 数据结构未初始化
+                const originalPerformanceMonitor = devicePage.performanceMonitor;
+                const originalDataCache = devicePage.dataCache;
+
+                devicePage.performanceMonitor = null;
+                devicePage.dataCache = null;
+
+                devicePage.updateDeviceStatus('device1', { status: 'online' });
+
+                // 恢复数据结构
+                devicePage.performanceMonitor = originalPerformanceMonitor;
+                devicePage.dataCache = originalDataCache;
+
+                // 2. 循环引用对象
+                const circularObj = { status: 'online' };
+                circularObj.self = circularObj;
+
+                devicePage.buildDeviceUpdate({ id: 'test' }, circularObj);
+
+                details = '所有错误场景测试通过';
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`错误场景测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('错误场景处理', passed, details);
+            logMessage(`错误场景测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testPerformanceRegression() {
+            logMessage('开始性能回归测试...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                const startTime = Date.now();
+
+                // 执行大量操作
+                for (let i = 0; i < 1000; i++) {
+                    devicePage.buildDeviceUpdate(
+                        { id: `device${i}`, status: 'offline' },
+                        { status: 'online', power: Math.random() * 1000 }
+                    );
+                }
+
+                const duration = Date.now() - startTime;
+
+                if (duration > 1000) { // 如果超过1秒认为性能有问题
+                    passed = false;
+                    details = `性能测试耗时过长: ${duration}ms`;
+                } else {
+                    details = `性能测试通过，耗时: ${duration}ms`;
+                }
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`性能回归测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('性能回归测试', passed, details);
+            logMessage(`性能回归测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testMemoryLeaks() {
+            logMessage('开始内存泄漏测试...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                const initialMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+
+                // 执行大量操作模拟内存使用
+                for (let i = 0; i < 10000; i++) {
+                    const device = { id: `device${i}`, status: 'offline', data: new Array(100).fill(i) };
+                    const statusData = { status: 'online', power: Math.random() * 1000 };
+                    devicePage.buildDeviceUpdate(device, statusData);
+                }
+
+                // 强制垃圾回收（如果支持）
+                if (window.gc) {
+                    window.gc();
+                }
+
+                const finalMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+                const memoryIncrease = finalMemory - initialMemory;
+
+                if (memoryIncrease > 50 * 1024 * 1024) { // 如果内存增长超过50MB
+                    passed = false;
+                    details = `可能存在内存泄漏，内存增长: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`;
+                } else {
+                    details = `内存使用正常，增长: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`;
+                }
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`内存泄漏测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('内存泄漏测试', passed, details);
+            logMessage(`内存泄漏测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        function testCacheEfficiency() {
+            logMessage('开始缓存效率测试...', 'info');
+
+            let passed = true;
+            let details = '';
+
+            try {
+                // 测试缓存功能
+                const cache = devicePage.dataCache.deviceLookup;
+
+                // 添加缓存项
+                cache.set('device1', { all: 0, filtered: 0, display: 0 });
+                cache.set('device2', { all: 1, filtered: 1, display: 1 });
+
+                // 验证缓存
+                if (!cache.has('device1') || !cache.has('device2')) {
+                    passed = false;
+                    details += '缓存存储失败; ';
+                }
+
+                // 验证缓存检索
+                const cached1 = cache.get('device1');
+                if (!cached1 || cached1.all !== 0) {
+                    passed = false;
+                    details += '缓存检索失败; ';
+                }
+
+                // 测试缓存清理
+                cache.clear();
+                if (cache.size !== 0) {
+                    passed = false;
+                    details += '缓存清理失败; ';
+                }
+
+                details = passed ? '缓存功能正常' : details;
+
+            } catch (error) {
+                passed = false;
+                details = `测试过程中发生错误: ${error.message}`;
+                logMessage(`缓存效率测试错误: ${error.message}`, 'error');
+            }
+
+            addTestResult('缓存效率测试', passed, details);
+            logMessage(`缓存效率测试完成: ${passed ? '通过' : '失败'}`, passed ? 'success' : 'error');
+        }
+
+        // 初始化
+        window.onload = function () {
+            devicePage.initPerformanceMonitor();
+            logMessage('运行时错误修复验证测试已初始化', 'info');
+        };
+    </script>
+</body>
+
+</html>

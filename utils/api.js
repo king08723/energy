@@ -7,7 +7,7 @@
 
 // 引入配置和工具
 const { API_CONFIG } = require('./config.js');
-const { showToast, getStorage, setStorage } = require('./utils.js');
+const { showToast, getStorage, setStorage } = require('./utils-commonjs.js');
 
 // 引入模拟数据工具
 const EnergyMockAPI = require('./api-mock.js');
@@ -65,7 +65,7 @@ const requestInterceptors = {
     }
     return config;
   },
-  
+
   // 添加设备信息
   addDeviceInfo: (config) => {
     config.header = config.header || {};
@@ -73,7 +73,7 @@ const requestInterceptors = {
     config.header['X-App-Version'] = API_CONFIG.version || '1.0.0';
     return config;
   },
-  
+
   // 添加时间戳
   addTimestamp: (config) => {
     config.data = config.data || {};
@@ -92,10 +92,10 @@ const responseInterceptors = {
       // 清除本地token
       wx.removeStorageSync('access_token');
       wx.removeStorageSync('user_info');
-      
+
       // 跳转到登录页
       wx.redirectTo({ url: '/pages/login/login' });
-      
+
       return Promise.reject({
         success: false,
         message: '登录已过期，请重新登录',
@@ -104,12 +104,12 @@ const responseInterceptors = {
     }
     return response;
   },
-  
+
   // 统一数据格式
   normalizeData: (response) => {
     if (response.statusCode === 200) {
       const data = response.data;
-      
+
       // 统一返回格式
       if (data && typeof data === 'object') {
         return {
@@ -120,7 +120,7 @@ const responseInterceptors = {
         };
       }
     }
-    
+
     return {
       success: false,
       data: null,
@@ -150,7 +150,7 @@ function realApiRequest(config) {
     Object.values(requestInterceptors).forEach(interceptor => {
       requestConfig = interceptor(requestConfig);
     });
-    
+
     // 设置默认配置
     const finalConfig = {
       url: currentConfig.baseUrl + config.url,
@@ -167,18 +167,18 @@ function realApiRequest(config) {
         Object.values(responseInterceptors).forEach(interceptor => {
           processedResponse = interceptor(processedResponse);
         });
-        
+
         if (currentConfig.enableLog) {
           console.log('API Response:', processedResponse);
         }
-        
+
         resolve(processedResponse);
       },
       fail: (error) => {
         if (currentConfig.enableLog) {
           console.error('API Error:', error);
         }
-        
+
         reject({
           success: false,
           message: error.errMsg || '网络请求失败',
@@ -186,11 +186,11 @@ function realApiRequest(config) {
         });
       }
     };
-    
+
     if (currentConfig.enableLog) {
       console.log('API Request:', finalConfig);
     }
-    
+
     // 发起请求
     wx.request(finalConfig);
   });
@@ -206,21 +206,21 @@ async function mockApiRequest(apiFunction, ...args) {
   try {
     // 模拟网络延时
     await simulateDelay();
-    
+
     // 调用API函数
     const result = apiFunction.apply(mockAPI, args);
-    
+
     if (currentConfig.enableLog) {
       console.log('Mock API Response:', result);
     }
-    
+
     // 返回结果
     return Promise.resolve(result);
   } catch (error) {
     if (currentConfig.enableLog) {
       console.error('Mock API Error:', error);
     }
-    
+
     return Promise.reject({
       success: false,
       message: error.message || '请求失败',
@@ -240,11 +240,11 @@ async function mockApiRequest(apiFunction, ...args) {
 async function apiRequest(url, options = {}, mockFunction = null, ...mockArgs) {
   // 检查是否使用模拟数据
   const useMock = currentConfig.enableMock || API_CONFIG.mockMode;
-  
+
   if (useMock && mockFunction) {
     return mockApiRequest(mockFunction, ...mockArgs);
   }
-  
+
   // 使用真实API
   const config = {
     url,
@@ -252,23 +252,23 @@ async function apiRequest(url, options = {}, mockFunction = null, ...mockArgs) {
     data: options.data || {},
     header: options.header || {}
   };
-  
+
   // 添加重试机制
   let retryCount = 0;
   const maxRetries = API_CONFIG.retryTimes || 3;
-  
+
   while (retryCount <= maxRetries) {
     try {
       const result = await realApiRequest(config);
       return result;
     } catch (error) {
       retryCount++;
-      
+
       if (retryCount > maxRetries) {
         // 最后一次重试失败，返回错误
         throw error;
       }
-      
+
       // 等待后重试
       await simulateDelay(1000 * retryCount);
     }
@@ -279,9 +279,9 @@ async function apiRequest(url, options = {}, mockFunction = null, ...mockArgs) {
  * 智慧能源管理API
  */
 const API = {
-  
+
   // ==================== 用户相关 ====================
-  
+
   /**
    * 用户登录
    * @param {string} phone 手机号
@@ -293,7 +293,7 @@ const API = {
       data: { phone, code }
     }, mockAPI.login, phone, code);
   },
-  
+
   /**
    * 获取用户信息
    * @param {string} userId 用户ID
@@ -303,7 +303,7 @@ const API = {
       method: 'GET'
     }, mockAPI.getUserInfo, userId);
   },
-  
+
   /**
    * 获取用户列表
    */
@@ -323,9 +323,9 @@ const API = {
       data: userId ? { userId } : {}
     }, mockAPI.getUserStatistics, userId);
   },
-  
+
   // ==================== 首页相关 ====================
-  
+
   /**
    * 获取首页概览数据
    */
@@ -334,7 +334,7 @@ const API = {
       method: 'GET'
     }, mockAPI.getHomeOverview);
   },
-  
+
   /**
    * 获取实时监控详情
    * @param {string} deviceId 设备ID
@@ -346,9 +346,9 @@ const API = {
       data: { timeRange }
     }, mockAPI.getMonitorDetail, deviceId, timeRange);
   },
-  
+
   // ==================== 设备相关 ====================
-  
+
   /**
    * 获取设备列表
    * @param {Object} params 查询参数
@@ -359,7 +359,7 @@ const API = {
       data: params
     }, mockAPI.getDeviceList, params);
   },
-  
+
   /**
    * 获取设备详情
    * @param {string} deviceId 设备ID
@@ -369,7 +369,7 @@ const API = {
       method: 'GET'
     }, mockAPI.getDeviceDetail, deviceId);
   },
-  
+
   /**
    * 控制设备
    * @param {string} deviceId 设备ID
@@ -381,7 +381,7 @@ const API = {
       data: command
     }, mockAPI.controlDevice, deviceId, command);
   },
-  
+
   /**
    * 添加设备
    * @param {Object} deviceInfo 设备信息
@@ -495,9 +495,9 @@ const API = {
       method: 'GET'
     }, mockAPI.getDeviceIntelligentAnalysis, deviceId);
   },
-  
+
   // ==================== 数据分析相关 ====================
-  
+
   /**
    * 获取历史能耗数据
    * @param {Object} params 查询参数
@@ -508,7 +508,7 @@ const API = {
       data: params
     }, mockAPI.getHistoryEnergyData, params);
   },
-  
+
   /**
    * 生成能耗报告
    * @param {Object} params 报告参数
@@ -519,7 +519,7 @@ const API = {
       data: params
     }, mockAPI.generateEnergyReport, params);
   },
-  
+
   /**
    * 获取节能方案
    */
@@ -528,9 +528,9 @@ const API = {
       method: 'GET'
     }, mockAPI.getSavingPlans);
   },
-  
+
   // ==================== 告警相关 ====================
-  
+
   /**
    * 获取告警列表
    * @param {Object} params 查询参数
@@ -541,7 +541,7 @@ const API = {
       data: params
     }, mockAPI.getAlertList, params);
   },
-  
+
   /**
    * 获取告警详情
    * @param {string} alertId 告警ID
@@ -563,9 +563,9 @@ const API = {
       data: { action }
     }, mockAPI.handleAlert, alertId, action);
   },
-  
+
   // ==================== 自动化相关 ====================
-  
+
   /**
    * 获取自动化规则列表
    */
@@ -574,7 +574,7 @@ const API = {
       method: 'GET'
     }, mockAPI.getAutomationRules);
   },
-  
+
   /**
    * 创建自动化规则
    * @param {Object} ruleData 规则数据
@@ -585,7 +585,7 @@ const API = {
       data: ruleData
     }, mockAPI.createAutomationRule, ruleData);
   },
-  
+
   /**
    * 更新自动化规则
    * @param {string} ruleId 规则ID
@@ -597,7 +597,7 @@ const API = {
       data: updateData
     }, mockAPI.updateAutomationRule, ruleId, updateData);
   },
-  
+
   /**
    * 执行自动化规则
    * @param {string} ruleId 规则ID
@@ -607,7 +607,7 @@ const API = {
       method: 'POST'
     }, mockAPI.executeAutomationRule, ruleId);
   },
-  
+
   /**
    * 获取规则执行历史
    * @param {string} ruleId 规则ID
@@ -619,7 +619,7 @@ const API = {
       data: { timeRange }
     }, mockAPI.getRuleExecutionHistory, ruleId, timeRange);
   },
-  
+
   /**
    * 测试规则执行
    * @param {string} ruleId 规则ID
@@ -629,7 +629,7 @@ const API = {
       method: 'POST'
     }, mockAPI.testAutomationRule, ruleId);
   },
-  
+
   /**
    * 获取规则性能统计
    * @param {string} ruleId 规则ID
@@ -639,7 +639,7 @@ const API = {
       method: 'GET'
     }, mockAPI.getRulePerformanceStats, ruleId);
   },
-  
+
   /**
    * 批量启用/禁用规则
    * @param {Array} ruleIds 规则ID列表
@@ -651,7 +651,7 @@ const API = {
       data: { ruleIds, enabled }
     }, mockAPI.batchUpdateRuleStatus, ruleIds, enabled);
   },
-  
+
   /**
    * 获取规则冲突检测
    * @param {string} ruleId 规则ID
@@ -661,9 +661,9 @@ const API = {
       method: 'GET'
     }, mockAPI.detectRuleConflicts, ruleId);
   },
-  
+
   // ==================== 场景模式相关 ====================
-  
+
   /**
    * 获取场景模式列表
    */
@@ -672,7 +672,7 @@ const API = {
       method: 'GET'
     }, mockAPI.getSceneModes);
   },
-  
+
   /**
    * 切换场景模式
    * @param {string} sceneId 场景ID
@@ -682,7 +682,7 @@ const API = {
       method: 'POST'
     }, mockAPI.switchSceneMode, sceneId);
   },
-  
+
   /**
    * 获取场景执行历史
    * @param {string} sceneId 场景ID
@@ -694,7 +694,7 @@ const API = {
       data: { timeRange }
     }, mockAPI.getSceneExecutionHistory, sceneId, timeRange);
   },
-  
+
   /**
    * 创建自定义场景
    * @param {Object} sceneData 场景数据
@@ -705,7 +705,7 @@ const API = {
       data: sceneData
     }, mockAPI.createSceneMode, sceneData);
   },
-  
+
   /**
    * 更新场景配置
    * @param {string} sceneId 场景ID
@@ -717,7 +717,7 @@ const API = {
       data: updateData
     }, mockAPI.updateSceneMode, sceneId, updateData);
   },
-  
+
   /**
    * 获取场景对能耗的影响分析
    * @param {string} sceneId 场景ID
@@ -727,7 +727,7 @@ const API = {
       method: 'GET'
     }, mockAPI.getSceneEnergyImpact, sceneId);
   },
-  
+
   /**
    * 批量获取设备状态（用于场景切换时同步更新）
    * @param {Array} deviceIds 设备ID列表
@@ -738,9 +738,9 @@ const API = {
       data: { deviceIds }
     }, mockAPI.getDevicesByIds, deviceIds);
   },
-  
+
   // ==================== 实时数据相关 ====================
-  
+
   /**
    * 获取实时能耗数据
    * @param {Array} deviceIds 设备ID列表
@@ -751,7 +751,7 @@ const API = {
       data: { deviceIds }
     });
   },
-  
+
   /**
    * 获取设备能耗数据
    * @param {string} deviceId 设备ID
@@ -767,9 +767,9 @@ const API = {
       const data = [];
       const now = new Date();
       let interval, count, format;
-      
+
       // 根据时间范围设置不同的数据点数量和时间间隔
-      switch(timeRange) {
+      switch (timeRange) {
         case '1h':
           // 1小时内，每5分钟一个数据点
           interval = 5 * 60 * 1000; // 5分钟
@@ -794,18 +794,18 @@ const API = {
           count = 12; // 24小时内12个数据点
           format = 'HH:mm';
       }
-      
+
       // 生成数据点
       for (let i = count - 1; i >= 0; i--) {
         const time = new Date(now.getTime() - i * interval);
         // 格式化时间
-        const formattedTime = function(date, format) {
+        const formattedTime = function (date, format) {
           const year = date.getFullYear();
           const month = (date.getMonth() + 1).toString().padStart(2, '0');
           const day = date.getDate().toString().padStart(2, '0');
           const hours = date.getHours().toString().padStart(2, '0');
           const minutes = date.getMinutes().toString().padStart(2, '0');
-          
+
           if (format === 'MM-DD') {
             return `${month}-${day}`;
           } else if (format === 'HH:mm') {
@@ -814,52 +814,52 @@ const API = {
             return `${year}-${month}-${day} ${hours}:${minutes}`;
           }
         }(time, format);
-        
+
         // 生成能耗数据，根据设备ID和时间生成确定性数据
         // 使用设备ID的最后一位数字作为基础值
         const baseValue = parseInt(deviceId.slice(-1), 10) * 10 || 50;
-        
+
         // 根据时间范围调整数据波动范围
         let value;
-        
+
         if (timeRange === '7d') {
           // 周末和工作日的能耗模式不同
           const dayOfWeek = time.getDay(); // 0是周日，6是周六
           const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-          
+
           value = isWeekend ? baseValue * 0.7 : baseValue * 1.2;
         } else {
           // 工作时间和非工作时间的能耗模式不同
           const hour = time.getHours();
           const isWorkHour = hour >= 8 && hour <= 18;
-          
+
           value = isWorkHour ? baseValue * 1.3 : baseValue * 0.8;
         }
-        
+
         // 使用确定性函数生成数据，减少随机性
         const hourFactor = time.getHours() % 12 / 12; // 0-1之间的小数，表示一天中的时间周期
         const dayFactor = time.getDay() / 7; // 0-1之间的小数，表示一周中的时间周期
-        
+
         // 添加一些波动
         value += Math.sin(hourFactor * Math.PI * 2) * 10 + Math.sin(dayFactor * Math.PI * 2) * 5;
-        
+
         data.push({
           time: formattedTime,
           value: parseFloat(value.toFixed(1)),
           unit: 'kWh'
         });
       }
-      
+
       // 计算总能耗和碳排放
       const totalEnergy = data.reduce((sum, item) => sum + item.value, 0);
       const carbonEmission = totalEnergy * 0.785; // 假设每kWh电力产生0.785kg碳排放
-      
+
       // 计算能效等级 (A-E)
       const efficiencyGrades = ['A+', 'A', 'B', 'C', 'D', 'E'];
       const deviceIdSum = deviceId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
       const efficiencyIndex = deviceIdSum % efficiencyGrades.length;
       const energyEfficiency = efficiencyGrades[efficiencyIndex];
-      
+
       return {
         success: true,
         data: {
@@ -876,7 +876,7 @@ const API = {
       };
     }, deviceId, timeRange);
   },
-  
+
   /**
    * 获取设备实时数据（普通API请求替代WebSocket）
    * @param {string|Array} deviceIds 设备ID或设备ID数组
@@ -890,7 +890,7 @@ const API = {
       data: { deviceIds: ids, energyType: energyType, timeRange: timeRange }
     }, mockAPI.getDeviceRealTimeData, ids, energyType, timeRange);
   },
-  
+
   /**
    * 创建模拟WebSocket连接（避免域名限制问题）
    * @param {Array} deviceIds 设备ID列表
@@ -906,7 +906,7 @@ const API = {
       // 模拟定时器ID
       intervalId: null,
       // 模拟关闭方法
-      close: function() {
+      close: function () {
         if (this.intervalId) {
           clearInterval(this.intervalId);
           this.intervalId = null;
@@ -915,21 +915,21 @@ const API = {
         }
       },
       // 模拟发送方法（仅记录日志）
-      send: function(data) {
+      send: function (data) {
         console.log('模拟WebSocket发送数据:', data);
       }
     };
-    
+
     // 模拟连接打开事件
     setTimeout(() => {
       mockSocketTask.isOpen = true;
       console.log('模拟WebSocket连接已打开');
-      
+
       // 模拟定期发送数据
       mockSocketTask.intervalId = setInterval(() => {
         // 判断是否为分类汇总模式（deviceIds为空数组且长度为0）
         const isCategoryMode = Array.isArray(deviceIds) && deviceIds.length === 0;
-        
+
         // 使用模拟API获取实时数据
         let mockData;
         if (isCategoryMode) {
@@ -953,64 +953,12 @@ const API = {
         }
       }, 5000); // 每5秒发送一次数据
     }, 500); // 模拟连接延迟
-    
+
     return mockSocketTask;
   },
-  
-  /**
-   * 订阅实时数据推送
-   * @param {Array} deviceIds 设备ID列表
-   * @param {Function} callback 数据回调函数
-   * @param {string} energyType 能源类型：power(电)、water(水)、gas(气)、carbon(碳)
-   */
-  subscribeRealTimeData(deviceIds, callback, energyType) {
-    // 使用本地模拟WebSocket，避免域名限制问题
-    return this.createLocalWebSocketMock(deviceIds, callback, energyType);
-    
-    /* 原始WebSocket实现（暂时禁用）
-    const wsUrl = currentConfig.baseUrl.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws/realtime';
-    
-    const socketTask = wx.connectSocket({
-      url: wsUrl,
-      header: {
-        'Authorization': `Bearer ${getStorage('access_token')}`
-      }
-    });
-    
-    socketTask.onOpen(() => {
-      console.log('WebSocket连接已打开');
-      // 发送订阅消息
-      socketTask.send({
-        data: JSON.stringify({
-          type: 'subscribe',
-          deviceIds
-        })
-      });
-    });
-    
-    socketTask.onMessage((res) => {
-      try {
-        const data = JSON.parse(res.data);
-        if (callback && typeof callback === 'function') {
-          callback(data);
-        }
-      } catch (error) {
-        console.error('解析WebSocket消息失败:', error);
-      }
-    });
-    
-    socketTask.onError((error) => {
-      console.error('WebSocket连接错误:', error);
-    });
-    
-    socketTask.onClose(() => {
-      console.log('WebSocket连接已关闭');
-    });
-    
-    return socketTask;
-    */
-  },
-  
+
+
+
   /**
    * 取消订阅实时数据
    * @param {Object} socketTask WebSocket任务对象或模拟WebSocket对象
@@ -1027,9 +975,9 @@ const API = {
       }
     }
   },
-  
+
   // ==================== 系统配置相关 ====================
-  
+
   /**
    * 获取系统配置
    */
@@ -1038,7 +986,7 @@ const API = {
       method: 'GET'
     });
   },
-  
+
   /**
    * 更新系统配置
    * @param {Object} config 配置数据
@@ -1049,7 +997,7 @@ const API = {
       data: config
     });
   },
-  
+
   /**
    * 获取API版本信息
    */
@@ -1058,7 +1006,7 @@ const API = {
       method: 'GET'
     });
   },
-  
+
   /**
    * 健康检查
    */
@@ -1069,109 +1017,8 @@ const API = {
   }
 };
 
-// 导出API和配置
-module.exports = {
-  ...API,
-  
-  // 配置管理
-  config: {
-    /**
-     * 设置环境
-     * @param {string} env 环境名称 development|testing|production
-     */
-    setEnvironment(env) {
-      if (ENV_CONFIG[env]) {
-        Object.assign(currentConfig, ENV_CONFIG[env]);
-        console.log(`API环境已切换到: ${env}`);
-      }
-    },
-    
-    /**
-     * 获取当前配置
-     */
-    getCurrentConfig() {
-      return { ...currentConfig };
-    },
-    
-    /**
-     * 设置自定义配置
-     * @param {Object} config 配置对象
-     */
-    setCustomConfig(config) {
-      Object.assign(currentConfig, config);
-    },
-    
-    /**
-     * 启用/禁用模拟模式
-     * @param {boolean} enable 是否启用
-     */
-    setMockMode(enable) {
-      currentConfig.enableMock = enable;
-      console.log(`模拟模式已${enable ? '启用' : '禁用'}`);
-    },
-    
-    /**
-     * 启用/禁用日志
-     * @param {boolean} enable 是否启用
-     */
-    setLogMode(enable) {
-      currentConfig.enableLog = enable;
-    }
-  },
-  
-  // 工具方法
-  utils: {
-    /**
-     * 检查网络连接
-     */
-    checkNetworkStatus() {
-      return new Promise((resolve) => {
-        wx.getNetworkType({
-          success: (res) => {
-            resolve({
-              isConnected: res.networkType !== 'none',
-              networkType: res.networkType
-            });
-          },
-          fail: () => {
-            resolve({
-              isConnected: false,
-              networkType: 'unknown'
-            });
-          }
-        });
-      });
-    },
-    
-    /**
-     * 批量请求
-     * @param {Array} requests 请求数组
-     * @returns {Promise} Promise对象
-     */
-    async batchRequest(requests) {
-      try {
-        const results = await Promise.allSettled(requests);
-        return results.map((result, index) => ({
-          index,
-          success: result.status === 'fulfilled',
-          data: result.status === 'fulfilled' ? result.value : null,
-          error: result.status === 'rejected' ? result.reason : null
-        }));
-      } catch (error) {
-        throw error;
-      }
-    },
-    
-    /**
-     * 清除所有缓存
-     */
-    clearCache() {
-      wx.removeStorageSync('access_token');
-      wx.removeStorageSync('user_info');
-      console.log('API缓存已清除');
-    }
-  }
-};
+// Note: API method implementations are defined later in the file
+// Module exports moved to the end of the file after all methods are defined
 
 /**
  * 使用示例：
@@ -1296,149 +1143,9 @@ module.exports = {
 
 // ==================== API优化扩展 ====================
 
-/**
- * 统一数据获取接口 - 支持多种数据类型
- * @param {string} dataType - 数据类型
- * @param {Object} params - 查询参数
- * @returns {Promise} 数据结果
- */
-API.getData = (dataType, params = {}) => {
-  switch (dataType) {
-    case 'device':
-      return API.getDeviceList(params);
-    case 'energy':
-      return API.getEnergyData(params);
-    case 'alert':
-      return API.getAlertList(params);
-    case 'report':
-      return API.getReportList(params);
-    case 'user':
-      return API.getUserList(params);
-    default:
-      return Promise.reject(new Error('未知的数据类型'));
-  }
-};
 
-/**
- * 实时数据更新机制 - WebSocket订阅
- * @param {Object} options - 订阅选项
- * @returns {Object} WebSocket任务对象
- */
-API.subscribeRealTimeData = (options) => {
-  const { deviceIds, onMessage, onConnect, onDisconnect } = options;
-  
-  // 在模拟环境下，使用定时器模拟WebSocket
-  if (currentConfig.enableMock) {
-    const mockSocketTask = {
-      id: 'mock_socket_' + Date.now(),
-      isConnected: false,
-      timer: null,
-      
-      // 模拟连接
-      connect() {
-        setTimeout(() => {
-          this.isConnected = true;
-          if (onConnect) onConnect();
-          
-          // 开始定时发送模拟数据
-          this.timer = setInterval(() => {
-            if (this.isConnected && onMessage) {
-              const mockData = {
-                type: 'realtime_data',
-                deviceId: deviceIds[0] || 'device_001',
-                timestamp: Date.now(),
-                data: {
-                  power: (Math.random() * 50 + 50).toFixed(1),
-                  voltage: (Math.random() * 20 + 220).toFixed(1),
-                  current: (Math.random() * 5 + 10).toFixed(2),
-                  temperature: (Math.random() * 10 + 25).toFixed(1)
-                }
-              };
-              onMessage(mockData);
-            }
-          }, 3000); // 每3秒发送一次数据
-        }, 1000);
-      },
-      
-      // 模拟发送消息
-      send(data) {
-        if (currentConfig.enableLog) {
-          console.log('Mock WebSocket send:', data);
-        }
-      },
-      
-      // 模拟关闭连接
-      close() {
-        this.isConnected = false;
-        if (this.timer) {
-          clearInterval(this.timer);
-          this.timer = null;
-        }
-        if (onDisconnect) onDisconnect();
-      }
-    };
-    
-    // 开始连接
-    mockSocketTask.connect();
-    return mockSocketTask;
-  }
-  
-  // 真实WebSocket连接
-  const socketTask = wx.connectSocket({
-    url: `${currentConfig.baseUrl.replace('http', 'ws')}/ws?token=${getStorage('access_token')}`,
-    success: () => {
-      if (currentConfig.enableLog) {
-        console.log('WebSocket连接成功');
-      }
-    },
-    fail: (error) => {
-      console.error('WebSocket连接失败:', error);
-    }
-  });
-  
-  // 监听连接打开
-  socketTask.onOpen(() => {
-    if (currentConfig.enableLog) {
-      console.log('WebSocket连接已打开');
-    }
-    
-    // 发送订阅消息
-    socketTask.send({
-      data: JSON.stringify({
-        type: 'subscribe',
-        deviceIds: deviceIds
-      })
-    });
-    
-    if (onConnect) onConnect();
-  });
-  
-  // 监听消息
-  socketTask.onMessage((message) => {
-    try {
-      const data = JSON.parse(message.data);
-      if (onMessage) onMessage(data);
-    } catch (error) {
-      console.error('WebSocket消息解析失败:', error);
-    }
-  });
-  
-  // 监听关闭
-  socketTask.onClose(() => {
-    if (currentConfig.enableLog) {
-      console.log('WebSocket连接已关闭');
-    }
-    if (onDisconnect) onDisconnect();
-  });
-  
-  // 监听错误
-  socketTask.onError((error) => {
-    console.error('WebSocket错误:', error);
-    if (onDisconnect) onDisconnect(error);
-  });
-  
-  return socketTask;
-};
+
+// First implementation removed - using the more complete implementation below
 
 /**
  * 取消实时数据订阅
@@ -1454,7 +1161,7 @@ API.unsubscribeRealTimeData = (socketTask) => {
         })
       });
     }
-    
+
     // 关闭连接
     if (socketTask.close && typeof socketTask.close === 'function') {
       socketTask.close();
@@ -1462,53 +1169,7 @@ API.unsubscribeRealTimeData = (socketTask) => {
   }
 };
 
-/**
- * 数据缓存管理
- */
-API.cache = {
-  // 清除所有缓存
-  clearAll() {
-    if (mockAPI && mockAPI.cache) {
-      Object.keys(mockAPI.cache).forEach(key => {
-        if (key.endsWith('Timestamp')) {
-          mockAPI.cache[key] = 0;
-        } else {
-          mockAPI.cache[key] = null;
-        }
-      });
-    }
-  },
-  
-  // 清除特定类型的缓存
-  clear(type) {
-    if (mockAPI && mockAPI.cache) {
-      mockAPI.cache[type] = null;
-      mockAPI.cache[type + 'Timestamp'] = 0;
-    }
-  },
-  
-  // 获取缓存状态
-  getStatus() {
-    if (mockAPI && mockAPI.cache) {
-      const status = {};
-      Object.keys(mockAPI.cache).forEach(key => {
-        if (key.endsWith('Timestamp')) {
-          const dataKey = key.replace('Timestamp', '');
-          const timestamp = mockAPI.cache[key];
-          const isValid = timestamp > 0 && (Date.now() - timestamp) < mockAPI.cacheExpiration;
-          status[dataKey] = {
-            cached: mockAPI.cache[dataKey] !== null,
-            timestamp: timestamp,
-            valid: isValid,
-            age: timestamp > 0 ? Date.now() - timestamp : 0
-          };
-        }
-      });
-      return status;
-    }
-    return {};
-  }
-};
+
 
 // ==================== API接口优化 ====================
 
@@ -1587,20 +1248,20 @@ API.getData = (dataType, params = {}) => {
  */
 API.subscribeRealTimeData = (options) => {
   const { deviceIds, onMessage, onConnect, onDisconnect, onError } = options;
-  
+
   // 检查是否使用模拟数据
   const useMock = currentConfig.enableMock || API_CONFIG.mockMode;
-  
+
   if (useMock) {
     // 模拟WebSocket连接
     return API.mockWebSocket(options);
   }
-  
+
   // 构建WebSocket URL
   const wsUrl = currentConfig.baseUrl.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws';
   const token = getStorage('access_token');
   const fullUrl = `${wsUrl}?token=${token}`;
-  
+
   // 创建WebSocket连接
   const socketTask = wx.connectSocket({
     url: fullUrl,
@@ -1616,13 +1277,13 @@ API.subscribeRealTimeData = (options) => {
       if (onError) onError(error);
     }
   });
-  
+
   // 监听连接打开
   socketTask.onOpen(() => {
     if (currentConfig.enableLog) {
       console.log('WebSocket连接已打开');
     }
-    
+
     // 发送订阅消息
     socketTask.send({
       data: JSON.stringify({
@@ -1631,10 +1292,10 @@ API.subscribeRealTimeData = (options) => {
         timestamp: Date.now()
       })
     });
-    
+
     if (onConnect) onConnect();
   });
-  
+
   // 监听消息
   socketTask.onMessage((message) => {
     try {
@@ -1650,7 +1311,7 @@ API.subscribeRealTimeData = (options) => {
       if (onError) onError(error);
     }
   });
-  
+
   // 监听关闭
   socketTask.onClose((closeEvent) => {
     if (currentConfig.enableLog) {
@@ -1658,7 +1319,7 @@ API.subscribeRealTimeData = (options) => {
     }
     if (onDisconnect) onDisconnect(closeEvent);
   });
-  
+
   // 监听错误
   socketTask.onError((error) => {
     if (currentConfig.enableLog) {
@@ -1666,7 +1327,7 @@ API.subscribeRealTimeData = (options) => {
     }
     if (onError) onError(error);
   });
-  
+
   return socketTask;
 };
 
@@ -1677,32 +1338,35 @@ API.subscribeRealTimeData = (options) => {
  */
 API.mockWebSocket = (options) => {
   const { deviceIds, onMessage, onConnect, onDisconnect } = options;
-  
+
   // 模拟连接延时
   setTimeout(() => {
     if (onConnect) onConnect();
-    
+
     // 模拟定期推送数据
     const interval = setInterval(() => {
       if (deviceIds && deviceIds.length > 0) {
         // 调用mockAPI获取完整的设备实时数据（包含水气数据）
         const realTimeResponse = mockAPI.getDeviceRealTimeData(deviceIds);
-        
+
         if (realTimeResponse.success && realTimeResponse.data) {
           realTimeResponse.data.forEach(deviceData => {
             const mockData = {
               type: 'device_update',
               deviceId: deviceData.deviceId,
               timestamp: Date.now(),
-              data: deviceData.realTimeParams // 使用完整的实时参数，包含水气数据
+              data: {
+                status: deviceData.status, // 包含设备状态
+                ...deviceData.realTimeParams // 使用完整的实时参数，包含水气数据
+              }
             };
-            
+
             if (onMessage) onMessage(mockData);
           });
         }
       }
     }, 3000); // 每3秒推送一次
-    
+
     // 返回模拟的socket对象
     return {
       send: (data) => {
@@ -1714,21 +1378,21 @@ API.mockWebSocket = (options) => {
         clearInterval(interval);
         if (onDisconnect) onDisconnect();
       },
-      onOpen: () => {},
-      onMessage: () => {},
-      onClose: () => {},
-      onError: () => {}
+      onOpen: () => { },
+      onMessage: () => { },
+      onClose: () => { },
+      onError: () => { }
     };
   }, 500);
-  
+
   // 立即返回一个基础对象
   return {
-    send: () => {},
-    close: () => {},
-    onOpen: () => {},
-    onMessage: () => {},
-    onClose: () => {},
-    onError: () => {}
+    send: () => { },
+    close: () => { },
+    onOpen: () => { },
+    onMessage: () => { },
+    onClose: () => { },
+    onError: () => { }
   };
 };
 
@@ -1745,16 +1409,16 @@ API.getBatchData = async (requests) => {
         .then(result => ({ type: request.type, success: true, data: result }))
         .catch(error => ({ type: request.type, success: false, error }));
     });
-    
+
     const results = await Promise.all(promises);
-    
+
     // 整理返回结果
     const batchResult = {
       success: true,
       data: {},
       errors: []
     };
-    
+
     results.forEach(result => {
       if (result.success) {
         batchResult.data[result.type] = result.data;
@@ -1765,10 +1429,10 @@ API.getBatchData = async (requests) => {
         });
       }
     });
-    
+
     // 如果有错误但也有成功的数据，仍然返回成功
     batchResult.success = Object.keys(batchResult.data).length > 0;
-    
+
     return batchResult;
   } catch (error) {
     return {
@@ -1794,16 +1458,16 @@ API.preloadData = async (currentPage, userBehavior = {}) => {
     'automation': ['automation', 'scene'],
     'profile': ['user']
   };
-  
+
   const dataTypes = preloadMap[currentPage] || [];
-  
+
   if (dataTypes.length > 0) {
     // 异步预加载，不阻塞当前操作
     setTimeout(async () => {
       try {
         const requests = dataTypes.map(type => ({ type, params: {} }));
         await API.getBatchData(requests);
-        
+
         if (currentConfig.enableLog) {
           console.log(`页面 ${currentPage} 数据预加载完成`);
         }
@@ -1827,7 +1491,7 @@ API.preloadData = async (currentPage, userBehavior = {}) => {
  */
 API.subscribeSceneAndRuleUpdates = (options) => {
   const { onSceneChange, onRuleExecution, onConnect, onDisconnect } = options;
-  
+
   return API.subscribeRealTimeData({
     topics: ['scene_changes', 'rule_executions'],
     onMessage: (data) => {
@@ -1854,10 +1518,10 @@ API.subscribeSceneAndRuleUpdates = (options) => {
 API.cache = {
   // 缓存存储
   storage: {},
-  
+
   // 默认缓存过期时间（5分钟）
   defaultExpiration: 5 * 60 * 1000,
-  
+
   /**
    * 设置缓存数据
    * @param {string} key 缓存键
@@ -1870,21 +1534,21 @@ API.cache = {
       timestamp: Date.now(),
       expireTime: Date.now() + expiration
     };
-    
+
     this.storage[key] = cacheItem;
-    
+
     // 同时缓存到本地存储（持久化）
     try {
       wx.setStorageSync(`api_cache_${key}`, cacheItem);
     } catch (error) {
       console.warn('缓存到本地存储失败:', error);
     }
-    
+
     if (currentConfig.enableLog) {
       console.log(`缓存数据已设置: ${key}`);
     }
   },
-  
+
   /**
    * 获取缓存数据
    * @param {string} key 缓存键
@@ -1893,7 +1557,7 @@ API.cache = {
   get(key) {
     // 优先从内存缓存获取
     let cacheItem = this.storage[key];
-    
+
     // 如果内存缓存不存在，尝试从本地存储获取
     if (!cacheItem) {
       try {
@@ -1905,7 +1569,7 @@ API.cache = {
         console.warn('从本地存储获取缓存失败:', error);
       }
     }
-    
+
     // 检查缓存是否过期
     if (cacheItem && cacheItem.expireTime > Date.now()) {
       if (currentConfig.enableLog) {
@@ -1916,10 +1580,10 @@ API.cache = {
       // 缓存过期，清除缓存
       this.remove(key);
     }
-    
+
     return null;
   },
-  
+
   /**
    * 检查缓存是否存在且未过期
    * @param {string} key 缓存键
@@ -1928,32 +1592,32 @@ API.cache = {
   has(key) {
     return this.get(key) !== null;
   },
-  
+
   /**
    * 移除指定缓存
    * @param {string} key 缓存键
    */
   remove(key) {
     delete this.storage[key];
-    
+
     try {
       wx.removeStorageSync(`api_cache_${key}`);
     } catch (error) {
       console.warn('从本地存储移除缓存失败:', error);
     }
-    
+
     if (currentConfig.enableLog) {
       console.log(`缓存已移除: ${key}`);
     }
   },
-  
+
   /**
    * 清除所有缓存
    */
   clearAll() {
     // 清除内存缓存
     this.storage = {};
-    
+
     // 清除本地存储中的API缓存
     try {
       const storageInfo = wx.getStorageInfoSync();
@@ -1964,12 +1628,12 @@ API.cache = {
     } catch (error) {
       console.warn('清除本地存储缓存失败:', error);
     }
-    
+
     if (currentConfig.enableLog) {
       console.log('所有缓存已清除');
     }
   },
-  
+
   /**
    * 清除指定类型的缓存
    * @param {string} type 缓存类型（如 'device', 'energy', 'alert'）
@@ -1977,12 +1641,12 @@ API.cache = {
   clear(type) {
     const keysToRemove = Object.keys(this.storage).filter(key => key.startsWith(type));
     keysToRemove.forEach(key => this.remove(key));
-    
+
     if (currentConfig.enableLog) {
       console.log(`${type} 类型缓存已清除`);
     }
   },
-  
+
   /**
    * 获取缓存状态信息
    * @returns {Object} 缓存状态
@@ -1993,18 +1657,18 @@ API.cache = {
       items: {},
       memoryUsage: 0
     };
-    
+
     Object.keys(this.storage).forEach(key => {
       const item = this.storage[key];
       const age = Date.now() - item.timestamp;
       const remaining = item.expireTime - Date.now();
-      
+
       status.items[key] = {
         age: Math.round(age / 1000), // 秒
         remaining: Math.round(remaining / 1000), // 秒
         expired: remaining <= 0
       };
-      
+
       // 估算内存使用（简单估算）
       try {
         status.memoryUsage += JSON.stringify(item.data).length;
@@ -2012,29 +1676,29 @@ API.cache = {
         // 忽略序列化错误
       }
     });
-    
+
     return status;
   },
-  
+
   /**
    * 清理过期缓存
    */
   cleanup() {
     const now = Date.now();
     const expiredKeys = [];
-    
+
     Object.keys(this.storage).forEach(key => {
       if (this.storage[key].expireTime <= now) {
         expiredKeys.push(key);
       }
     });
-    
+
     expiredKeys.forEach(key => this.remove(key));
-    
+
     if (currentConfig.enableLog && expiredKeys.length > 0) {
       console.log(`清理了 ${expiredKeys.length} 个过期缓存`);
     }
-    
+
     return expiredKeys.length;
   }
 };
@@ -2052,10 +1716,10 @@ API.getDataWithCache = async (dataType, params = {}, options = {}) => {
     cacheExpiration = API.cache.defaultExpiration,
     forceRefresh = false
   } = options;
-  
+
   // 生成缓存键
   const cacheKey = `${dataType}_${JSON.stringify(params)}`;
-  
+
   // 如果不强制刷新且启用缓存，先尝试获取缓存数据
   if (!forceRefresh && useCache) {
     const cachedData = API.cache.get(cacheKey);
@@ -2063,16 +1727,16 @@ API.getDataWithCache = async (dataType, params = {}, options = {}) => {
       return Promise.resolve(cachedData);
     }
   }
-  
+
   try {
     // 从网络获取数据
     const result = await API.getData(dataType, params);
-    
+
     // 如果启用缓存且请求成功，缓存结果
     if (useCache && result && result.success) {
       API.cache.set(cacheKey, result, cacheExpiration);
     }
-    
+
     return result;
   } catch (error) {
     // 如果网络请求失败，尝试返回过期的缓存数据作为备用
@@ -2083,7 +1747,7 @@ API.getDataWithCache = async (dataType, params = {}, options = {}) => {
         return expiredCache.data;
       }
     }
-    
+
     throw error;
   }
 };
@@ -2093,5 +1757,117 @@ setInterval(() => {
   API.cache.cleanup();
 }, 10 * 60 * 1000);
 
-// 导出API对象
-module.exports = API;
+// 导出API和配置 - 在所有方法定义完成后导出
+module.exports = {
+  ...API,
+
+  // 确保这些方法在导出时可用
+  getBatchData: API.getBatchData,
+  preloadData: API.preloadData,
+  getDataWithCache: API.getDataWithCache,
+  subscribeRealTimeData: API.subscribeRealTimeData,
+  unsubscribeRealTimeData: API.unsubscribeRealTimeData,
+  getData: API.getData,
+  subscribeSceneAndRuleUpdates: API.subscribeSceneAndRuleUpdates,
+  mockWebSocket: API.mockWebSocket,
+  cache: API.cache,
+
+  // 配置管理
+  config: {
+    /**
+     * 设置环境
+     * @param {string} env 环境名称 development|testing|production
+     */
+    setEnvironment(env) {
+      if (ENV_CONFIG[env]) {
+        Object.assign(currentConfig, ENV_CONFIG[env]);
+        console.log(`API环境已切换到: ${env}`);
+      }
+    },
+
+    /**
+     * 获取当前配置
+     */
+    getCurrentConfig() {
+      return { ...currentConfig };
+    },
+
+    /**
+     * 设置自定义配置
+     * @param {Object} config 配置对象
+     */
+    setCustomConfig(config) {
+      Object.assign(currentConfig, config);
+    },
+
+    /**
+     * 启用/禁用模拟模式
+     * @param {boolean} enable 是否启用
+     */
+    setMockMode(enable) {
+      currentConfig.enableMock = enable;
+      console.log(`模拟模式已${enable ? '启用' : '禁用'}`);
+    },
+
+    /**
+     * 启用/禁用日志
+     * @param {boolean} enable 是否启用
+     */
+    setLogMode(enable) {
+      currentConfig.enableLog = enable;
+    }
+  },
+
+  // 工具方法
+  utils: {
+    /**
+     * 检查网络连接
+     */
+    checkNetworkStatus() {
+      return new Promise((resolve) => {
+        wx.getNetworkType({
+          success: (res) => {
+            resolve({
+              isConnected: res.networkType !== 'none',
+              networkType: res.networkType
+            });
+          },
+          fail: () => {
+            resolve({
+              isConnected: false,
+              networkType: 'unknown'
+            });
+          }
+        });
+      });
+    },
+
+    /**
+     * 批量请求
+     * @param {Array} requests 请求数组
+     * @returns {Promise} Promise对象
+     */
+    async batchRequest(requests) {
+      try {
+        const results = await Promise.allSettled(requests);
+        return results.map((result, index) => ({
+          index,
+          success: result.status === 'fulfilled',
+          data: result.status === 'fulfilled' ? result.value : null,
+          error: result.status === 'rejected' ? result.reason : null
+        }));
+      } catch (error) {
+        throw error;
+      }
+    },
+
+    /**
+     * 清除所有缓存
+     */
+    clearCache() {
+      wx.removeStorageSync('access_token');
+      wx.removeStorageSync('user_info');
+      console.log('API缓存已清除');
+    }
+  }
+};

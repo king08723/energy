@@ -284,4 +284,5 @@
       <text class="success-text">设备添加成功</text>
     </view>
   </view>
+  <custom-footer></custom-footer>
 </view>

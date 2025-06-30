@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备页面性能测试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2d3748;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(248, 250, 252, 0.8);
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .test-button.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .test-button.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .performance-chart {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .log-container {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .log-entry.info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+        }
+
+        .log-entry.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid #f59e0b;
+        }
+
+        .log-entry.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #ef4444;
+        }
+
+        .log-entry.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid #10b981;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .device-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .device-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s ease;
+        }
+
+        .device-item:hover {
+            background: #f8fafc;
+        }
+
+        .device-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .device-status.online {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .device-status.offline {
+            background: rgba(156, 163, 175, 0.1);
+            color: #6b7280;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .filter-tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .filter-tag {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-tag.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .filter-tag:hover {
+            background: #e5e7eb;
+        }
+
+        .filter-tag.active:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 设备页面性能测试工具</h1>
+            <p>模拟WeChat Mini Program设备管理页面的性能测试和监控</p>
+        </div>
+
+        <!-- 性能指标 -->
+        <div class="test-section">
+            <h3>📊 实时性能指标</h3>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="searchCount">0</div>
+                    <div class="metric-label">搜索次数</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="filterCount">0</div>
+                    <div class="metric-label">筛选次数</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="setDataCount">0</div>
+                    <div class="metric-label">setData调用</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="memoryUsage">0MB</div>
+                    <div class="metric-label">内存使用</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avgResponseTime">0ms</div>
+                    <div class="metric-label">平均响应时间</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="cacheHitRate">0%</div>
+                    <div class="metric-label">缓存命中率</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 测试控制 -->
+        <div class="test-section">
+            <h3>🧪 性能测试控制</h3>
+            <div class="test-controls">
+                <button class="test-button" onclick="startStressTest()">压力测试</button>
+                <button class="test-button" onclick="startMemoryLeakTest()">内存泄漏测试</button>
+                <button class="test-button" onclick="startRealTimeTest()">实时更新测试</button>
+                <button class="test-button success" onclick="generateLargeDataset()">生成大数据集</button>
+                <button class="test-button danger" onclick="clearAllData()">清空数据</button>
+                <button class="test-button" onclick="exportPerformanceReport()">导出报告</button>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="testProgress"></div>
+            </div>
+        </div>
+
+        <!-- 搜索和筛选测试 -->
+        <div class="test-section">
+            <h3>🔍 搜索和筛选测试</h3>
+            <input type="text" class="search-input" id="searchInput" placeholder="输入搜索关键词..."
+                oninput="onSearchInput(event)">
+            <div class="filter-tags">
+                <span class="filter-tag active" data-type="all" onclick="onFilterType(event)">全部</span>
+                <span class="filter-tag" data-type="meter" onclick="onFilterType(event)">电表</span>
+                <span class="filter-tag" data-type="sensor" onclick="onFilterType(event)">传感器</span>
+                <span class="filter-tag" data-type="switch" onclick="onFilterType(event)">开关</span>
+                <span class="filter-tag" data-type="offline" onclick="onFilterType(event)">离线设备</span>
+                <span class="filter-tag" data-type="alert" onclick="onFilterType(event)">告警设备</span>
+            </div>
+            <div class="device-list" id="deviceList"></div>
+        </div>
+
+        <!-- 性能日志 -->
+        <div class="test-section">
+            <h3>📝 性能日志</h3>
+            <div class="log-container" id="performanceLog"></div>
+        </div>
+    </div>
+
+    <script>
+        // 性能监控对象
+        const performanceMonitor = {
+            searchCount: 0,
+            filterCount: 0,
+            setDataCount: 0,
+            memoryUsage: 0,
+            responseTimes: [],
+            cacheHits: 0,
+            cacheMisses: 0,
+            startTime: Date.now()
+        };
+
+        // 模拟设备数据
+        let allDevices = [];
+        let filteredDevices = [];
+        let searchKeyword = '';
+        let filterType = 'all';
+        let searchTimer = null;
+        let isSearching = false;
+
+        // 数据缓存
+        const dataCache = {
+            lastFilterResult: null,
+            lastFilterParams: null,
+            deviceLookup: new Map()
+        };
+
+        // 生成测试数据
+        function generateTestData(count) {
+            allDevices = [];
+            const deviceTypes = ['meter', 'sensor', 'switch', 'hvac'];
+            const locations = ['生产车间A区', '办公楼2层', '仓库', '配电房', '屋顶', '地下室'];
+
+            for (let i = 0; i < count; i++) {
+                const type = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+                const location = locations[Math.floor(Math.random() * locations.length)];
+                const status = Math.random() > 0.2 ? 'online' : 'offline';
+                const hasAlert = Math.random() > 0.8;
+
+                allDevices.push({
+                    id: `device_${String(i + 1).padStart(3, '0')}`,
+                    name: `${type === 'meter' ? '电表' : type === 'sensor' ? '传感器' : type === 'switch' ? '开关' : '空调'}${i + 1}`,
+                    location: location,
+                    type: type,
+                    status: status,
+                    statusText: status === 'online' ? '在线' : '离线',
+                    hasAlert: hasAlert,
+                    alerts: hasAlert ? [{ severity: 'warning', message: '设备异常' }] : [],
+                    power: Math.random() * 1000,
+                    energy: Math.random() * 10000,
+                    lastUpdate: Date.now()
+                });
+            }
+
+            filteredDevices = [...allDevices];
+            renderDevices();
+            logMessage(`生成了 ${count} 个测试设备`, 'success');
+        }
+
+        // 渲染设备列表
+        function renderDevices() {
+            const deviceList = document.getElementById('deviceList');
+            deviceList.innerHTML = '';
+
+            const displayDevices = filteredDevices.slice(0, 50); // 只显示前50个
+
+            displayDevices.forEach(device => {
+                const deviceItem = document.createElement('div');
+                deviceItem.className = 'device-item';
+                deviceItem.innerHTML = `
+                    <div>
+                        <strong>${device.name}</strong>
+                        <div style="font-size: 12px; color: #6b7280;">${device.location}</div>
+                    </div>
+                    <div class="device-status ${device.status}">
+                        ${device.statusText}
+                        ${device.hasAlert ? ' ⚠️' : ''}
+                    </div>
+                `;
+                deviceList.appendChild(deviceItem);
+            });
+        }
+
+        // 优化的搜索和筛选逻辑（复制自修复后的代码）
+        function applyFilters() {
+            const startTime = Date.now();
+            performanceMonitor.filterCount++;
+
+            // 检查缓存
+            const filterParams = {
+                searchKeyword: searchKeyword || '',
+                filterType: filterType || 'all',
+                deviceCount: allDevices.length
+            };
+
+            const cacheKey = JSON.stringify(filterParams);
+            if (dataCache.lastFilterParams === cacheKey && dataCache.lastFilterResult) {
+                filteredDevices = dataCache.lastFilterResult;
+                performanceMonitor.cacheHits++;
+                renderDevices();
+
+                const duration = Date.now() - startTime;
+                performanceMonitor.responseTimes.push(duration);
+                logMessage(`筛选完成（缓存命中），耗时: ${duration}ms`, 'success');
+                updateMetrics();
+                return;
+            }
+
+            performanceMonitor.cacheMisses++;
+            let filtered = allDevices;
+
+            // 搜索过滤
+            if (searchKeyword && searchKeyword.trim()) {
+                performanceMonitor.searchCount++;
+                const keyword = searchKeyword.trim();
+                const isChineseKeyword = /[\u4e00-\u9fa5]/.test(keyword);
+
+                const searchCondition = isChineseKeyword ?
+                    (text) => text.includes(keyword) :
+                    (text) => text.toLowerCase().includes(keyword.toLowerCase());
+
+                filtered = filtered.filter(device => {
+                    const deviceName = (device.name || '').toString();
+                    const deviceLocation = (device.location || '').toString();
+                    const deviceType = (device.type || '').toString();
+                    const deviceId = (device.id || '').toString();
+
+                    return searchCondition(deviceName) ||
+                        searchCondition(deviceLocation) ||
+                        searchCondition(deviceType) ||
+                        searchCondition(deviceId);
+                });
+            }
+
+            // 类型筛选
+            if (filterType !== 'all') {
+                if (filterType === 'offline') {
+                    filtered = filtered.filter(device => device.status === 'offline');
+                } else if (filterType === 'alert') {
+                    filtered = filtered.filter(device => device.hasAlert);
+                } else {
+                    filtered = filtered.filter(device => device.type === filterType);
+                }
+            }
+
+            // 缓存结果
+            dataCache.lastFilterResult = filtered;
+            dataCache.lastFilterParams = cacheKey;
+
+            filteredDevices = filtered;
+            renderDevices();
+
+            const duration = Date.now() - startTime;
+            performanceMonitor.responseTimes.push(duration);
+            performanceMonitor.setDataCount++;
+
+            logMessage(`筛选完成，结果: ${filtered.length}/${allDevices.length}，耗时: ${duration}ms`, 'info');
+            updateMetrics();
+        }
+
+        // 搜索输入处理
+        function onSearchInput(event) {
+            const newKeyword = event.target.value;
+            if (searchKeyword === newKeyword) {
+                return;
+            }
+
+            searchKeyword = newKeyword;
+            debounceSearch();
+        }
+
+        // 防抖搜索
+        function debounceSearch() {
+            if (searchTimer) {
+                clearTimeout(searchTimer);
+            }
+
+            isSearching = true;
+            searchTimer = setTimeout(() => {
+                if (isSearching) {
+                    applyFilters();
+                    isSearching = false;
+                }
+            }, 300);
+        }
+
+        // 筛选类型处理
+        function onFilterType(event) {
+            filterType = event.target.dataset.type;
+
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            applyFilters();
+        }
+
+        // 更新性能指标
+        function updateMetrics() {
+            document.getElementById('searchCount').textContent = performanceMonitor.searchCount;
+            document.getElementById('filterCount').textContent = performanceMonitor.filterCount;
+            document.getElementById('setDataCount').textContent = performanceMonitor.setDataCount;
+
+            // 模拟内存使用
+            const memoryUsage = (performanceMonitor.setDataCount * 0.1 + allDevices.length * 0.01).toFixed(1);
+            document.getElementById('memoryUsage').textContent = memoryUsage + 'MB';
+
+            // 平均响应时间
+            const avgTime = performanceMonitor.responseTimes.length > 0 ?
+                (performanceMonitor.responseTimes.reduce((a, b) => a + b, 0) / performanceMonitor.responseTimes.length).toFixed(1) : 0;
+            document.getElementById('avgResponseTime').textContent = avgTime + 'ms';
+
+            // 缓存命中率
+            const totalRequests = performanceMonitor.cacheHits + performanceMonitor.cacheMisses;
+            const hitRate = totalRequests > 0 ? ((performanceMonitor.cacheHits / totalRequests) * 100).toFixed(1) : 0;
+            document.getElementById('cacheHitRate').textContent = hitRate + '%';
+        }
+
+        // 日志记录
+        function logMessage(message, type = 'info') {
+            const logContainer = document.getElementById('performanceLog');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 压力测试
+        function startStressTest() {
+            logMessage('开始压力测试...', 'warning');
+            const testKeywords = ['电表', '传感器', '开关', '空调', '车间', '办公', '仓库', 'device', 'sensor', 'meter'];
+            let testIndex = 0;
+
+            const stressInterval = setInterval(() => {
+                if (testIndex >= 100) {
+                    clearInterval(stressInterval);
+                    logMessage('压力测试完成', 'success');
+                    updateProgress(100);
+                    return;
+                }
+
+                // 随机搜索
+                const keyword = testKeywords[Math.floor(Math.random() * testKeywords.length)];
+                searchKeyword = keyword;
+                document.getElementById('searchInput').value = keyword;
+
+                // 随机筛选
+                const filters = ['all', 'meter', 'sensor', 'switch', 'offline', 'alert'];
+                filterType = filters[Math.floor(Math.random() * filters.length)];
+
+                applyFilters();
+                testIndex++;
+                updateProgress((testIndex / 100) * 100);
+            }, 50);
+        }
+
+        // 内存泄漏测试
+        function startMemoryLeakTest() {
+            logMessage('开始内存泄漏测试...', 'warning');
+            let testCount = 0;
+
+            const memoryInterval = setInterval(() => {
+                if (testCount >= 50) {
+                    clearInterval(memoryInterval);
+                    logMessage('内存泄漏测试完成', 'success');
+                    updateProgress(100);
+                    return;
+                }
+
+                // 创建大量临时数据
+                const tempDevices = [];
+                for (let i = 0; i < 1000; i++) {
+                    tempDevices.push({
+                        id: `temp_${i}`,
+                        name: `临时设备${i}`,
+                        data: new Array(1000).fill(Math.random())
+                    });
+                }
+
+                // 模拟setData调用
+                performanceMonitor.setDataCount += 10;
+
+                testCount++;
+                updateProgress((testCount / 50) * 100);
+                updateMetrics();
+            }, 100);
+        }
+
+        // 实时更新测试
+        function startRealTimeTest() {
+            logMessage('开始实时更新测试...', 'warning');
+            let updateCount = 0;
+
+            const realTimeInterval = setInterval(() => {
+                if (updateCount >= 100) {
+                    clearInterval(realTimeInterval);
+                    logMessage('实时更新测试完成', 'success');
+                    updateProgress(100);
+                    return;
+                }
+
+                // 随机更新设备状态
+                const randomDevice = allDevices[Math.floor(Math.random() * allDevices.length)];
+                if (randomDevice) {
+                    randomDevice.status = Math.random() > 0.5 ? 'online' : 'offline';
+                    randomDevice.statusText = randomDevice.status === 'online' ? '在线' : '离线';
+                    randomDevice.power = Math.random() * 1000;
+
+                    // 模拟实时更新
+                    performanceMonitor.setDataCount++;
+                    renderDevices();
+                }
+
+                updateCount++;
+                updateProgress((updateCount / 100) * 100);
+                updateMetrics();
+            }, 200);
+        }
+
+        // 生成大数据集
+        function generateLargeDataset() {
+            const count = parseInt(prompt('请输入设备数量（建议1000-5000）:', '1000'));
+            if (count && count > 0) {
+                generateTestData(count);
+                logMessage(`生成了 ${count} 个设备的大数据集`, 'success');
+            }
+        }
+
+        // 清空数据
+        function clearAllData() {
+            if (confirm('确定要清空所有数据吗？')) {
+                allDevices = [];
+                filteredDevices = [];
+                dataCache.lastFilterResult = null;
+                dataCache.lastFilterParams = null;
+                dataCache.deviceLookup.clear();
+
+                // 重置性能监控
+                Object.keys(performanceMonitor).forEach(key => {
+                    if (typeof performanceMonitor[key] === 'number') {
+                        performanceMonitor[key] = 0;
+                    } else if (Array.isArray(performanceMonitor[key])) {
+                        performanceMonitor[key] = [];
+                    }
+                });
+
+                renderDevices();
+                updateMetrics();
+                logMessage('所有数据已清空', 'warning');
+            }
+        }
+
+        // 导出性能报告
+        function exportPerformanceReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                deviceCount: allDevices.length,
+                performanceMetrics: performanceMonitor,
+                cacheStats: {
+                    hits: performanceMonitor.cacheHits,
+                    misses: performanceMonitor.cacheMisses,
+                    hitRate: performanceMonitor.cacheHits / (performanceMonitor.cacheHits + performanceMonitor.cacheMisses) * 100
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `performance-report-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            logMessage('性能报告已导出', 'success');
+        }
+
+        // 更新进度条
+        function updateProgress(percentage) {
+            document.getElementById('testProgress').style.width = percentage + '%';
+        }
+
+        // 初始化
+        window.onload = function () {
+            generateTestData(100);
+            updateMetrics();
+            logMessage('性能测试工具已初始化', 'info');
+        };
+    </script>
+</body>
+
+</html>

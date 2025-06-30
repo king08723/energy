@@ -7,4 +7,5 @@
     <!-- 密码设置 -->
     <!-- 用户协议与隐私政策 -->
   </view>
+  <custom-footer></custom-footer>
 </view>

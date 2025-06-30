@@ -189,21 +189,29 @@
             data-type="all" bindtap="onFilterType">
         <text>全部</text>
       </view>
-      <view class="energy-filter-tag {{filterType === 'meter' ? 'active' : ''}}" 
+      <view class="energy-filter-tag {{filterType === 'meter' ? 'active' : ''}}"
             data-type="meter" bindtap="onFilterType">
-        <text>电表</text>
+        <text>计量设备</text>
       </view>
-      <view class="energy-filter-tag {{filterType === 'sensor' ? 'active' : ''}}" 
+      <view class="energy-filter-tag {{filterType === 'sensor' ? 'active' : ''}}"
             data-type="sensor" bindtap="onFilterType">
         <text>传感器</text>
       </view>
-      <view class="energy-filter-tag {{filterType === 'switch' ? 'active' : ''}}" 
-            data-type="switch" bindtap="onFilterType">
-        <text>开关</text>
+      <view class="energy-filter-tag {{filterType === 'electrical' ? 'active' : ''}}"
+            data-type="electrical" bindtap="onFilterType">
+        <text>电气设备</text>
       </view>
-      <view class="energy-filter-tag {{filterType === 'hvac' ? 'active' : ''}}" 
+      <view class="energy-filter-tag {{filterType === 'hvac' ? 'active' : ''}}"
             data-type="hvac" bindtap="onFilterType">
-        <text>空调</text>
+        <text>空调设备</text>
+      </view>
+      <view class="energy-filter-tag {{filterType === 'heating' ? 'active' : ''}}"
+            data-type="heating" bindtap="onFilterType">
+        <text>加热设备</text>
+      </view>
+      <view class="energy-filter-tag {{filterType === 'water' ? 'active' : ''}}"
+            data-type="water" bindtap="onFilterType">
+        <text>水处理</text>
       </view>
     </view>
     
@@ -268,8 +276,8 @@
       <view class="device-list-header">
         <text class="energy-title-medium">设备列表</text>
         <!-- 筛选结果统计信息 -->
-        <view class="filter-result-info" wx:if="{{filteredDevices.length !== allDevices.length}}">
-          <text class="energy-text-small energy-text-tertiary">筛选结果：{{filteredDevices.length}}/{{allDevices.length}} 个设备</text>
+        <view class="filter-result-info" wx:if="{{filterType !== 'all' || searchKeyword || selectedGroup !== 'all'}}">
+          <text class="energy-text-small energy-text-tertiary">筛选结果：{{devices.length}} 个设备</text>
           <view class="energy-btn energy-btn-outline energy-btn-small energy-ml-8" bindtap="onClearFilter">
             <text>清除筛选</text>
           </view>
@@ -289,9 +297,9 @@
                  lower-threshold="50">
       <!-- 设备项 - 优化后的卡片式布局 -->
       <view class="device-list">
-        <view class="device-card {{batchMode ? 'batch-mode' : ''}} {{item.isSelected ? 'selected' : ''}}" 
-              wx:for="{{devices}}" wx:key="id"
-              bindtap="{{batchMode ? 'onSelectDevice' : 'onDeviceDetail'}}" 
+        <view class="device-card {{batchMode ? 'batch-mode' : ''}} {{item.isSelected ? 'selected' : ''}}"
+              wx:for="{{currentPageDevices}}" wx:key="id"
+              bindtap="{{batchMode ? 'onSelectDevice' : 'onDeviceDetail'}}"
               data-device="{{item}}" data-device-id="{{item.id}}">
         
         <!-- 批量选择复选框 -->
@@ -349,68 +357,13 @@
             </view>
           </view>
           
-          <!-- 设备运行数据 -->
-          <view class="device-metrics" wx:if="{{item.status === 'online'}}">
-            <view class="metrics-grid">
-              <!-- 功耗信息 -->
-              <view class="metric-item" wx:if="{{item.power}}">
-                <view class="metric-label">
-                  <text class="energy-icon-text">⚡</text>
-                  <text>功耗</text>
-                </view>
-                <view class="metric-value">
-                  <text class="value-text">{{item.power}}W</text>
-                  <view class="power-trend {{item.powerTrend || 'stable'}}">
-                    <text class="energy-icon-text">{{item.powerTrend === 'up' ? '📈' : item.powerTrend === 'down' ? '📉' : '➖'}}</text>
-                  </view>
-                </view>
-              </view>
-              
-              <!-- 温度信息 -->
-              <view class="metric-item" wx:if="{{item.temperature}}">
-                <view class="metric-label">
-                  <text class="energy-icon-text">🌡️</text>
-                  <text>温度</text>
-                </view>
-                <view class="metric-value">
-                  <text class="value-text">{{item.temperature}}°C</text>
-                </view>
-              </view>
-              
-              <!-- 运行时间 -->
-              <view class="metric-item" wx:if="{{item.uptime}}">
-                <view class="metric-label">
-                  <text class="energy-icon-text">⏱️</text>
-                  <text>运行时间</text>
-                </view>
-                <view class="metric-value">
-                  <text class="value-text">{{item.uptime}}</text>
-                </view>
-              </view>
-            </view>
-          </view>
           
-          <!-- 告警信息 -->
-          <view class="device-alert" wx:if="{{item.alerts && item.alerts.length > 0}}">
-            <view class="alert-content">
-              <view class="alert-icon">
-                <text class="energy-icon-text">⚠️</text>
-              </view>
-              <view class="alert-info">
-                <text class="alert-message">{{item.alerts[0].message}}</text>
-                <text class="alert-time">{{item.alerts[0].time}}</text>
-              </view>
-              <view class="alert-severity {{item.alerts[0].severity || 'warning'}}">
-                <view class="severity-dot"></view>
-              </view>
-            </view>
-          </view>
         </view>
       </view>
       </view>
       
       <!-- 加载更多提示（仅在不显示分页时显示） -->
-      <view class="load-more-container" wx:if="{{devices.length > 0 && !showPagination}}">
+      <view class="load-more-container" wx:if="{{currentPageDevices.length > 0 && !showPagination}}">
         <view class="load-more-item" wx:if="{{loadingMore}}">
           <view class="loading-spinner"></view>
           <text class="energy-text-tertiary energy-text-small">正在加载更多...</text>
@@ -422,7 +375,7 @@
     </scroll-view>
 
     <!-- 页码导航 -->
-    <view class="pagination-container" wx:if="{{showPagination && devices.length > 0}}">
+    <view class="pagination-container" wx:if="{{showPagination && currentPageDevices.length > 0}}">
       <view class="pagination-info">
         <text class="energy-text-tertiary energy-text-small">第 {{currentPage}} 页，共 {{totalPages}} 页</text>
       </view>
@@ -453,7 +406,7 @@
     </view>
 
     <!-- 空状态 -->
-    <view class="energy-empty-state" wx:if="{{devices.length === 0}}">
+    <view class="energy-empty-state" wx:if="{{currentPageDevices.length === 0 && devices.length === 0}}">
       <text class="energy-icon-text energy-text-large energy-mb-16">📱</text>
       <text class="energy-text-primary energy-text-medium energy-mb-8">暂无设备</text>
       <text class="energy-text-tertiary energy-text-small energy-mb-24">点击下方按钮添加您的第一个设备</text>
@@ -601,4 +554,5 @@
         </view>
     </view>
   </view>
+  <custom-footer></custom-footer>
 </view>

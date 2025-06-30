@@ -47,10 +47,10 @@ Page({
    */
   async loadGroupList() {
     this.setData({ loading: true });
-    
+
     try {
       const result = await API.getDeviceGroups();
-      
+
       if (result.success) {
         this.setData({
           groupList: result.data
@@ -113,7 +113,7 @@ Page({
    * 隐藏编辑分组对话框
    */
   onHideEditDialog() {
-    this.setData({ 
+    this.setData({
       showEditDialog: false,
       currentGroup: {}
     });
@@ -125,7 +125,7 @@ Page({
   onFormInput(e) {
     const { field } = e.currentTarget.dataset;
     const { value } = e.detail;
-    
+
     this.setData({
       [`formData.${field}`]: value
     });
@@ -146,7 +146,7 @@ Page({
    */
   async onCreateGroup() {
     const { formData } = this.data;
-    
+
     // 表单验证
     if (!formData.name.trim()) {
       wx.showToast({
@@ -155,22 +155,22 @@ Page({
       });
       return;
     }
-    
+
     try {
       wx.showLoading({ title: '创建中...' });
-      
+
       const result = await API.createDeviceGroup({
         name: formData.name.trim(),
         description: formData.description.trim(),
         icon: formData.icon
       });
-      
+
       if (result.success) {
         wx.showToast({
           title: '创建成功',
           icon: 'success'
         });
-        
+
         this.onHideAddDialog();
         this.loadGroupList(); // 刷新列表
       } else {
@@ -195,7 +195,7 @@ Page({
    */
   async onUpdateGroup() {
     const { formData, currentGroup } = this.data;
-    
+
     // 表单验证
     if (!formData.name.trim()) {
       wx.showToast({
@@ -204,22 +204,22 @@ Page({
       });
       return;
     }
-    
+
     try {
       wx.showLoading({ title: '更新中...' });
-      
+
       const result = await API.updateDeviceGroup(currentGroup.id, {
         name: formData.name.trim(),
         description: formData.description.trim(),
         icon: formData.icon
       });
-      
+
       if (result.success) {
         wx.showToast({
           title: '更新成功',
           icon: 'success'
         });
-        
+
         this.onHideEditDialog();
         this.loadGroupList(); // 刷新列表
       } else {
@@ -244,7 +244,7 @@ Page({
    */
   onDeleteGroup(e) {
     const { group } = e.currentTarget.dataset;
-    
+
     wx.showModal({
       title: '确认删除',
       content: `确定要删除分组"${group.name}"吗？删除后该分组下的设备将移至默认分组。`,
@@ -264,15 +264,15 @@ Page({
   async deleteGroup(groupId) {
     try {
       wx.showLoading({ title: '删除中...' });
-      
+
       const result = await API.deleteDeviceGroup(groupId);
-      
+
       if (result.success) {
         wx.showToast({
           title: '删除成功',
           icon: 'success'
         });
-        
+
         this.loadGroupList(); // 刷新列表
       } else {
         wx.showToast({
@@ -296,7 +296,7 @@ Page({
    */
   onManageDevices(e) {
     const { group } = e.currentTarget.dataset;
-    
+
     // 跳转到设备分组分配页面（如果需要单独页面）
     // 或者在当前页面显示设备管理界面
     wx.navigateTo({

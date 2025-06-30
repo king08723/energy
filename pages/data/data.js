@@ -186,6 +186,9 @@ Page({
 
     // 页面隐藏时断开实时连接
     this.disconnectRealTime();
+    
+    // 停止自适应更新，避免后台继续执行
+    this.stopAdaptiveUpdates();
   },
 
   /**
@@ -197,6 +200,18 @@ Page({
 
     // 页面卸载时断开实时连接
     this.disconnectRealTime();
+    
+    // 清理所有定时器
+    this.stopAdaptiveUpdates();
+    
+    // 清理图表上下文
+    if (this.chartContext) {
+      this.chartContext = null;
+      this.canvas = null;
+    }
+    
+    // 清理重试计数器
+    this.initChartRetryCount = 0;
   },
 
   /**
@@ -1808,6 +1823,11 @@ Page({
       // console.log('页面不可见，跳过实时监控初始化');
       return;
     }
+    
+    // 防止重复初始化
+    if (this.isRealTimeConnected) {
+      return;
+    }
 
     this.socketTask = API.subscribeRealTimeData({
       dataTypes: ['energy', 'chart'], // 订阅能耗和图表数据更新
@@ -1988,6 +2008,9 @@ Page({
 
     // 停止自适应更新
     this.stopAdaptiveUpdates();
+    
+    // 更新连接状态
+    this.setData({ realTimeStatus: 'disconnected' });
   },
 
 

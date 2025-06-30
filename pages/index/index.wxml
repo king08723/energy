@@ -244,12 +244,6 @@
     </view>
   </view>
 
-  <!-- 底部导航提示 -->
-  <view class="bottom-tip">
-    <text class="tip-text">上滑查看更多功能</text>
-    <text class="tip-arrow">↑</text>
-  </view>
-
   <!-- 页面底部组件 -->
   <custom-footer></custom-footer>
 </view>

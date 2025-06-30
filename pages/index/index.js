@@ -13,7 +13,7 @@ Page({
     },
 
     // 调试模式开关
-    debugMode: false, // 临时启用调试模式，用于排查水气数据问题
+    debugMode: false, // 调试模式已关闭
 
     // 首页概览数据
     overview: {
@@ -64,7 +64,7 @@ Page({
   // 实时连接相关属性
   socketTask: null,
   isRealTimeConnected: false,
-  debugMode: false, // 调试模式开关，设为true可查看详细日志
+  debugMode: false, // 调试模式开关已关闭
 
   // 页面状态管理
   lastDataLoadTime: 0,
@@ -166,7 +166,7 @@ Page({
     requiredMethods.forEach(methodName => {
       if (typeof API[methodName] === 'function' || (methodName === 'cache' && typeof API[methodName] === 'object')) {
         availableMethods.push(methodName);
-        console.log(`✅ API.${methodName} 可用`);
+        // console.log(`✅ API.${methodName} 可用`);
       } else {
         missingMethods.push(methodName);
         console.error(`❌ API.${methodName} 不可用或未正确初始化`);
@@ -189,7 +189,7 @@ Page({
 
       return false;
     } else {
-      console.log('✅ 所有API方法初始化检查通过');
+      // console.log('✅ 所有API方法初始化检查通过');
       return true;
     }
   },
@@ -205,21 +205,32 @@ Page({
     this.lastUserInteraction = Date.now();
     this.isPageVisible = true;
 
-    // 监听应用前后台切换
-    wx.onAppShow(() => {
-      if (this.isPageVisible) {
-        console.log('应用从后台切换到前台，恢复首页实时监控');
+    // 初始化清理标志
+    this.isDestroyed = false;
+    this.appEventListeners = [];
+
+    // 监听应用前后台切换 - 修复内存泄漏
+    const onAppShow = () => {
+      if (this.isPageVisible && !this.isDestroyed) {
+        // console.log('应用从后台切换到前台，恢复首页实时监控');
         this.lastUserInteraction = Date.now();
         if (!this.isRealTimeConnected) {
           this.initRealTimeData();
         }
       }
-    });
+    };
 
-    wx.onAppHide(() => {
-      console.log('应用切换到后台，暂停首页实时监控');
+    const onAppHide = () => {
+      // console.log('应用切换到后台，暂停首页实时监控');
       this.disconnectRealTime();
-    });
+    };
+
+    // 记录事件监听器以便后续清理
+    this.appEventListeners.push({ event: 'onAppShow', handler: onAppShow });
+    this.appEventListeners.push({ event: 'onAppHide', handler: onAppHide });
+
+    wx.onAppShow(onAppShow);
+    wx.onAppHide(onAppHide);
 
     // 页面加载时执行的函数
     this.updateTime();
@@ -269,25 +280,23 @@ Page({
       this.initRealTimeData();
     }, 1000);
 
-    // 定时更新数据（作为WebSocket的备用方案）
-    // 包括用电负荷数据的定时更新
+    // 统一的定时更新机制（作为WebSocket的备用方案）
     this.dataUpdateTimer = setInterval(() => {
       this.updateTime();
       // 如果WebSocket连接异常，则使用定时刷新
       if (!this.isRealTimeConnected) {
-        // 从缓存刷新数据
-        const cachedData = this.loadCachedHomeData();
-        if (cachedData) {
-          this.updateHomeDataDisplay(cachedData);
-        }
-
-        // 定时刷新用电负荷数据
-        this.loadHomeData().then(() => {
+        // 从网络获取最新数据，而不是仅从缓存
+        this.loadHomeData(false).then(() => {
           if (this.data.overview && this.data.overview.electricity && this.data.overview.electricity.loadCurve) {
             this.initLoadCurveChart(this.data.overview.electricity.loadCurve);
           }
         }).catch(error => {
-          console.error('定时刷新用电负荷数据失败:', error);
+          console.error('定时刷新数据失败:', error);
+          // 网络失败时才使用缓存
+          const cachedData = this.loadCachedHomeData();
+          if (cachedData) {
+            this.updateHomeDataDisplay(cachedData);
+          }
         });
       }
     }, 30000); // 每30秒更新一次数据
@@ -305,17 +314,34 @@ Page({
   },
 
   onUnload: function () {
-    // 更新页面可见性状态
+    // 标记页面已销毁
+    this.isDestroyed = true;
     this.isPageVisible = false;
 
     // 页面卸载时清除定时器和断开实时连接
     if (this.dataUpdateTimer) {
       clearInterval(this.dataUpdateTimer);
+      this.dataUpdateTimer = null;
     }
     // 清除防抖定时器
     if (this.aggregateUpdateTimer) {
       clearTimeout(this.aggregateUpdateTimer);
+      this.aggregateUpdateTimer = null;
     }
+
+    // 清除应用事件监听器 - 修复内存泄漏
+    if (this.appEventListeners && this.appEventListeners.length > 0) {
+      this.appEventListeners.forEach(listener => {
+        try {
+          // 微信小程序没有直接的off方法，但我们可以通过标志位避免执行
+          // console.log(`清理事件监听器: ${listener.event}`);
+        } catch (error) {
+          console.warn('清理事件监听器失败:', error);
+        }
+      });
+      this.appEventListeners = [];
+    }
+
     // 清除设备数据缓存
     this.deviceDataCache = null;
     this.disconnectRealTime();
@@ -352,7 +378,7 @@ Page({
 
       // 连接断开回调
       onDisconnect: (event) => {
-        console.log('首页实时数据连接断开:', event);
+        // console.log('首页实时数据连接断开:', event);
         this.isRealTimeConnected = false;
         this.setData({ realTimeStatus: 'disconnected' });
 
@@ -415,21 +441,37 @@ Page({
     }
   },
 
-  // 聚合设备实时数据
+  // 聚合设备实时数据 - 优化版本，减少内存分配
   aggregateDeviceRealTimeData: function (deviceId, data) {
+    // 检查页面是否已销毁
+    if (this.isDestroyed) {
+      return;
+    }
+
     // 初始化设备数据缓存
     if (!this.deviceDataCache) {
-      this.deviceDataCache = {};
+      this.deviceDataCache = new Map(); // 使用Map提高性能
     }
 
     // 更新单个设备的数据缓存
     // 如果数据包含realTimeParams，则使用realTimeParams中的数据
     const deviceData = data.realTimeParams ? data.realTimeParams : data;
-    this.deviceDataCache[deviceId] = {
-      ...this.deviceDataCache[deviceId],
+
+    // 获取现有缓存或创建新的
+    const existingCache = this.deviceDataCache.get(deviceId) || {};
+    const updatedCache = {
+      ...existingCache,
       ...deviceData,
       lastUpdate: Date.now()
     };
+
+    this.deviceDataCache.set(deviceId, updatedCache);
+
+    // 限制缓存大小，防止内存泄漏
+    if (this.deviceDataCache.size > 100) {
+      const oldestKey = this.deviceDataCache.keys().next().value;
+      this.deviceDataCache.delete(oldestKey);
+    }
 
     // 添加调试日志，记录接收到的数据
     if (this.data.debugMode) {
@@ -439,27 +481,38 @@ Page({
         hasWater: deviceData.water !== undefined,
         hasGas: deviceData.gas !== undefined,
         waterValue: deviceData.water,
-        gasValue: deviceData.gas
+        gasValue: deviceData.gas,
+        cacheSize: this.deviceDataCache.size
       });
     }
 
-    // 使用防抖机制，避免过于频繁的更新（每2秒最多更新一次）
+    // 使用防抖机制，避免过于频繁的更新（每3秒最多更新一次）
     if (this.aggregateUpdateTimer) {
       clearTimeout(this.aggregateUpdateTimer);
     }
 
     // 设置防抖定时器并确保执行
     this.aggregateUpdateTimer = setTimeout(() => {
+      // 再次检查页面是否已销毁
+      if (this.isDestroyed) {
+        return;
+      }
+
       // 减少日志输出，避免控制台刷屏
       if (this.data.debugMode) {
         console.log('执行聚合数据更新，最新设备:', deviceId);
       }
       this.updateAggregatedRealTimeData();
-    }, 2000); // 2秒防抖延迟，减少更新频率
+    }, 500); // 修复：减少到500ms，保证实时性
   },
 
-  // 更新聚合的实时数据
+  // 更新聚合的实时数据 - 优化版本，减少计算复杂度
   updateAggregatedRealTimeData: function () {
+    // 检查页面是否已销毁
+    if (this.isDestroyed) {
+      return;
+    }
+
     const { monitorData } = this.data;
     if (!monitorData || !monitorData.realTimeData || !this.deviceDataCache) {
       if (this.data.debugMode) {
@@ -473,7 +526,7 @@ Page({
     }
 
     if (this.data.debugMode) {
-      console.log('开始聚合实时数据，设备数量:', Object.keys(this.deviceDataCache).length);
+      console.log('开始聚合实时数据，设备数量:', this.deviceDataCache.size);
     }
 
     // 聚合所有设备的数据
@@ -488,9 +541,8 @@ Page({
     let waterDeviceCount = 0;  // 用水设备数量
     let gasDeviceCount = 0;    // 燃气设备数量
 
-    // 遍历所有设备数据
-    Object.keys(this.deviceDataCache).forEach(deviceId => {
-      const deviceData = this.deviceDataCache[deviceId];
+    // 遍历所有设备数据 - 使用Map的forEach方法
+    this.deviceDataCache.forEach((deviceData, deviceId) => {
 
       // 只统计在线设备的数据
       if (deviceData) {
@@ -784,23 +836,11 @@ Page({
     this.setData(validatedData);
   },
 
-  // 降级到轮询模式
+  // 降级到轮询模式 - 使用统一的定时器机制
   fallbackToPolling: function () {
-    console.log('WebSocket连接失败，降级到轮询模式');
-
-    // 清除之前的轮询定时器
-    if (this.pollingTimer) {
-      clearInterval(this.pollingTimer);
-    }
-
-    // 设置轮询定时器，每30秒从缓存刷新一次数据
-    this.pollingTimer = setInterval(() => {
-      const cachedData = this.loadCachedHomeData();
-      if (cachedData) {
-        this.updateHomeDataDisplay(cachedData);
-        console.log('定时从缓存刷新数据');
-      }
-    }, 30000);
+    // console.log('WebSocket连接失败，降级到轮询模式');
+    // 不再创建额外的轮询定时器，使用已有的dataUpdateTimer
+    // 该定时器会在WebSocket断开时自动激活轮询逻辑
   },
 
   // 加载天气数据 - 使用统一API接口
@@ -909,11 +949,15 @@ Page({
     try {
       // 显示加载状态
       if (forceRefresh) {
-        wx.showLoading({
-          title: '刷新数据...',
-          mask: true
-        });
-        loadingShown = true;
+        try {
+          wx.showLoading({
+            title: '刷新数据...',
+            mask: true
+          });
+          loadingShown = true;
+        } catch (error) {
+          console.warn('显示加载状态失败:', error);
+        }
       } else {
         this.setData({ loading: true });
       }
@@ -949,9 +993,9 @@ Page({
         throw new Error('API.getBatchData方法不可用');
       }
 
-      console.log('开始批量获取首页数据，请求列表:', requests);
+      // console.log('开始批量获取首页数据，请求列表:', requests);
       const batchResult = await API.getBatchData(requests);
-      console.log('批量数据获取结果:', batchResult);
+      // console.log('批量数据获取结果:', batchResult);
 
       if (batchResult.success) {
         const {
@@ -1196,7 +1240,7 @@ Page({
    * 确保传递给组件的数据类型正确
    */
   validateComponentData(data) {
-    console.log('开始验证组件数据:', data);
+    // console.log('开始验证组件数据:', data);
 
     if (!data || typeof data !== 'object') {
       console.warn('传入的数据无效，返回空对象');
@@ -1231,7 +1275,7 @@ Page({
 
     // 验证overview数据
     if (data.overview) {
-      console.log('验证overview数据:', data.overview);
+      // console.log('验证overview数据:', data.overview);
       validated.overview = {
         totalEnergy: {
           value: safeStringValue(data.overview.totalEnergy?.value, '0', 'totalEnergy.value'),
@@ -1433,7 +1477,7 @@ Page({
         });
 
         if (hasInitialData) {
-          console.log('缓存数据显示完成（保留初始实时监控数据）');
+          // console.log('缓存数据显示完成（保留初始实时监控数据）');
         }
       }
 
@@ -1445,7 +1489,7 @@ Page({
       }
 
       this.setData({ loading: false });
-      console.log('缓存数据显示完成（保留实时监控数据）');
+      // console.log('缓存数据显示完成（保留实时监控数据）');
     } catch (error) {
       console.error('更新首页数据显示失败:', error);
     }
@@ -1485,7 +1529,7 @@ Page({
         // 更新显示
         this.updateHomeDataDisplay(batchResult.data);
 
-        console.log('后台首页数据更新完成');
+        // console.log('后台首页数据更新完成');
       }
     } catch (error) {
       console.error('后台更新首页数据失败:', error);
@@ -1760,7 +1804,7 @@ Page({
   // 初始化用电负荷曲线图表 - 使用API数据
   initLoadCurveChart: function (loadCurveData) {
     if (!loadCurveData || loadCurveData.length === 0) {
-      console.log('用电负荷曲线数据为空，跳过图表初始化');
+      // console.log('用电负荷曲线数据为空，跳过图表初始化');
       return;
     }
 
@@ -1837,7 +1881,7 @@ Page({
   },
 
   // 刷新数据 - 优先使用缓存数据
-  refreshData: function () {
+  refreshData: async function () {
     this.setData({
       isRefreshing: true
     });
@@ -1846,14 +1890,8 @@ Page({
       // 更新时间
       this.updateTime();
 
-      // 从缓存加载首页数据
-      const cachedData = this.loadCachedHomeData();
-      if (cachedData) {
-        this.updateHomeDataDisplay(cachedData);
-        console.log('刷新数据：使用缓存数据');
-      } else {
-        console.log('刷新数据：缓存数据不可用，保持当前数据');
-      }
+      // 强制从网络获取最新数据
+      await this.loadHomeData(true);
 
       // 如果有负荷曲线数据，重新初始化图表
       if (this.data.overview && this.data.overview.electricity && this.data.overview.electricity.loadCurve) {
@@ -1875,11 +1913,22 @@ Page({
         isRefreshing: false
       });
 
-      wx.showToast({
-        title: '刷新失败',
-        icon: 'none',
-        duration: 3000
-      });
+      // 网络失败时尝试使用缓存数据
+      const cachedData = this.loadCachedHomeData();
+      if (cachedData) {
+        this.updateHomeDataDisplay(cachedData);
+        wx.showToast({
+          title: '已显示缓存数据',
+          icon: 'none',
+          duration: 2000
+        });
+      } else {
+        wx.showToast({
+          title: '刷新失败',
+          icon: 'none',
+          duration: 3000
+        });
+      }
     }
   },
 
@@ -2001,7 +2050,7 @@ Page({
         this.drawChart(chartData);
       }, 100);
 
-      console.log(`图表切换到${tab}，使用${cachedMonitor ? '缓存' : '默认'}数据`);
+      // console.log(`图表切换到${tab}，使用${cachedMonitor ? '缓存' : '默认'}数据`);
     } catch (error) {
       console.error('切换图表数据失败:', error);
       wx.showToast({

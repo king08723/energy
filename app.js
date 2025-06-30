@@ -1,23 +1,40 @@
 // app.js
 let API;
+
+// 调试日志控制 - 默认关闭
+const DEBUG_MODE = false;
+
+// 调试日志函数
+const debugLog = (...args) => {
+    if (DEBUG_MODE) {
+        console.log(...args);
+    }
+};
+
+const debugWarn = (...args) => {
+    if (DEBUG_MODE) {
+        console.warn(...args);
+    }
+};
+
 try {
     API = require('./utils/api.js');
-    console.log('API模块加载成功');
-    console.log('API对象结构:', Object.keys(API));
-    console.log('API.config存在:', !!API.config);
+    debugLog('API模块加载成功');
+    debugLog('API对象结构:', Object.keys(API));
+    debugLog('API.config存在:', !!API.config);
     if (API.config) {
-        console.log('API.config方法:', Object.keys(API.config));
+        debugLog('API.config方法:', Object.keys(API.config));
     }
 } catch (error) {
     console.error('API模块加载失败:', error);
     // 创建一个基础的API对象作为备用
     API = {
         config: {
-            setEnvironment: (env) => console.warn('API模块未正确加载，无法设置环境:', env),
+            setEnvironment: (env) => debugWarn('API模块未正确加载，无法设置环境:', env),
             getCurrentConfig: () => ({}),
-            setCustomConfig: () => console.warn('API模块未正确加载'),
-            setMockMode: () => console.warn('API模块未正确加载'),
-            setLogMode: () => console.warn('API模块未正确加载')
+            setCustomConfig: () => debugWarn('API模块未正确加载'),
+            setMockMode: () => debugWarn('API模块未正确加载'),
+            setLogMode: () => debugWarn('API模块未正确加载')
         }
     };
 }
@@ -30,7 +47,7 @@ App({
         devices: [],
         // 系统配置
         systemConfig: {
-            enableDebug: false,
+            enableDebug: DEBUG_MODE, // 使用全局调试模式设置
             enableMock: true,
             cacheTimeout: 5 * 60 * 1000 // 5分钟缓存
         },
@@ -43,7 +60,7 @@ App({
     },
 
     onLaunch(options) {
-        console.log('应用启动', options);
+        debugLog('应用启动', options);
 
         // 记录启动时间
         const launchStartTime = Date.now();
@@ -53,11 +70,11 @@ App({
         this.initApp().then(() => {
             const launchEndTime = Date.now();
             const launchDuration = launchEndTime - launchStartTime;
-            console.log(`应用启动完成，耗时: ${launchDuration}ms`);
+            debugLog(`应用启动完成，耗时: ${launchDuration}ms`);
 
             // 如果启动时间过长，记录警告
             if (launchDuration > 3000) {
-                console.warn(`应用启动时间过长: ${launchDuration}ms`);
+                debugWarn(`应用启动时间过长: ${launchDuration}ms`);
             }
         }).catch(error => {
             console.error('应用初始化失败:', error);
@@ -65,7 +82,7 @@ App({
     },
 
     onShow(options) {
-        console.log('应用显示', options);
+        debugLog('应用显示', options);
         this.globalData.appState.lastActiveTime = Date.now();
 
         // 检查网络状态
@@ -73,7 +90,7 @@ App({
     },
 
     onHide() {
-        console.log('应用隐藏');
+        debugLog('应用隐藏');
         // 清理定时器和连接
         this.cleanupResources();
     },
@@ -98,7 +115,7 @@ App({
             return false;
         }
 
-        console.log('API对象可用方法:', Object.keys(API).filter(key => typeof API[key] === 'function'));
+        debugLog('API对象可用方法:', Object.keys(API).filter(key => typeof API[key] === 'function'));
 
         // 检查API方法
         requiredMethods.forEach(method => {
@@ -107,7 +124,7 @@ App({
                 isValid = false;
                 console.error(`缺少方法: API.${method}, 类型:`, typeof API[method]);
             } else {
-                console.log(`✓ API.${method} 可用`);
+                debugLog(`✓ API.${method} 可用`);
             }
         });
 
@@ -116,14 +133,14 @@ App({
             console.error('API.config对象未定义');
             isValid = false;
         } else {
-            console.log('API.config可用方法:', Object.keys(API.config).filter(key => typeof API.config[key] === 'function'));
+            debugLog('API.config可用方法:', Object.keys(API.config).filter(key => typeof API.config[key] === 'function'));
             requiredConfigMethods.forEach(method => {
                 if (typeof API.config[method] !== 'function') {
                     missingMethods.push(`API.config.${method}`);
                     isValid = false;
                     console.error(`缺少方法: API.config.${method}, 类型:`, typeof API.config[method]);
                 } else {
-                    console.log(`✓ API.config.${method} 可用`);
+                    debugLog(`✓ API.config.${method} 可用`);
                 }
             });
         }
@@ -131,7 +148,7 @@ App({
         if (!isValid) {
             console.error('API模块验证失败，缺少方法:', missingMethods);
         } else {
-            console.log('✅ API模块验证通过');
+            debugLog('✅ API模块验证通过');
         }
 
         return isValid;
@@ -143,7 +160,7 @@ App({
             // 1. 验证API模块
             const isAPIValid = this.validateAPIModule();
             if (!isAPIValid) {
-                console.warn('API模块验证失败，部分功能可能不可用');
+                debugWarn('API模块验证失败，部分功能可能不可用');
             }
 
             // 2. 检查网络状态
@@ -156,7 +173,7 @@ App({
             if (isAPIValid) {
                 await this.preloadCriticalData();
             } else {
-                console.warn('跳过数据预加载，API模块不可用');
+                debugWarn('跳过数据预加载，API模块不可用');
             }
 
             // 5. 初始化用户信息
@@ -177,7 +194,7 @@ App({
             wx.getNetworkType({
                 success: (res) => {
                     this.globalData.appState.networkStatus = res.networkType;
-                    console.log('网络状态:', res.networkType);
+                    debugLog('网络状态:', res.networkType);
                     resolve(res.networkType);
                 },
                 fail: () => {
@@ -204,7 +221,7 @@ App({
             if (envVersion === 'develop') {
                 // 开发环境
                 API.config.setEnvironment('development');
-                this.globalData.systemConfig.enableDebug = true;
+                this.globalData.systemConfig.enableDebug = DEBUG_MODE;
                 this.globalData.systemConfig.enableMock = true;
             } else if (envVersion === 'trial') {
                 // 体验版
@@ -218,11 +235,11 @@ App({
                 this.globalData.systemConfig.enableMock = false;
             }
 
-            console.log('API环境配置完成:', envVersion);
+            debugLog('API环境配置完成:', envVersion);
         } catch (error) {
             console.error('API配置初始化失败:', error);
             // 设置默认配置
-            this.globalData.systemConfig.enableDebug = true;
+            this.globalData.systemConfig.enableDebug = DEBUG_MODE;
             this.globalData.systemConfig.enableMock = true;
         }
     },
@@ -238,9 +255,9 @@ App({
             ];
 
             await Promise.allSettled(preloadPromises);
-            console.log('关键数据预加载完成');
+            debugLog('关键数据预加载完成');
         } catch (error) {
-            console.warn('预加载数据失败:', error);
+            debugWarn('预加载数据失败:', error);
         }
     },
 
@@ -249,17 +266,17 @@ App({
         try {
             // 检查API是否可用
             if (!API || typeof API.getDeviceList !== 'function') {
-                console.warn('API.getDeviceList方法不可用，跳过设备列表预加载');
+                debugWarn('API.getDeviceList方法不可用，跳过设备列表预加载');
                 return;
             }
 
             const deviceRes = await API.getDeviceList({ limit: 20 });
             if (deviceRes && deviceRes.success && deviceRes.data) {
                 this.globalData.devices = deviceRes.data;
-                console.log('设备列表预加载完成:', deviceRes.data.length);
+                debugLog('设备列表预加载完成:', deviceRes.data.length);
             }
         } catch (error) {
-            console.warn('设备列表预加载失败:', error);
+            debugWarn('设备列表预加载失败:', error);
         }
     },
 
@@ -270,10 +287,10 @@ App({
             const settings = wx.getStorageSync('userSettings');
             if (settings) {
                 this.globalData.userSettings = settings;
-                console.log('用户设置预加载完成');
+                debugLog('用户设置预加载完成');
             }
         } catch (error) {
-            console.warn('用户设置预加载失败:', error);
+            debugWarn('用户设置预加载失败:', error);
         }
     },
 
@@ -284,10 +301,10 @@ App({
             const config = wx.getStorageSync('systemConfig');
             if (config) {
                 Object.assign(this.globalData.systemConfig, config);
-                console.log('系统配置预加载完成');
+                debugLog('系统配置预加载完成');
             }
         } catch (error) {
-            console.warn('系统配置预加载失败:', error);
+            debugWarn('系统配置预加载失败:', error);
         }
     },
 
@@ -298,10 +315,10 @@ App({
             const userInfo = wx.getStorageSync('userInfo');
             if (userInfo) {
                 this.globalData.userInfo = userInfo;
-                console.log('用户信息初始化完成');
+                debugLog('用户信息初始化完成');
             }
         } catch (error) {
-            console.warn('用户信息初始化失败:', error);
+            debugWarn('用户信息初始化失败:', error);
         }
     },
 
@@ -327,7 +344,7 @@ App({
         // 在生产环境中可以上报到错误监控服务
         if (!this.globalData.systemConfig.enableDebug) {
             // 这里可以集成错误监控服务
-            console.log('错误上报:', error);
+            debugLog('错误上报:', error);
         }
     },
 
@@ -342,5 +359,16 @@ App({
         if (deviceIndex !== -1) {
             Object.assign(this.globalData.devices[deviceIndex], updates);
         }
+    },
+
+    // 动态控制调试模式
+    setDebugMode(enable) {
+        this.globalData.systemConfig.enableDebug = enable;
+        console.log(`调试模式已${enable ? '开启' : '关闭'}`);
+    },
+
+    // 获取调试模式状态
+    isDebugMode() {
+        return this.globalData.systemConfig.enableDebug || DEBUG_MODE;
     }
 })

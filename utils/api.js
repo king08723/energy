@@ -1230,6 +1230,8 @@ API.getData = (dataType, params = {}) => {
       return API.detectRuleConflicts();
     case 'rule_test':
       return API.testAutomationRule(params.ruleData);
+    case 'saving':
+      return API.getSavingPlans(params);
     default:
       return Promise.reject(new Error(`未知的数据类型: ${dataType}`));
   }
@@ -1364,6 +1366,18 @@ API.mockWebSocket = (options) => {
             if (onMessage) onMessage(mockData);
           });
         }
+      } else {
+        // 如果没有指定设备ID，推送系统级别的实时数据
+        const systemData = {
+          type: 'energy_update',
+          timestamp: Date.now(),
+          data: {
+            totalEnergy: 1234.5 + Math.random() * 100,
+            totalPower: 156.8 + Math.random() * 50,
+            trend: (Math.random() - 0.5) * 10
+          }
+        };
+        if (onMessage) onMessage(systemData);
       }
     }, 3000); // 每3秒推送一次
 
@@ -1753,9 +1767,32 @@ API.getDataWithCache = async (dataType, params = {}, options = {}) => {
 };
 
 // 定期清理过期缓存（每10分钟执行一次）
-setInterval(() => {
-  API.cache.cleanup();
-}, 10 * 60 * 1000);
+// 使用全局变量存储定时器ID，以便在需要时清理
+let cacheCleanupInterval = null;
+
+/**
+ * 启动缓存清理定时器
+ */
+function startCacheCleanup() {
+  if (!cacheCleanupInterval) {
+    cacheCleanupInterval = setInterval(() => {
+      API.cache.cleanup();
+    }, 10 * 60 * 1000);
+  }
+}
+
+/**
+ * 停止缓存清理定时器
+ */
+function stopCacheCleanup() {
+  if (cacheCleanupInterval) {
+    clearInterval(cacheCleanupInterval);
+    cacheCleanupInterval = null;
+  }
+}
+
+// 启动缓存清理
+startCacheCleanup();
 
 // 导出API和配置 - 在所有方法定义完成后导出
 module.exports = {
@@ -1868,6 +1905,20 @@ module.exports = {
       wx.removeStorageSync('access_token');
       wx.removeStorageSync('user_info');
       console.log('API缓存已清除');
+    },
+
+    /**
+     * 停止缓存清理定时器
+     */
+    stopCacheCleanup() {
+      stopCacheCleanup();
+    },
+
+    /**
+     * 启动缓存清理定时器
+     */
+    startCacheCleanup() {
+      startCacheCleanup();
     }
   }
 };

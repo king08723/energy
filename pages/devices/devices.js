@@ -111,6 +111,7 @@ Page({
     // 设备列表数据
     allDevices: [], // 所有设备数据（统一数据源）
     devices: [], // 筛选后的全部设备数据
+    filteredDevices: [], // 筛选后的设备数据（用于非分页模式）
     currentPageDevices: [], // 当前页显示的设备数据（最多5个）
     loading: false,
 
@@ -185,6 +186,12 @@ Page({
   },
 
   onLoad: function (options) {
+    // 初始化页面状态
+    this.isDestroyed = false;
+    this.searchCache = new Map(); // 搜索结果缓存
+    this.lastSearchKeyword = '';
+    this.lastFilterType = 'all';
+
     // 初始化性能监控
     this.initPerformanceMonitor();
 
@@ -248,8 +255,42 @@ Page({
     // 清理所有定时器和资源
     this.cleanupResources();
 
-    // 输出性能报告
-    this.logPerformanceReport();
+    // 清理性能监控
+    if (this.performanceMonitor) {
+      this.logPerformanceReport();
+      this.performanceMonitor = null;
+    }
+
+    // 清理缓存，防止内存泄漏
+    if (this.dataCache) {
+      this.dataCache.deviceLookup.clear();
+      this.dataCache = null;
+    }
+
+    if (this.searchCache) {
+      this.searchCache.clear();
+      this.searchCache = null;
+    }
+
+    // 清理定时器
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+      this.searchTimer = null;
+    }
+
+    if (this.updateStatsTimer) {
+      clearTimeout(this.updateStatsTimer);
+      this.updateStatsTimer = null;
+    }
+
+    // 清理活动定时器
+    if (this.activeTimers) {
+      this.activeTimers.forEach(timer => {
+        clearInterval(timer);
+      });
+      this.activeTimers.clear();
+      this.activeTimers = null;
+    }
   },
 
   // 实时连接相关属性
@@ -456,6 +497,7 @@ Page({
         this.setData({
           allDevices: devices,
           devices: devices, // 初始时筛选结果等于全部设备
+          filteredDevices: devices, // 初始时筛选结果等于全部设备
           currentPage: 1,
           totalPages: totalPages,
           showPagination: showPagination
@@ -1000,10 +1042,31 @@ Page({
   },
 
   /**
-   * 应用筛选条件并更新devices数据 - 统一筛选逻辑
+   * 应用筛选条件并更新devices数据 - 优化版本，添加缓存机制
    */
   applyDeviceFilters() {
+    // 检查页面是否已销毁
+    if (this.isDestroyed) {
+      return;
+    }
+
     const { allDevices, searchKeyword, filterType, selectedGroup } = this.data;
+
+    // 生成缓存键
+    const cacheKey = `${searchKeyword || ''}_${filterType}_${selectedGroup}`;
+
+    // 检查缓存
+    if (this.searchCache && this.searchCache.has(cacheKey)) {
+      const cachedResult = this.searchCache.get(cacheKey);
+      this.updateFilteredResults(cachedResult);
+      return;
+    }
+
+    // 性能监控
+    if (this.performanceMonitor) {
+      this.performanceMonitor.filterOperations++;
+    }
+
     let filtered = allDevices;
 
     // 应用搜索关键词过滤
@@ -1086,12 +1149,30 @@ Page({
       }
     }
 
-    // 更新筛选后的设备数据
+    // 缓存筛选结果
+    if (this.searchCache) {
+      // 限制缓存大小，防止内存泄漏
+      if (this.searchCache.size > 50) {
+        const firstKey = this.searchCache.keys().next().value;
+        this.searchCache.delete(firstKey);
+      }
+      this.searchCache.set(cacheKey, filtered);
+    }
+
+    // 更新筛选结果
+    this.updateFilteredResults(filtered);
+  },
+
+  /**
+   * 更新筛选结果 - 提取公共逻辑
+   */
+  updateFilteredResults(filtered) {
     const totalPages = Math.ceil(filtered.length / this.data.pageSize);
     const showPagination = filtered.length > this.data.pageSize;
 
     this.setData({
       devices: filtered,
+      filteredDevices: filtered, // 同时更新 filteredDevices
       totalPages: totalPages,
       showPagination: showPagination,
       hasMore: filtered.length > this.data.pageSize
@@ -1366,15 +1447,91 @@ Page({
       }
     });
 
-    // 计算健康度 - 基于所有设备的状态
+    // 计算健康度 - 基于所有设备的状态和详细健康信息
     const totalDevices = allDevices.length;
     const onlineDevices = allDevices.filter(d => d.status === 'online').length;
     const alertDevices = allDevices.filter(d => d.hasAlert).length;
 
-    // 健康度计算：在线设备比例占50%权重，无告警设备比例占50%权重
-    const onlineRatio = totalDevices > 0 ? onlineDevices / totalDevices : 0;
-    const healthyRatio = totalDevices > 0 ? (totalDevices - alertDevices) / totalDevices : 0;
-    const healthScore = Math.round((onlineRatio * 0.5 + healthyRatio * 0.5) * 100);
+    // 增强的健康度计算系统
+    let totalHealthScore = 0;
+    let deviceCount = 0;
+
+    allDevices.forEach(device => {
+      let deviceHealthScore = 0;
+
+      // 如果设备有详细健康信息，使用详细计算
+      if (device.healthDetails) {
+        const {
+          operationalScore = 85,
+          maintenanceScore = 85,
+          performanceScore = 85,
+          reliabilityScore = 85
+        } = device.healthDetails;
+
+        // 加权平均：运行状态30%，维护状态25%，性能25%，可靠性20%
+        deviceHealthScore = Math.round(
+          operationalScore * 0.30 +
+          maintenanceScore * 0.25 +
+          performanceScore * 0.25 +
+          reliabilityScore * 0.20
+        );
+      } else {
+        // 传统计算方式作为后备
+        let baseScore = 85; // 基础分数
+
+        // 设备状态评分
+        if (device.status === 'online') {
+          baseScore += 10;
+        } else if (device.status === 'offline') {
+          baseScore -= 30;
+        } else if (device.status === 'alarm') {
+          baseScore -= 20;
+        } else if (device.status === 'maintenance') {
+          baseScore -= 5;
+        }
+
+        // 告警状态评分
+        if (device.hasAlert) {
+          baseScore -= 15;
+        }
+
+        // 维护状态评分
+        if (device.maintenanceStatus === 'normal') {
+          baseScore += 5;
+        } else if (device.maintenanceStatus === 'warning') {
+          baseScore -= 10;
+        } else if (device.maintenanceStatus === 'required') {
+          baseScore -= 15;
+        }
+
+        // 能效等级评分
+        if (device.energyEfficiency === 'A+') {
+          baseScore += 5;
+        } else if (device.energyEfficiency === 'A') {
+          baseScore += 3;
+        } else if (device.energyEfficiency === 'B') {
+          baseScore -= 5;
+        } else if (device.energyEfficiency === 'C') {
+          baseScore -= 10;
+        }
+
+        // 运行时间评分（运行时间越长，可能需要更多维护）
+        const uptime = device.uptime || 0;
+        if (uptime > 10000) {
+          baseScore -= 5;
+        } else if (uptime > 5000) {
+          baseScore -= 2;
+        }
+
+        deviceHealthScore = Math.max(0, Math.min(100, baseScore));
+      }
+
+      totalHealthScore += deviceHealthScore;
+      deviceCount++;
+    });
+
+    // 计算平均健康度
+    const healthScore = deviceCount > 0 ? Math.round(totalHealthScore / deviceCount) : 0;
 
     // 根据健康度确定健康等级和颜色
     let healthLevel = 'success';
@@ -1383,9 +1540,15 @@ Page({
     if (healthScore < 60) {
       healthLevel = 'error';
       healthColor = '#EF4444';
-    } else if (healthScore < 80) {
+    } else if (healthScore < 75) {
       healthLevel = 'warning';
       healthColor = '#F59E0B';
+    } else if (healthScore < 90) {
+      healthLevel = 'success';
+      healthColor = '#10B981';
+    } else {
+      healthLevel = 'success';
+      healthColor = '#059669'; // 更深的绿色表示优秀
     }
 
     const stats = {
@@ -1460,6 +1623,7 @@ Page({
         this.setData({
           allDevices: devices,
           devices: devices, // 刷新后重置筛选结果
+          filteredDevices: devices, // 刷新后重置筛选结果
           currentPage: 1,
           totalPages: totalPages,
           showPagination: showPagination,
@@ -1820,8 +1984,12 @@ Page({
    * 管理分组 - 跳转到设备分组管理页面
    */
   onManageGroups() {
-    wx.navigateTo({
-      url: '/pages/group-management/group-management'
+    // wx.navigateTo({
+    //   url: '/pages/group-management/group-management'
+    // });
+    wx.showToast({
+      title: '没有权限YJ03',
+      icon: 'none'
     });
   },
 
@@ -1871,7 +2039,7 @@ Page({
     if (!this.data.batchMode) return;
 
     const deviceId = e.currentTarget.dataset.deviceId;
-    const { selectedDevices, devices } = this.data;
+    const { selectedDevices, devices, currentPageDevices } = this.data;
     const index = selectedDevices.indexOf(deviceId);
 
     if (index > -1) {
@@ -1888,9 +2056,16 @@ Page({
       isSelected: selectedDevices.includes(device.id)
     }));
 
+    // 更新当前页设备列表中的选中状态
+    const updatedCurrentPageDevices = currentPageDevices.map(device => ({
+      ...device,
+      isSelected: selectedDevices.includes(device.id)
+    }));
+
     this.setData({
       selectedDevices,
-      devices: updatedDevices
+      devices: updatedDevices,
+      currentPageDevices: updatedCurrentPageDevices
     });
 
     // 更新全选按钮文本
@@ -1901,11 +2076,11 @@ Page({
    * 全选/取消全选 - 在分页模式下只选择当前页面的设备
    */
   onSelectAll() {
-    const { selectedDevices, devices, showPagination } = this.data;
+    const { selectedDevices, devices, showPagination, currentPageDevices } = this.data;
 
     // 在分页模式下，只操作当前页面的设备
-    const targetDevices = showPagination ? devices : this.data.filteredDevices;
-    const currentPageDeviceIds = targetDevices.map(d => d.id);
+    const targetDevices = showPagination ? devices : (this.data.filteredDevices || devices || []);
+    const currentPageDeviceIds = targetDevices && targetDevices.length > 0 ? targetDevices.map(d => d.id) : [];
 
     // 检查当前页面的设备是否全部被选中
     const allCurrentPageSelected = currentPageDeviceIds.every(id =>
@@ -1934,9 +2109,16 @@ Page({
       isSelected: updatedSelectedDevices.includes(device.id)
     }));
 
+    // 更新当前页设备列表中的选中状态
+    const updatedCurrentPageDevices = currentPageDevices.map(device => ({
+      ...device,
+      isSelected: updatedSelectedDevices.includes(device.id)
+    }));
+
     this.setData({
       selectedDevices: updatedSelectedDevices,
-      devices: updatedDevices
+      devices: updatedDevices,
+      currentPageDevices: updatedCurrentPageDevices
     });
 
     // 更新全选按钮文本
@@ -1962,10 +2144,17 @@ Page({
       isSelected: false
     }));
 
+    // 更新当前页设备列表中的选中状态
+    const updatedCurrentPageDevices = this.data.currentPageDevices.map(device => ({
+      ...device,
+      isSelected: false
+    }));
+
     this.setData({
       batchMode: false,
       selectedDevices: [],
-      devices: updatedDevices
+      devices: updatedDevices,
+      currentPageDevices: updatedCurrentPageDevices
     });
 
     // 更新全选按钮文本
@@ -2493,14 +2682,16 @@ Page({
 
     if (showPagination) {
       // 分页模式下，检查当前页面的设备是否全部被选中
-      const currentPageDeviceIds = devices.map(d => d.id);
+      const currentPageDeviceIds = devices && devices.length > 0 ? devices.map(d => d.id) : [];
       const allCurrentPageSelected = currentPageDeviceIds.length > 0 &&
-        currentPageDeviceIds.every(id => selectedDevices.includes(id));
+        currentPageDeviceIds.every(id => selectedDevices && selectedDevices.includes(id));
       selectAllText = allCurrentPageSelected ? '取消全选' : '全选';
     } else {
       // 非分页模式下，检查所有过滤后的设备是否全部被选中
-      const allSelected = filteredDevices.length > 0 &&
-        selectedDevices.length === filteredDevices.length;
+      // 使用 devices 作为备选，如果 filteredDevices 不存在
+      const targetDevices = filteredDevices || devices || [];
+      const allSelected = targetDevices.length > 0 &&
+        selectedDevices && selectedDevices.length === targetDevices.length;
       selectAllText = allSelected ? '取消全选' : '全选';
     }
 

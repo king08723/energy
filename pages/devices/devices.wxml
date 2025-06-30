@@ -264,7 +264,7 @@
               wx:for="{{deviceGroups}}" wx:key="id"
               data-group="{{item.id}}" bindtap="onSelectGroup">
           <text>{{item.name}}</text>
-          <text class="energy-text-small energy-text-tertiary">({{item.count}})</text>
+          <text class="energy-text-small energy-text-tertiary">({{item.deviceIds.length}})</text>
         </view>
       </view>
     </scroll-view>

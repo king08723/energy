@@ -34,3 +34,31 @@
   font-size: 24rpx;
   color: var(--text-secondary); /* Use secondary text color from design system */
 }
+
+/* 联系电话样式 */
+.footer-contact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  margin: 4rpx 0;
+}
+
+.footer-contact-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.footer-phone {
+  font-size: 24rpx;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  letter-spacing: 1rpx;
+  /* 添加轻微的文字阴影增强可读性 */
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+  /* 防止文本选择，增加防爬虫效果 */
+  -webkit-user-select: none;
+  user-select: none;
+}

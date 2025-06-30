@@ -12,9 +12,7 @@
   min-width: 0;
 }
 
-.data-card:active {
-  transform: scale(0.98);
-}
+/* Active state removed - not supported in component WXSS */
 
 .data-icon {
   width: 56rpx;

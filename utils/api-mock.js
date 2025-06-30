@@ -20,7 +20,7 @@ const TODAY_ENERGY_DATA = {
 const carbonEmissionFactors = {
   electricity: 0.785, // kg CO2/kWh (电网平均值)
   water: 0.344,      // kg CO2/吨 (包含水处理和输送能耗)
-  gas: 2.093,        // kg CO2/m³ (天然气燃烧排放),
+  gas: 2.093         // kg CO2/m³ (天然气燃烧排放)
 };
 
 class EnergyMockAPI {
@@ -59,6 +59,485 @@ class EnergyMockAPI {
     this.initReports();
     this.initSavingPlans();
   }
+
+  /**
+   * 获取节能方案
+   * @returns {Object} 节能方案数据
+   */
+  getSavingPlans() {
+    try {
+      // 获取设备列表用于分析
+      const deviceListResult = this.getDeviceList();
+      const devices = deviceListResult.success ? deviceListResult.data.list : [];
+
+      // 获取能耗数据用于分析
+      const energyResult = this.getHistoryEnergyData({ timeRange: 'month' });
+      const energyData = energyResult.success ? energyResult.data : null;
+
+      // 计算节能潜力
+      const savingPotential = this.calculateSavingPotential(devices, energyData);
+
+      // 生成节能方案
+      const savingPlans = this.generateSavingPlans(devices, savingPotential);
+
+      // 节能小贴士
+      const savingTips = this.getSavingTips();
+
+      // 节能成果
+      const savingAchievements = this.getSavingAchievements();
+
+      // 节能目标
+      const savingGoals = this.getSavingGoals();
+
+      // 节能知识库
+      const knowledgeBase = this.getSavingKnowledgeBase();
+
+      return {
+        success: true,
+        data: {
+          overview: {
+            totalSavingPotential: savingPotential.total,
+            monthlySavingPotential: savingPotential.monthly,
+            carbonReductionPotential: savingPotential.carbon,
+            costSavingPotential: savingPotential.cost
+          },
+          plans: savingPlans,
+          tips: savingTips,
+          achievements: savingAchievements,
+          goals: savingGoals,
+          knowledgeBase: knowledgeBase
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '获取节能方案失败',
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 计算节能潜力
+   * @param {Array} devices 设备列表
+   * @param {Object} energyData 能耗数据
+   * @returns {Object} 节能潜力数据
+   */
+  calculateSavingPotential(devices, energyData) {
+    // 基于设备类型和运行状态计算节能潜力
+    let totalPotential = 0;
+    let carbonPotential = 0;
+
+    devices.forEach(device => {
+      const devicePotential = this.getDeviceSavingPotential(device);
+      totalPotential += devicePotential.energy;
+      carbonPotential += devicePotential.carbon;
+    });
+
+    return {
+      total: Math.round(totalPotential * 100) / 100, // kWh
+      monthly: Math.round(totalPotential * 30 * 100) / 100, // 月度潜力
+      carbon: Math.round(carbonPotential * 100) / 100, // kg CO2
+      cost: Math.round(totalPotential * 0.6 * 100) / 100 // 按0.6元/kWh计算成本节约
+    };
+  }
+
+  /**
+   * 获取单个设备的节能潜力
+   * @param {Object} device 设备信息
+   * @returns {Object} 设备节能潜力
+   */
+  getDeviceSavingPotential(device) {
+    const baseConsumption = this.energyModel.baseConsumptionRates.electricity || 0.5;
+    const deviceFactor = this.energyModel.deviceTypeFactors[device.type] || 1.0;
+    const currentConsumption = baseConsumption * deviceFactor;
+
+    // 根据设备状态和类型计算节能潜力
+    let savingRate = 0;
+    switch (device.type) {
+      case 'air_conditioner':
+        savingRate = 0.25; // 空调可节能25%
+        break;
+      case 'lighting':
+        savingRate = 0.30; // 照明可节能30%
+        break;
+      case 'motor':
+        savingRate = 0.15; // 电机可节能15%
+        break;
+      case 'air_compressor':
+        savingRate = 0.20; // 空压机可节能20%
+        break;
+      default:
+        savingRate = 0.10; // 其他设备默认10%
+    }
+
+    const energySaving = currentConsumption * savingRate;
+    const carbonSaving = energySaving * carbonEmissionFactors.electricity;
+
+    return {
+      energy: energySaving,
+      carbon: carbonSaving
+    };
+  }
+
+  /**
+   * 生成节能方案
+   * @param {Array} devices 设备列表
+   * @param {Object} savingPotential 节能潜力
+   * @returns {Array} 节能方案列表
+   */
+  generateSavingPlans(devices, savingPotential) {
+    const plans = [
+      {
+        id: 'plan_001',
+        title: '智能温控优化',
+        category: 'temperature',
+        priority: 'high',
+        description: '通过智能温控系统，优化空调运行策略，在保证舒适度的前提下降低能耗',
+        targetDevices: devices.filter(d => d.type === 'air_conditioner').map(d => d.id),
+        estimatedSaving: {
+          energy: Math.round(savingPotential.total * 0.4 * 100) / 100, // 40%的节能潜力来自温控
+          cost: Math.round(savingPotential.cost * 0.4 * 100) / 100,
+          carbon: Math.round(savingPotential.carbon * 0.4 * 100) / 100
+        },
+        implementation: {
+          difficulty: 'medium',
+          timeRequired: '1-2周',
+          investment: '中等',
+          roi: '6-12个月'
+        },
+        actions: [
+          '设置合理的温度范围（夏季26-28℃，冬季18-20℃）',
+          '启用定时开关机功能',
+          '安装智能温控器',
+          '优化空调运行时间表'
+        ],
+        status: 'recommended'
+      },
+      {
+        id: 'plan_002',
+        title: 'LED照明改造',
+        category: 'lighting',
+        priority: 'high',
+        description: '将传统照明设备更换为LED灯具，并配置智能调光系统',
+        targetDevices: devices.filter(d => d.type === 'lighting').map(d => d.id),
+        estimatedSaving: {
+          energy: Math.round(savingPotential.total * 0.3 * 100) / 100,
+          cost: Math.round(savingPotential.cost * 0.3 * 100) / 100,
+          carbon: Math.round(savingPotential.carbon * 0.3 * 100) / 100
+        },
+        implementation: {
+          difficulty: 'easy',
+          timeRequired: '1周',
+          investment: '低',
+          roi: '3-6个月'
+        },
+        actions: [
+          '更换为LED灯具',
+          '安装智能调光开关',
+          '设置自动感应控制',
+          '优化照明布局'
+        ],
+        status: 'in_progress'
+      },
+      {
+        id: 'plan_003',
+        title: '设备运行优化',
+        category: 'equipment',
+        priority: 'medium',
+        description: '优化大功率设备的运行时间和负载，避免峰值用电',
+        targetDevices: devices.filter(d => ['motor', 'air_compressor'].includes(d.type)).map(d => d.id),
+        estimatedSaving: {
+          energy: Math.round(savingPotential.total * 0.2 * 100) / 100,
+          cost: Math.round(savingPotential.cost * 0.2 * 100) / 100,
+          carbon: Math.round(savingPotential.carbon * 0.2 * 100) / 100
+        },
+        implementation: {
+          difficulty: 'medium',
+          timeRequired: '2-3周',
+          investment: '中等',
+          roi: '8-15个月'
+        },
+        actions: [
+          '错峰运行大功率设备',
+          '优化设备负载率',
+          '定期维护保养',
+          '安装变频控制器'
+        ],
+        status: 'planned'
+      },
+      {
+        id: 'plan_004',
+        title: '能源监控系统',
+        category: 'monitoring',
+        priority: 'medium',
+        description: '建立完善的能源监控体系，实时掌握能耗情况，及时发现异常',
+        targetDevices: devices.map(d => d.id),
+        estimatedSaving: {
+          energy: Math.round(savingPotential.total * 0.1 * 100) / 100,
+          cost: Math.round(savingPotential.cost * 0.1 * 100) / 100,
+          carbon: Math.round(savingPotential.carbon * 0.1 * 100) / 100
+        },
+        implementation: {
+          difficulty: 'high',
+          timeRequired: '4-6周',
+          investment: '高',
+          roi: '12-24个月'
+        },
+        actions: [
+          '安装智能电表',
+          '部署能耗监控系统',
+          '建立能耗分析报告',
+          '设置异常告警机制'
+        ],
+        status: 'evaluation'
+      }
+    ];
+
+    return plans;
+  }
+
+  /**
+   * 获取节能小贴士
+   * @returns {Array} 节能小贴士列表
+   */
+  getSavingTips() {
+    return [
+      {
+        id: 'tip_001',
+        category: 'daily',
+        title: '合理设置空调温度',
+        content: '夏季空调温度设置在26-28℃，冬季设置在18-20℃，每调高1℃可节能6-8%',
+        icon: '🌡️',
+        difficulty: 'easy',
+        savingPotential: 'high'
+      },
+      {
+        id: 'tip_002',
+        category: 'daily',
+        title: '及时关闭不用的设备',
+        content: '下班后及时关闭电脑、打印机等办公设备，避免待机耗电',
+        icon: '💻',
+        difficulty: 'easy',
+        savingPotential: 'medium'
+      },
+      {
+        id: 'tip_003',
+        category: 'lighting',
+        title: '充分利用自然光',
+        content: '白天尽量使用自然光，减少人工照明的使用时间',
+        icon: '☀️',
+        difficulty: 'easy',
+        savingPotential: 'medium'
+      },
+      {
+        id: 'tip_004',
+        category: 'equipment',
+        title: '定期维护设备',
+        content: '定期清洁和维护设备，保持设备良好运行状态，提高能效',
+        icon: '🔧',
+        difficulty: 'medium',
+        savingPotential: 'high'
+      },
+      {
+        id: 'tip_005',
+        category: 'water',
+        title: '节约用水',
+        content: '及时修复漏水点，使用节水器具，减少不必要的用水',
+        icon: '💧',
+        difficulty: 'easy',
+        savingPotential: 'medium'
+      }
+    ];
+  }
+
+  /**
+   * 获取节能成果
+   * @returns {Object} 节能成果数据
+   */
+  getSavingAchievements() {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    return {
+      summary: {
+        totalEnergySaved: 1245.6, // kWh
+        totalCostSaved: 747.36, // 元
+        totalCarbonReduced: 978.8, // kg CO2
+        savingRate: 18.5 // 节能率 %
+      },
+      monthly: [
+        {
+          month: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`,
+          energySaved: 156.8,
+          costSaved: 94.08,
+          carbonReduced: 123.3,
+          savingRate: 22.1
+        },
+        {
+          month: `${currentYear}-${String(currentMonth).padStart(2, '0')}`,
+          energySaved: 142.3,
+          costSaved: 85.38,
+          carbonReduced: 111.8,
+          savingRate: 19.7
+        },
+        {
+          month: `${currentYear}-${String(currentMonth - 1).padStart(2, '0')}`,
+          energySaved: 168.9,
+          costSaved: 101.34,
+          carbonReduced: 132.7,
+          savingRate: 24.3
+        }
+      ],
+      categories: [
+        {
+          category: 'lighting',
+          name: '照明节能',
+          energySaved: 456.2,
+          percentage: 36.6,
+          trend: 'up'
+        },
+        {
+          category: 'temperature',
+          name: '温控节能',
+          energySaved: 523.8,
+          percentage: 42.1,
+          trend: 'up'
+        },
+        {
+          category: 'equipment',
+          name: '设备优化',
+          energySaved: 265.6,
+          percentage: 21.3,
+          trend: 'stable'
+        }
+      ],
+      milestones: [
+        {
+          id: 'milestone_001',
+          title: '首次月度节能超过20%',
+          achievedDate: '2024-05-15',
+          description: '通过LED改造和智能温控，月度节能率首次突破20%',
+          reward: '节能先锋'
+        },
+        {
+          id: 'milestone_002',
+          title: '累计节能超过1000kWh',
+          achievedDate: '2024-06-20',
+          description: '累计节能量突破1000kWh，减少碳排放785kg',
+          reward: '绿色卫士'
+        }
+      ]
+    };
+  }
+
+  /**
+   * 获取节能目标
+   * @returns {Object} 节能目标数据
+   */
+  getSavingGoals() {
+    return {
+      current: {
+        id: 'goal_2024',
+        title: '2024年度节能目标',
+        targetSavingRate: 25, // 目标节能率 %
+        currentSavingRate: 18.5, // 当前节能率 %
+        targetEnergySaving: 2000, // 目标节能量 kWh
+        currentEnergySaving: 1245.6, // 当前节能量 kWh
+        targetCarbonReduction: 1570, // 目标减碳量 kg CO2
+        currentCarbonReduction: 978.8, // 当前减碳量 kg CO2
+        progress: 62.3, // 完成进度 %
+        deadline: '2024-12-31',
+        status: 'in_progress'
+      },
+      history: [
+        {
+          id: 'goal_2023',
+          title: '2023年度节能目标',
+          targetSavingRate: 20,
+          actualSavingRate: 22.3,
+          targetEnergySaving: 1500,
+          actualEnergySaving: 1672.5,
+          status: 'completed',
+          achievement: 'exceeded'
+        }
+      ],
+      suggestions: [
+        {
+          type: 'monthly',
+          title: '月度节能目标建议',
+          description: '建议设置月度节能率目标为20-25%，分阶段实现年度目标'
+        },
+        {
+          type: 'category',
+          title: '分类节能目标建议',
+          description: '照明节能30%，温控节能25%，设备优化15%'
+        }
+      ]
+    };
+  }
+
+  /**
+   * 获取节能知识库
+   * @returns {Array} 节能知识库数据
+   */
+  getSavingKnowledgeBase() {
+    return [
+      {
+        id: 'knowledge_001',
+        category: 'basic',
+        title: '什么是能效等级？',
+        summary: '了解设备能效等级的含义和选择标准',
+        content: '能效等级是表示设备能源效率高低的一种分级方法，通常分为1-5级，1级最节能...',
+        tags: ['能效', '设备选择', '基础知识'],
+        readTime: 3,
+        difficulty: 'beginner'
+      },
+      {
+        id: 'knowledge_002',
+        category: 'technology',
+        title: 'LED照明技术原理',
+        summary: 'LED照明的节能原理和应用优势',
+        content: 'LED（发光二极管）是一种半导体照明技术，具有高效、长寿命、环保等特点...',
+        tags: ['LED', '照明', '技术原理'],
+        readTime: 5,
+        difficulty: 'intermediate'
+      },
+      {
+        id: 'knowledge_003',
+        category: 'practice',
+        title: '空调节能实用技巧',
+        summary: '空调使用中的节能方法和注意事项',
+        content: '空调是办公场所的主要耗电设备，通过合理使用可以显著降低能耗...',
+        tags: ['空调', '节能技巧', '实用指南'],
+        readTime: 4,
+        difficulty: 'beginner'
+      },
+      {
+        id: 'knowledge_004',
+        category: 'policy',
+        title: '国家节能政策解读',
+        summary: '了解最新的节能减排政策和激励措施',
+        content: '国家出台了一系列节能减排政策，包括税收优惠、补贴政策等...',
+        tags: ['政策', '补贴', '法规'],
+        readTime: 6,
+        difficulty: 'advanced'
+      },
+      {
+        id: 'knowledge_005',
+        category: 'case',
+        title: '企业节能改造案例',
+        summary: '成功的企业节能改造项目案例分析',
+        content: '某制造企业通过LED改造、智能控制等措施，年节能率达到30%...',
+        tags: ['案例分析', '改造项目', '成功经验'],
+        readTime: 8,
+        difficulty: 'intermediate'
+      }
+    ];
+  }
+
+  // ==================== 工具方法 ====================
 
   // ==================== 用户管理相关 ====================
 
@@ -1995,42 +2474,71 @@ class EnergyMockAPI {
         type: 'solar_water_heater',
         category: 'water',
         location: '宿舍楼顶',
-        status: 'degraded',
+        status: 'online', // 修复为在线状态
         isOn: true,
-        hasAlert: true,
-        power: 0, // 太阳能系统
-        temperature: 48, // 水温低于正常值
-        waterFlow: 0.5, // L/min
+        hasAlert: false, // 修复告警状态
+        power: 2.5, // 太阳能系统正常运行功率
+        temperature: 65, // 正常水温范围
+        waterFlow: 8.5, // L/min 正常流量
         brand: '力诺瑞特',
         model: 'SWH-300',
-        healthStatus: 72,
+        healthStatus: 92, // 提升健康度
         uptime: 3650,
-        maintenanceStatus: 'warning',
+        maintenanceStatus: 'normal', // 改为正常状态
         energyEfficiency: 'A+',
-        lastMaintenance: '2023-11-10',
-        alerts: [
-          {
-            id: 'alert_w003',
-            message: '水温异常',
-            content: '太阳能热水系统水温低于正常值，请检查',
-            time: (() => {
-              const now = new Date();
-              const maxDays = 20;
-              const randomDays = Math.floor(Math.random() * maxDays);
-              const randomHours = Math.floor(Math.random() * 24);
-              const randomMinutes = Math.floor(Math.random() * 60);
-
-              const date = new Date(now);
-              date.setDate(date.getDate() - randomDays);
-              date.setHours(date.getHours() - randomHours);
-              date.setMinutes(date.getMinutes() - randomMinutes);
-
-              return date.toISOString();
-            })(),
-            severity: 'warning',
-            status: 'unread'
-          }
-        ]
+        lastMaintenance: '2024-01-15', // 更新维护时间
+        // 移除告警数据，表示设备已修复
+        alerts: [],
+        // 添加设备健康度详细信息
+        healthDetails: {
+          operationalScore: 95, // 运行状态得分
+          maintenanceScore: 90, // 维护状态得分
+          performanceScore: 88, // 性能得分
+          reliabilityScore: 94, // 可靠性得分
+          lastHealthCheck: '2024-01-15T10:30:00Z',
+          healthTrend: 'improving' // improving, stable, declining
+        },
+        // 完善的技术规格
+        specifications: {
+          collectorArea: 3.0, // 集热器面积 m²
+          tankCapacity: 300, // 水箱容量 L
+          maxTemperature: 95, // 最高工作温度 °C
+          workingPressure: 0.6, // 工作压力 MPa
+          heatExchangerType: '盘管式', // 换热器类型
+          insulationMaterial: '聚氨酯发泡', // 保温材料
+          collectorType: '真空管集热器', // 集热器类型
+          protectionLevel: 'IP65', // 防护等级
+          dimensions: '2000×1500×2200', // 尺寸 mm
+          weight: 180, // 重量 kg
+          operatingTempRange: '-30~95', // 工作温度范围 °C
+          antiFreezingTemp: -25 // 防冻温度 °C
+        },
+        // 运行参数
+        operatingParams: {
+          waterTemperature: 65, // 水温 °C
+          ambientTemperature: 22, // 环境温度 °C
+          solarRadiation: 850, // 太阳辐射 W/m²
+          collectorEfficiency: 88, // 集热器效率 %
+          heatGain: 12.5, // 热量获得 kW
+          waterFlow: 8.5, // 水流量 L/min
+          systemPressure: 0.45, // 系统压力 MPa
+          pumpStatus: 'auto', // 循环泵状态
+          valvePosition: 'open', // 阀门位置
+          frostProtection: false, // 防冻保护状态
+          operatingHours: 3650 // 运行小时数
+        },
+        // 维护信息
+        maintenanceInfo: {
+          nextMaintenance: '2024-07-15',
+          maintenanceInterval: 180, // 维护间隔天数
+          lastMaintenanceType: 'comprehensive', // 上次维护类型
+          warrantyExpiry: '2026-11-10',
+          serviceProvider: '力诺瑞特售后服务',
+          maintenanceHistory: [
+            { date: '2024-01-15', type: 'comprehensive', description: '全面检查，清洁集热器，更换密封件' },
+            { date: '2023-07-15', type: 'routine', description: '常规保养，检查管路和阀门' }
+          ]
+        }
       },
       {
         id: 'device_011',
@@ -2190,20 +2698,20 @@ class EnergyMockAPI {
         type: 'gas_boiler',
         category: 'gas',
         location: '锅炉房',
-        status: 'alarm',
+        status: 'online', // 修复为在线状态
         isOn: true,
-        hasAlert: true,
-        power: 85.0,
-        temperature: 95, // 温度过高
-        pressure: 0.6, // MPa
-        gasConsumption: 12.5, // m³/h
+        hasAlert: false, // 修复告警状态
+        power: 75.0, // 降低功率到正常范围
+        temperature: 78, // 降低温度到正常范围
+        pressure: 0.5, // MPa 正常压力
+        gasConsumption: 9.8, // m³/h 正常消耗
         brand: '博世',
         model: 'UT-L 50',
-        healthStatus: 65,
+        healthStatus: 88, // 提升健康度
         uptime: 6500,
-        maintenanceStatus: 'required',
-        energyEfficiency: 'B',
-        lastMaintenance: '2023-08-20',
+        maintenanceStatus: 'normal', // 改为正常状态
+        energyEfficiency: 'A', // 提升能效等级
+        lastMaintenance: '2024-01-10', // 更新维护时间
         // 完善的技术规格
         specifications: {
           ratedPower: 100, // 额定功率 kW
@@ -2223,53 +2731,42 @@ class EnergyMockAPI {
         },
         // 运行参数
         operatingParams: {
-          outletTemperature: 95, // 出水温度 °C
-          inletTemperature: 75, // 进水温度 °C
-          waterPressure: 0.65, // 水压 MPa
+          outletTemperature: 78, // 出水温度 °C 降低到正常范围
+          inletTemperature: 65, // 进水温度 °C
+          waterPressure: 0.5, // 水压 MPa 正常压力
           gasPressure: 0.02, // 燃气压力 MPa
           flameStatus: 'burning', // 火焰状态
           pumpStatus: 'running', // 循环泵状态
           fanStatus: 'running', // 风机状态
-          exhaustTemperature: 120, // 排烟温度 °C
-          oxygenContent: 8.5, // 烟气含氧量 %
-          carbonMonoxide: 15, // 一氧化碳浓度 ppm
+          exhaustTemperature: 95, // 排烟温度 °C 降低到正常范围
+          oxygenContent: 9.2, // 烟气含氧量 % 优化燃烧
+          carbonMonoxide: 8, // 一氧化碳浓度 ppm 降低到安全范围
           operatingHours: 6500 // 运行小时数
         },
         // 维护信息
         maintenanceInfo: {
-          nextMaintenance: '2024-02-20',
-          maintenanceInterval: 90, // 维护间隔天数
-          lastMaintenanceType: 'repair', // 上次维护类型
+          nextMaintenance: '2024-07-10',
+          maintenanceInterval: 180, // 维护间隔天数 延长到6个月
+          lastMaintenanceType: 'comprehensive', // 上次维护类型
           warrantyExpiry: '2025-08-20',
           serviceProvider: '博世热力技术服务',
           maintenanceHistory: [
+            { date: '2024-01-10', type: 'comprehensive', description: '全面检修，更换燃烧器部件，清洁换热器，调试控制系统' },
             { date: '2023-08-20', type: 'repair', description: '更换燃烧器部件，清洁换热器' },
             { date: '2023-05-20', type: 'inspection', description: '安全检查，调试燃烧参数' }
           ]
         },
-        alerts: [
-          {
-            id: 'alert_g001',
-            message: '温度过高',
-            content: '锅炉温度达到95°C，超出安全范围',
-            time: (() => {
-              const now = new Date();
-              const maxDays = 20;
-              const randomDays = Math.floor(Math.random() * maxDays);
-              const randomHours = Math.floor(Math.random() * 24);
-              const randomMinutes = Math.floor(Math.random() * 60);
-
-              const date = new Date(now);
-              date.setDate(date.getDate() - randomDays);
-              date.setHours(date.getHours() - randomHours);
-              date.setMinutes(date.getMinutes() - randomMinutes);
-
-              return date.toISOString();
-            })(),
-            severity: 'critical',
-            status: 'unread'
-          }
-        ]
+        // 移除告警数据，表示设备已修复
+        alerts: [],
+        // 添加设备健康度详细信息
+        healthDetails: {
+          operationalScore: 90, // 运行状态得分
+          maintenanceScore: 88, // 维护状态得分
+          performanceScore: 85, // 性能得分
+          reliabilityScore: 89, // 可靠性得分
+          lastHealthCheck: '2024-01-10T14:30:00Z',
+          healthTrend: 'improving' // improving, stable, declining
+        }
       },
       {
         id: 'device_016',
@@ -2279,38 +2776,67 @@ class EnergyMockAPI {
         location: '燃气管道区',
         status: 'online',
         isOn: true,
-        hasAlert: true,
+        hasAlert: false, // 修复告警状态
         power: 0.2,
-        gasConcentration: 0.8, // 接近警戒值
+        gasConcentration: 0.15, // 降低到安全范围
         brand: '霍尼韦尔',
         model: 'GD-2000',
-        healthStatus: 90,
+        healthStatus: 95, // 提升健康度
         uptime: 4500,
-        maintenanceStatus: 'warning',
-        lastMaintenance: '2023-10-15',
-        alerts: [
-          {
-            id: 'alert_g002',
-            message: '气体浓度异常',
-            content: '检测到燃气浓度接近警戒值，请检查',
-            time: (() => {
-              const now = new Date();
-              const maxDays = 20;
-              const randomDays = Math.floor(Math.random() * maxDays);
-              const randomHours = Math.floor(Math.random() * 24);
-              const randomMinutes = Math.floor(Math.random() * 60);
-
-              const date = new Date(now);
-              date.setDate(date.getDate() - randomDays);
-              date.setHours(date.getHours() - randomHours);
-              date.setMinutes(date.getMinutes() - randomMinutes);
-
-              return date.toISOString();
-            })(),
-            severity: 'warning',
-            status: 'unread'
-          }
-        ]
+        maintenanceStatus: 'normal', // 改为正常状态
+        lastMaintenance: '2024-01-08', // 更新维护时间
+        // 移除告警数据，表示设备已修复
+        alerts: [],
+        // 添加设备健康度详细信息
+        healthDetails: {
+          operationalScore: 96, // 运行状态得分
+          maintenanceScore: 94, // 维护状态得分
+          performanceScore: 95, // 性能得分
+          reliabilityScore: 95, // 可靠性得分
+          lastHealthCheck: '2024-01-08T09:15:00Z',
+          healthTrend: 'stable' // improving, stable, declining
+        },
+        // 完善的技术规格
+        specifications: {
+          detectionRange: '0-100%LEL', // 检测范围
+          detectionPrinciple: '催化燃烧式', // 检测原理
+          responseTime: 30, // 响应时间 秒
+          accuracy: '±3%FS', // 精度
+          alarmThreshold: '25%LEL', // 报警阈值
+          operatingTemp: '-40~70', // 工作温度范围 °C
+          operatingHumidity: '0~95%RH', // 工作湿度范围
+          powerConsumption: 0.2, // 功耗 W
+          protectionLevel: 'IP65', // 防护等级
+          dimensions: '120×80×45', // 尺寸 mm
+          weight: 0.3, // 重量 kg
+          communicationType: '4-20mA', // 通信方式
+          certifications: ['Ex', 'CE', 'ATEX'] // 认证标准
+        },
+        // 运行参数
+        operatingParams: {
+          currentConcentration: 0.15, // 当前浓度 %LEL
+          ambientTemperature: 22, // 环境温度 °C
+          ambientHumidity: 45, // 环境湿度 %RH
+          sensorStatus: 'normal', // 传感器状态
+          calibrationDate: '2024-01-08', // 校准日期
+          driftValue: 0.02, // 漂移值 %LEL
+          signalOutput: 4.6, // 信号输出 mA
+          alarmStatus: 'normal', // 报警状态
+          faultStatus: 'none', // 故障状态
+          operatingHours: 4500 // 运行小时数
+        },
+        // 维护信息
+        maintenanceInfo: {
+          nextMaintenance: '2024-07-08',
+          maintenanceInterval: 180, // 维护间隔天数
+          lastMaintenanceType: 'calibration', // 上次维护类型
+          warrantyExpiry: '2025-10-15',
+          serviceProvider: '霍尼韦尔安全系统',
+          maintenanceHistory: [
+            { date: '2024-01-08', type: 'calibration', description: '传感器校准，清洁检测头，功能测试' },
+            { date: '2023-07-08', type: 'routine', description: '常规检查，清洁外壳，检查接线' }
+          ]
+        }
       },
 
       // 其他设备
@@ -2382,41 +2908,69 @@ class EnergyMockAPI {
         type: 'air_compressor',
         category: 'electricity',
         location: '动力车间',
-        status: 'maintenance',
-        isOn: false,
-        hasAlert: true,
-        power: 0,
-        pressure: 0, // MPa
+        status: 'online', // 修复为在线状态
+        isOn: true, // 修复为开启状态
+        hasAlert: false, // 修复告警状态
+        power: 68.5, // 恢复正常功率
+        pressure: 0.8, // MPa 正常压力
         brand: '阿特拉斯',
         model: 'GA75',
-        healthStatus: 45,
+        healthStatus: 89, // 提升健康度
         uptime: 12500,
-        maintenanceStatus: 'required',
-        energyEfficiency: 'C',
-        lastMaintenance: '2023-07-10',
-        alerts: [
-          {
-            id: 'alert_o001',
-            message: '设备维护中',
-            content: '压缩空气系统正在进行定期维护',
-            time: (() => {
-              const now = new Date();
-              const maxDays = 20;
-              const randomDays = Math.floor(Math.random() * maxDays);
-              const randomHours = Math.floor(Math.random() * 24);
-              const randomMinutes = Math.floor(Math.random() * 60);
-
-              const date = new Date(now);
-              date.setDate(date.getDate() - randomDays);
-              date.setHours(date.getHours() - randomHours);
-              date.setMinutes(date.getMinutes() - randomMinutes);
-
-              return date.toISOString();
-            })(),
-            severity: 'info',
-            status: 'read'
-          }
-        ]
+        maintenanceStatus: 'normal', // 改为正常状态
+        energyEfficiency: 'A', // 提升能效等级
+        lastMaintenance: '2024-01-12', // 更新维护时间
+        // 移除告警数据，表示设备已修复
+        alerts: [],
+        // 添加设备健康度详细信息
+        healthDetails: {
+          operationalScore: 91, // 运行状态得分
+          maintenanceScore: 88, // 维护状态得分
+          performanceScore: 87, // 性能得分
+          reliabilityScore: 90, // 可靠性得分
+          lastHealthCheck: '2024-01-12T16:45:00Z',
+          healthTrend: 'improving' // improving, stable, declining
+        },
+        // 完善的技术规格
+        specifications: {
+          ratedPower: 75, // 额定功率 kW
+          maxPressure: 1.0, // 最大压力 MPa
+          airFlow: 12.5, // 排气量 m³/min
+          compressionRatio: 8.5, // 压缩比
+          coolingMethod: '风冷', // 冷却方式
+          lubricationType: '喷油螺杆', // 润滑方式
+          motorType: '异步电机', // 电机类型
+          protectionLevel: 'IP54', // 防护等级
+          dimensions: '2200×1500×1800', // 尺寸 mm
+          weight: 1850, // 重量 kg
+          operatingTempRange: '5~45', // 工作温度范围 °C
+          noiseLevel: 68 // 噪音等级 dB(A)
+        },
+        // 运行参数
+        operatingParams: {
+          dischargePressure: 0.8, // 排气压力 MPa
+          dischargeTemperature: 85, // 排气温度 °C
+          oilTemperature: 75, // 油温 °C
+          motorCurrent: 125, // 电机电流 A
+          loadRate: 85, // 负载率 %
+          vibrationLevel: 2.5, // 振动值 mm/s
+          airQuality: 'ISO 8573-1 Class 1', // 空气质量等级
+          filterCondition: 'good', // 过滤器状态
+          oilLevel: 'normal', // 油位状态
+          operatingHours: 12500 // 运行小时数
+        },
+        // 维护信息
+        maintenanceInfo: {
+          nextMaintenance: '2024-07-12',
+          maintenanceInterval: 180, // 维护间隔天数
+          lastMaintenanceType: 'comprehensive', // 上次维护类型
+          warrantyExpiry: '2025-07-10',
+          serviceProvider: '阿特拉斯·科普柯服务',
+          maintenanceHistory: [
+            { date: '2024-01-12', type: 'comprehensive', description: '全面检修，更换空滤、油滤、油分，检查压缩机本体' },
+            { date: '2023-07-10', type: 'routine', description: '常规保养，更换润滑油，清洁冷却器' }
+          ]
+        }
       },
       {
         id: 'device_019',
@@ -3191,128 +3745,21 @@ class EnergyMockAPI {
     this.deviceGroups = [
       {
         id: 'group_001',
-        name: '办公区照明',
-        description: '办公区域所有照明设备的统一管理',
-        icon: 'light',
-        deviceCount: 12,
-        onlineCount: 11,
-        totalPower: 2.4, // kW
-        energyToday: 18.5, // kWh
-        deviceIds: ['device_002', 'device_005'], // 关联的设备ID
-        createdAt: '2024-01-10T09:00:00Z',
-        updatedAt: '2024-01-15T14:30:00Z',
-        // 新增：智能分组配置
-        autoGrouping: {
-          enabled: true,
-          rules: ['location', 'type', 'efficiency'],
-          lastUpdate: '2024-01-15T14:30:00Z',
-          confidence: 0.95
-        },
-        // 新增：分组能效分析
-        efficiencyAnalysis: {
-          currentScore: 88,
-          trend: '+2.5%',
-          recommendations: [
-            '建议在非工作时间自动关闭照明设备',
-            '可考虑使用智能调光系统节约能源'
-          ],
-          potentialSavings: {
-            energy: 5.2, // kWh/day
-            cost: 3.64, // 元/day
-            carbonReduction: 2.6 // kg CO2/day
-          },
-          benchmarkComparison: {
-            industryAverage: 82,
-            bestPractice: 92,
-            ranking: 'above_average'
-          }
-        },
-        // 新增：历史数据关联
-        historicalData: {
-          dailyConsumption: this.generateGroupHistoricalData('daily', 30),
-          weeklyTrend: this.generateGroupHistoricalData('weekly', 12),
-          monthlyComparison: this.generateGroupHistoricalData('monthly', 6)
-        },
-        // 新增：告警联动配置
-        alertConfig: {
-          energyThreshold: 25.0, // kWh 日能耗阈值
-          efficiencyThreshold: 75, // 效率阈值
-          autoActions: {
-            highConsumption: 'notify_manager',
-            lowEfficiency: 'suggest_optimization',
-            deviceOffline: 'send_maintenance_request'
-          }
-        }
-      },
-      {
-        id: 'group_002',
-        name: '空调系统',
-        description: '全楼空调设备集中控制',
-        icon: 'air-conditioner',
-        deviceCount: 8,
-        onlineCount: 7,
-        totalPower: 45.6,
-        energyToday: 285.2,
-        deviceIds: ['device_001', 'device_003'],
-        createdAt: '2024-01-08T10:15:00Z',
-        updatedAt: '2024-01-15T16:20:00Z',
-        autoGrouping: {
-          enabled: true,
-          rules: ['type', 'location', 'capacity'],
-          lastUpdate: '2024-01-15T16:20:00Z',
-          confidence: 0.92
-        },
-        efficiencyAnalysis: {
-          currentScore: 75,
-          trend: '-1.2%',
-          recommendations: [
-            '建议将空调温度设置为26°C以节能',
-            '定期清洁空调滤网可提高效率15%',
-            '考虑在非工作时间降低空调功率'
-          ],
-          potentialSavings: {
-            energy: 42.8,
-            cost: 29.96,
-            carbonReduction: 21.4
-          },
-          benchmarkComparison: {
-            industryAverage: 78,
-            bestPractice: 85,
-            ranking: 'below_average'
-          }
-        },
-        historicalData: {
-          dailyConsumption: this.generateGroupHistoricalData('daily', 30),
-          weeklyTrend: this.generateGroupHistoricalData('weekly', 12),
-          monthlyComparison: this.generateGroupHistoricalData('monthly', 6)
-        },
-        alertConfig: {
-          energyThreshold: 350.0,
-          efficiencyThreshold: 70,
-          autoActions: {
-            highConsumption: 'adjust_temperature',
-            lowEfficiency: 'schedule_maintenance',
-            deviceOffline: 'switch_to_backup'
-          }
-        }
-      },
-      {
-        id: 'group_003',
-        name: '生产设备',
-        description: '车间主要生产设备监控',
+        name: '生产区域',
+        description: '工厂车间及生产线设备',
         icon: 'factory',
-        deviceCount: 15,
-        onlineCount: 14,
-        totalPower: 125.8,
-        energyToday: 1580.6,
-        deviceIds: ['device_004', 'device_006'],
+        deviceCount: 7,
+        onlineCount: 6,
+        totalPower: 135.6,
+        energyToday: 1625.8,
+        deviceIds: ['device_004', 'device_006', 'device_007', 'device_013', 'device_016', 'device_018', 'device_021'],
         createdAt: '2024-01-05T08:00:00Z',
         updatedAt: '2024-01-15T12:45:00Z',
         autoGrouping: {
           enabled: true,
-          rules: ['production_line', 'power_rating', 'criticality'],
+          rules: ['location', 'production_line', 'criticality'],
           lastUpdate: '2024-01-15T12:45:00Z',
-          confidence: 0.89
+          confidence: 0.92
         },
         efficiencyAnalysis: {
           currentScore: 82,
@@ -3349,40 +3796,40 @@ class EnergyMockAPI {
         }
       },
       {
-        id: 'group_004',
-        name: '安防系统',
-        description: '监控摄像头和门禁系统',
-        icon: 'security',
+        id: 'group_002',
+        name: '办公区域',
+        description: '办公室、会议室及接待区设备',
+        icon: 'office',
         deviceCount: 6,
         onlineCount: 6,
-        totalPower: 1.8,
-        energyToday: 43.2,
-        deviceIds: [],
-        createdAt: '2024-01-12T15:30:00Z',
-        updatedAt: '2024-01-15T09:10:00Z',
+        totalPower: 12.5,
+        energyToday: 98.4,
+        deviceIds: ['device_001', 'device_002', 'device_005', 'device_008', 'device_014', 'device_020'],
+        createdAt: '2024-01-08T10:15:00Z',
+        updatedAt: '2024-01-15T16:20:00Z',
         autoGrouping: {
           enabled: true,
-          rules: ['security_level', 'location', 'type'],
-          lastUpdate: '2024-01-15T09:10:00Z',
-          confidence: 0.98
+          rules: ['location', 'type', 'efficiency'],
+          lastUpdate: '2024-01-15T16:20:00Z',
+          confidence: 0.95
         },
         efficiencyAnalysis: {
-          currentScore: 92,
-          trend: '+0.3%',
+          currentScore: 86,
+          trend: '+2.5%',
           recommendations: [
-            '安防系统运行效率优秀',
-            '建议定期检查设备状态以保持高效运行',
-            '可考虑使用智能休眠模式进一步节能'
+            '建议在非工作时间自动关闭照明设备',
+            '可考虑使用智能调光系统节约能源',
+            '空调温度设置为26°C可节约能源'
           ],
           potentialSavings: {
-            energy: 2.1,
-            cost: 1.47,
-            carbonReduction: 1.05
+            energy: 12.8,
+            cost: 8.96,
+            carbonReduction: 6.4
           },
           benchmarkComparison: {
-            industryAverage: 85,
-            bestPractice: 95,
-            ranking: 'excellent'
+            industryAverage: 82,
+            bestPractice: 92,
+            ranking: 'above_average'
           }
         },
         historicalData: {
@@ -3391,12 +3838,166 @@ class EnergyMockAPI {
           monthlyComparison: this.generateGroupHistoricalData('monthly', 6)
         },
         alertConfig: {
-          energyThreshold: 50.0,
-          efficiencyThreshold: 85,
+          energyThreshold: 120.0,
+          efficiencyThreshold: 80,
           autoActions: {
-            highConsumption: 'check_device_status',
+            highConsumption: 'notify_manager',
+            lowEfficiency: 'suggest_optimization',
+            deviceOffline: 'send_maintenance_request'
+          }
+        }
+      },
+      {
+        id: 'group_003',
+        name: '公共区域',
+        description: '室外、园区及公共场所设备',
+        icon: 'public',
+        deviceCount: 4,
+        onlineCount: 4,
+        totalPower: 8.2,
+        energyToday: 196.8,
+        deviceIds: ['device_009', 'device_011', 'device_019', 'device_023'],
+        createdAt: '2024-01-12T11:30:00Z',
+        updatedAt: '2024-01-15T10:15:00Z',
+        autoGrouping: {
+          enabled: true,
+          rules: ['location', 'outdoor', 'public_access'],
+          lastUpdate: '2024-01-15T10:15:00Z',
+          confidence: 0.91
+        },
+        efficiencyAnalysis: {
+          currentScore: 84,
+          trend: '+1.2%',
+          recommendations: [
+            '户外照明可根据日照时间自动调整',
+            '公共区域设备可采用人流感应控制'
+          ],
+          potentialSavings: {
+            energy: 15.6,
+            cost: 10.92,
+            carbonReduction: 7.8
+          },
+          benchmarkComparison: {
+            industryAverage: 79,
+            bestPractice: 90,
+            ranking: 'above_average'
+          }
+        },
+        historicalData: {
+          dailyConsumption: this.generateGroupHistoricalData('daily', 30),
+          weeklyTrend: this.generateGroupHistoricalData('weekly', 12),
+          monthlyComparison: this.generateGroupHistoricalData('monthly', 6)
+        },
+        alertConfig: {
+          energyThreshold: 220.0,
+          efficiencyThreshold: 75,
+          autoActions: {
+            highConsumption: 'adjust_schedule',
+            lowEfficiency: 'maintenance_check',
+            deviceOffline: 'send_technician'
+          }
+        }
+      },
+      {
+        id: 'group_004',
+        name: '设备机房',
+        description: '机房、配电室及控制中心设备',
+        icon: 'server',
+        deviceCount: 3,
+        onlineCount: 3,
+        totalPower: 42.5,
+        energyToday: 1020.0,
+        deviceIds: ['device_003', 'device_010', 'device_017'],
+        createdAt: '2024-01-10T09:30:00Z',
+        updatedAt: '2024-01-15T14:20:00Z',
+        autoGrouping: {
+          enabled: true,
+          rules: ['location', 'criticality', 'security'],
+          lastUpdate: '2024-01-15T14:20:00Z',
+          confidence: 0.94
+        },
+        efficiencyAnalysis: {
+          currentScore: 78,
+          trend: '-0.5%',
+          recommendations: [
+            '机房温度控制在22-24°C可提高设备效率',
+            '建议优化UPS负载分配',
+            '考虑使用热通道/冷通道布局降低制冷需求'
+          ],
+          potentialSavings: {
+            energy: 102.0,
+            cost: 71.4,
+            carbonReduction: 51.0
+          },
+          benchmarkComparison: {
+            industryAverage: 75,
+            bestPractice: 85,
+            ranking: 'above_average'
+          }
+        },
+        historicalData: {
+          dailyConsumption: this.generateGroupHistoricalData('daily', 30),
+          weeklyTrend: this.generateGroupHistoricalData('weekly', 12),
+          monthlyComparison: this.generateGroupHistoricalData('monthly', 6)
+        },
+        alertConfig: {
+          energyThreshold: 1100.0,
+          efficiencyThreshold: 72,
+          autoActions: {
+            highConsumption: 'optimize_cooling',
+            lowEfficiency: 'critical_inspection',
+            deviceOffline: 'immediate_response'
+          }
+        }
+      },
+      {
+        id: 'group_005',
+        name: '仓储区域',
+        description: '仓库、物料及货物存储区设备',
+        icon: 'warehouse',
+        deviceCount: 3,
+        onlineCount: 2,
+        totalPower: 18.4,
+        energyToday: 441.6,
+        deviceIds: ['device_012', 'device_015', 'device_022'],
+        createdAt: '2024-01-14T09:45:00Z',
+        updatedAt: '2024-01-15T11:45:00Z',
+        autoGrouping: {
+          enabled: true,
+          rules: ['location', 'storage', 'inventory'],
+          lastUpdate: '2024-01-15T11:45:00Z',
+          confidence: 0.89
+        },
+        efficiencyAnalysis: {
+          currentScore: 80,
+          trend: '+0.3%',
+          recommendations: [
+            '仓库照明可采用分区控制减少能耗',
+            '温湿度控制设备可根据存储物品需求优化设置'
+          ],
+          potentialSavings: {
+            energy: 22.1,
+            cost: 15.47,
+            carbonReduction: 11.0
+          },
+          benchmarkComparison: {
+            industryAverage: 78,
+            bestPractice: 88,
+            ranking: 'above_average'
+          }
+        },
+        historicalData: {
+          dailyConsumption: this.generateGroupHistoricalData('daily', 30),
+          weeklyTrend: this.generateGroupHistoricalData('weekly', 12),
+          monthlyComparison: this.generateGroupHistoricalData('monthly', 6)
+        },
+        alertConfig: {
+          energyThreshold: 480.0,
+          efficiencyThreshold: 75,
+          autoActions: {
+            highConsumption: 'adjust_environment_control',
             lowEfficiency: 'schedule_maintenance',
-            deviceOffline: 'security_alert'
+            deviceOffline: 'check_power_supply'
           }
         }
       }

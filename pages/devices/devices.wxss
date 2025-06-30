@@ -468,52 +468,55 @@
   position: relative;
 }
 
-/* 趋势指示器样式 */
+/* 趋势指示器样式 - 调大尺寸和文字 */
 .trend-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6rpx;
+  gap: 8rpx; /* 增加间距 */
   /* 增加上边距，避免压住数字 */
   margin-top: 26rpx;
-  padding: 4rpx 8rpx;
-  border-radius: 8rpx;
-  background: rgba(255, 255, 255, 0.8);
+  padding: 8rpx 12rpx; /* 增加内边距 */
+  border-radius: 12rpx; /* 增加圆角 */
+  background: rgba(255, 255, 255, 0.9); /* 增加背景透明度 */
   backdrop-filter: blur(10rpx);
-  border: 1rpx solid rgba(0, 0, 0, 0.05);
+  border: 1rpx solid rgba(0, 0, 0, 0.08); /* 增加边框透明度 */
   /* 确保趋势指示器在数字下方，指示器上方 */
   order: 3.5;
   /* 防止遮盖其他元素 */
   position: relative;
   z-index: 1;
+  /* 增加最小高度确保视觉一致性 */
+  min-height: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05); /* 添加阴影 */
 }
 
 .trend-arrow {
-  font-size: 20rpx;
-  font-weight: 600;
+  font-size: 28rpx; /* 从20rpx增加到28rpx */
+  font-weight: 700; /* 增加字重 */
   line-height: 1;
 }
 
 .trend-arrow.up {
   color: #10B981;
-  text-shadow: 0 0 4rpx rgba(16, 185, 129, 0.4);
+  text-shadow: 0 0 6rpx rgba(16, 185, 129, 0.5); /* 增强阴影 */
 }
 
 .trend-arrow.down {
   color: #EF4444;
-  text-shadow: 0 0 4rpx rgba(239, 68, 68, 0.4);
+  text-shadow: 0 0 6rpx rgba(239, 68, 68, 0.5); /* 增强阴影 */
 }
 
 .trend-arrow.stable {
   color: #6B7280;
-  text-shadow: 0 0 4rpx rgba(107, 114, 128, 0.4);
+  text-shadow: 0 0 6rpx rgba(107, 114, 128, 0.5); /* 增强阴影 */
 }
 
 .trend-text {
-  font-size: 18rpx;
-  font-weight: 500;
-  color: #6B7280;
-  letter-spacing: 0.3rpx;
+  font-size: 24rpx; /* 从18rpx增加到24rpx */
+  font-weight: 600; /* 增加字重 */
+  color: #4B5563; /* 调整颜色使其更清晰 */
+  letter-spacing: 0.5rpx; /* 增加字间距 */
 }
 
 /* 设备统计卡片文字样式优化 */
@@ -1770,19 +1773,21 @@
   max-width: 100%; /* 使用全宽 */
 }
 
-/* 趋势指示器优化 */
+/* 趋势指示器优化 - 调大尺寸 */
 .trend-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32rpx;
-  height: 32rpx;
+  width: 40rpx; /* 从32rpx增加到40rpx */
+  height: 40rpx; /* 从32rpx增加到40rpx */
   border-radius: 50%;
-  background: rgba(var(--theme-rgb), 0.1);
+  background: rgba(var(--theme-rgb), 0.15); /* 增加背景透明度 */
+  box-shadow: 0 2rpx 8rpx rgba(var(--theme-rgb), 0.1); /* 添加阴影 */
 }
 
 .trend-icon {
-  font-size: 20rpx;
+  font-size: 28rpx; /* 从20rpx增加到28rpx */
+  font-weight: 700; /* 增加字重 */
   animation: trendPulse 2s ease-in-out infinite;
 }
 

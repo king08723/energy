@@ -13,14 +13,17 @@
   padding: 32rpx;
   border-radius: 16rpx;
   border: 1rpx solid rgba(0, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10rpx);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+  backdrop-filter: blur(20rpx);
   transition: all 0.3s ease;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.2);
 }
 
 .group-card:hover {
   border-color: rgba(0, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.12) 100%);
+  transform: translateY(-2rpx);
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.3);
 }
 
 /* 分组头部信息 */
@@ -55,13 +58,15 @@
   font-size: 32rpx;
   font-weight: 600;
   margin-bottom: 8rpx;
-  color: #ffffff;
+  color: #2c3e50;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
 }
 
 .group-description {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.6);
+  color: #5a6c7d;
   line-height: 1.4;
+  opacity: 0.9;
 }
 
 /* 分组操作按钮 */
@@ -104,13 +109,25 @@
 .stat-value {
   font-size: 36rpx;
   font-weight: 600;
-  color: #00ffff;
+  color: #00ffff !important;
   margin-bottom: 8rpx;
+  text-shadow: 0 2rpx 4rpx rgba(0, 255, 255, 0.3);
 }
 
 .stat-label {
   font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.4);
+  color: #34495e !important;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* 覆盖设计系统的文字颜色，确保在亮色背景上可见 */
+.group-card .energy-text-primary {
+  color: #00ffff !important;
+}
+
+.group-card .energy-text-tertiary {
+  color: #34495e !important;
 }
 
 /* 分组操作按钮 */
@@ -136,6 +153,13 @@
   text-align: right;
 }
 
+.group-meta text {
+  font-size: 20rpx;
+  color: #7f8c8d;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
 /* 对话框样式 */
 .dialog-overlay {
   position: fixed;
@@ -155,11 +179,12 @@
   width: 100%;
   max-width: 600rpx;
   max-height: 80vh;
-  background: rgba(26, 26, 46, 0.95);
-  backdrop-filter: blur(20rpx);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.12) 100%);
+  backdrop-filter: blur(25rpx);
   border-radius: 24rpx;
   border: 1rpx solid rgba(0, 255, 255, 0.3);
   overflow: hidden;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.4);
 }
 
 /* 对话框头部 */
@@ -172,8 +197,9 @@
 }
 
 .dialog-title {
-  color: #ffffff;
+  color: #2c3e50;
   font-weight: 600;
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.1);
 }
 
 .dialog-close {
@@ -209,9 +235,10 @@
 
 .form-label {
   font-size: 28rpx;
-  color: #ffffff;
+  color: #34495e;
   margin-bottom: 16rpx;
-  font-weight: 500;
+  font-weight: 600;
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.1);
 }
 
 .form-input,

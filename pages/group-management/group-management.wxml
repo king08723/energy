@@ -41,10 +41,16 @@
           <!-- 分组头部信息 -->
           <view class="group-header energy-flex energy-flex-between">
             <view class="group-info energy-flex">
-              <view class="group-icon">{{item.icon === 'office' ? '🏢' : item.icon === 'factory' ? '🏭' : item.icon === 'home' ? '🏠' : item.icon === 'outdoor' ? '🌳' : '📁'}}</view>
+              <view class="group-icon">
+                <text wx:if="{{item.icon === 'office'}}">🏢</text>
+                <text wx:elif="{{item.icon === 'factory'}}">🏭</text>
+                <text wx:elif="{{item.icon === 'home'}}">🏠</text>
+                <text wx:elif="{{item.icon === 'outdoor'}}">🌳</text>
+                <text wx:else>📁</text>
+              </view>
               <view class="group-details">
                 <text class="group-name energy-text-primary">{{item.name}}</text>
-                <text class="group-description energy-text-secondary">{{item.description || '暂无描述'}}</text>
+                <text class="group-description energy-text-secondary">{{item.description ? item.description : '暂无描述'}}</text>
               </view>
             </view>
             <view class="group-actions energy-flex">
@@ -79,7 +85,7 @@
               <text class="energy-icon">⚙️</text>
               <text>管理设备</text>
             </view>
-            <view class="operation-btn energy-btn energy-btn-outline">
+            <view class="operation-btn energy-btn energy-btn-outline" bindtap="onViewStatistics" data-group="{{item}}">
               <text class="energy-icon">📊</text>
               <text>查看统计</text>
             </view>

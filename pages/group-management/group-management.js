@@ -52,8 +52,18 @@ Page({
       const result = await API.getDeviceGroups();
 
       if (result.success) {
+        // 处理API返回的数据结构，支持 data.list 或直接 data
+        const groupList = result.data.list || result.data || [];
+
+        // 为每个分组添加告警数量统计（模拟数据）
+        const processedGroups = groupList.map(group => ({
+          ...group,
+          alertCount: group.alertCount || Math.floor(Math.random() * 3), // 随机生成0-2个告警
+          createdAt: group.createdAt ? this.formatDate(group.createdAt) : '未知'
+        }));
+
         this.setData({
-          groupList: result.data
+          groupList: processedGroups
         });
       } else {
         wx.showToast({
@@ -145,6 +155,15 @@ Page({
    * 创建设备分组
    */
   async onCreateGroup() {
+    // 开发阶段权限限制
+    wx.showToast({
+      title: '没有权限YJ03',
+      icon: 'none'
+    });
+    return;
+
+    // 以下代码在开发完成后启用
+    /*
     const { formData } = this.data;
 
     // 表单验证
@@ -188,12 +207,22 @@ Page({
     } finally {
       wx.hideLoading();
     }
+    */
   },
 
   /**
    * 更新设备分组
    */
   async onUpdateGroup() {
+    // 开发阶段权限限制
+    wx.showToast({
+      title: '没有权限YJ03',
+      icon: 'none'
+    });
+    return;
+
+    // 以下代码在开发完成后启用
+    /*
     const { formData, currentGroup } = this.data;
 
     // 表单验证
@@ -237,12 +266,22 @@ Page({
     } finally {
       wx.hideLoading();
     }
+    */
   },
 
   /**
    * 删除设备分组
    */
   onDeleteGroup(e) {
+    // 开发阶段权限限制
+    wx.showToast({
+      title: '没有权限YJ03',
+      icon: 'none'
+    });
+    return;
+
+    // 以下代码在开发完成后启用
+    /*
     const { group } = e.currentTarget.dataset;
 
     wx.showModal({
@@ -256,6 +295,7 @@ Page({
         }
       }
     });
+    */
   },
 
   /**
@@ -295,6 +335,15 @@ Page({
    * 管理分组设备
    */
   onManageDevices(e) {
+    // 开发阶段权限限制
+    wx.showToast({
+      title: '没有权限YJ03',
+      icon: 'none'
+    });
+    return;
+
+    // 以下代码在开发完成后启用
+    /*
     const { group } = e.currentTarget.dataset;
 
     // 跳转到设备分组分配页面（如果需要单独页面）
@@ -302,6 +351,29 @@ Page({
     wx.navigateTo({
       url: `/pages/devices/devices?groupId=${group.id}&groupName=${group.name}`
     });
+    */
+  },
+
+  /**
+   * 查看分组统计
+   */
+  onViewStatistics(e) {
+    // 开发阶段权限限制
+    wx.showToast({
+      title: '没有权限YJ03',
+      icon: 'none'
+    });
+    return;
+
+    // 以下代码在开发完成后启用
+    /*
+    const { group } = e.currentTarget.dataset;
+
+    // 跳转到分组统计页面
+    wx.navigateTo({
+      url: `/pages/group-statistics/group-statistics?groupId=${group.id}&groupName=${group.name}`
+    });
+    */
   },
 
   /**
@@ -311,5 +383,24 @@ Page({
     this.loadGroupList().finally(() => {
       wx.stopPullDownRefresh();
     });
+  },
+
+  /**
+   * 格式化日期
+   */
+  formatDate(dateString) {
+    try {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    } catch (error) {
+      console.error('日期格式化失败:', error);
+      return '格式错误';
+    }
   }
 });

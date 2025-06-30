@@ -520,8 +520,8 @@
 .energy-breakdown-list {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
-  margin-top: 16rpx;
+  gap: 12rpx;
+  margin-top: 12rpx;
 }
 
 /* 列表视图中的卡片样式 */

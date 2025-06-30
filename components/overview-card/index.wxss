@@ -1,14 +1,14 @@
 @import '../../styles/design-system.wxss';
 
 .data-card-list {
-  padding: 24rpx;
+  padding: 16rpx 20rpx;
   width: 100%;
   box-sizing: border-box;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 16rpx;
   position: relative;
   overflow: hidden;
-  min-height: 100rpx;
+  min-height: 80rpx;
   border: 1px solid rgba(59, 130, 246, 0.08);
 }
 
@@ -25,8 +25,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 16rpx;
-  margin-right: 16rpx;
+  margin-left: 12rpx;
+  margin-right: 12rpx;
 }
 
 .data-info-row {
@@ -36,8 +36,8 @@
   align-items: center;
   width: 100%;
   position: relative;
-  min-height: 60rpx;
-  padding: 10rpx 0;
+  min-height: 48rpx;
+  padding: 6rpx 0;
 }
 
 .data-info-row .data-title {
@@ -52,14 +52,14 @@
 }
 
 .icon-svg {
-  width: 32rpx;
-  height: 32rpx;
+  width: 28rpx;
+  height: 28rpx;
   filter: brightness(0) invert(1);
 }
 
 .data-icon {
-  width: 56rpx;
-  height: 56rpx;
+  width: 48rpx;
+  height: 48rpx;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -90,7 +90,7 @@
 }
 
 .data-title {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: #64748b;
   font-weight: 500;
 }
@@ -102,13 +102,13 @@
 }
 
 .data-value {
-  font-size: 36rpx;
+  font-size: 32rpx;
   font-weight: 700;
   color: #1e293b;
 }
 
 .data-unit {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #64748b;
   font-weight: 500;
 }
@@ -117,17 +117,17 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8rpx;
-  padding: 8rpx 16rpx;
-  border-radius: 12rpx;
+  gap: 6rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 10rpx;
 }
 
 .trend-arrow {
-  font-size: 20rpx;
+  font-size: 18rpx;
 }
 
 .trend-value {
-  font-size: 24rpx;
+  font-size: 22rpx;
   font-weight: 600;
 }
 

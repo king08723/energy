@@ -273,6 +273,25 @@ Page({
     onMenuItemTap(e) {
         const { item } = e.currentTarget.dataset;
 
+        // 特殊处理用户管理权限
+        if (item.id === 'user-management') {
+            wx.showModal({
+                title: '权限提示',
+                content: '没有权限YJ03',
+                showCancel: false
+            });
+            return;
+        }
+
+        // 特殊处理我的设备跳转
+        if (item.id === 'devices') {
+            wx.switchTab({
+                url: '/pages/devices/devices'
+            });
+            return;
+        }
+
+        // 其他菜单项的通用处理
         if (item.path) {
             wx.navigateTo({
                 url: item.path
@@ -341,9 +360,10 @@ Page({
      * 显示关于信息
      */
     showAbout() {
+        const currentYear = new Date().getFullYear();
         wx.showModal({
             title: '关于我们',
-            content: '智慧能源管理小程序\n版本：v1.0.0\n© 2024 智慧科技有限公司',
+            content: `陆博能效云 v1.7.0 © ${currentYear} 江西陆博能效科技有限公司 版权所有`,
             showCancel: false
         });
     },
